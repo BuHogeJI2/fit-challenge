@@ -1,5 +1,5 @@
-import { Initial } from "./components";
+import { ChallengeApp } from "./components";
 
 export function App() {
-  return <Initial />;
+  return <ChallengeApp />;
 }
