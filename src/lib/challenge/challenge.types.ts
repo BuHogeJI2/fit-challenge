@@ -1,14 +1,14 @@
-export type DayRow = {
+export type TDayRow = {
   id: number;
   date: string;
   exercises: string | null;
   is_done: boolean | null;
 };
 
-export type CalendarDay = {
+export type TCalendarDay = {
   date: Date;
   dateKey: string;
-  row?: DayRow;
+  row?: TDayRow;
   isToday: boolean;
   isFuture: boolean;
   isPast: boolean;

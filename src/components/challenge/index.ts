@@ -1,1 +1,0 @@
-export { ChallengeApp } from "./ChallengeApp";

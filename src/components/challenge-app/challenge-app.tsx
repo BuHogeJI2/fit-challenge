@@ -1,10 +1,9 @@
 import { useMemo } from "react";
-import { ChallengeHeader } from "./ChallengeHeader";
-import { CurrentDayCard } from "./CurrentDayCard";
-import { MonthOverview } from "./MonthOverview";
-import { StatusBanner } from "./StatusBanner";
-import { useChallengeDays } from "./useChallengeDays";
-import type { CalendarDay } from "./types";
+import { ChallengeHeader } from "../challenge-header/challenge-header";
+import { CurrentDayCard } from "../current-day-card/current-day-card";
+import { MonthOverview } from "../month-overview/month-overview";
+import { StatusBanner } from "../status-banner/status-banner";
+import type { TCalendarDay } from "../../lib/challenge";
 import {
   CHALLENGE_LENGTH_DAYS,
   CHALLENGE_START_DATE,
@@ -14,7 +13,9 @@ import {
   getDateKey,
   parseExercises,
   parseIsoDate,
-} from "./utils";
+  useChallengeDays,
+} from "../../lib/challenge";
+import { challengeAppClasses } from "./challenge-app.styles";
 
 export function ChallengeApp() {
   const { days, loading, error } = useChallengeDays();
@@ -68,7 +69,7 @@ export function ChallengeApp() {
     [focusDate],
   );
 
-  const calendarDays = useMemo<CalendarDay[]>(
+  const calendarDays = useMemo<TCalendarDay[]>(
     () =>
       Array.from({ length: daysInMonth }, (_, index) => {
         const date = new Date(
@@ -153,11 +154,11 @@ export function ChallengeApp() {
     : "No exercises listed. Check back later or update the plan in Supabase.";
 
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6 lg:px-10">
+    <div className={challengeAppClasses.container}>
+      <div className={challengeAppClasses.content}>
         <ChallengeHeader completedCount={completedCount} />
 
-        <section className="mt-10 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+        <section className={challengeAppClasses.mainGrid}>
           <CurrentDayCard
             label={cardLabel}
             dateLabel={formatDate(focusDate)}
@@ -174,7 +175,7 @@ export function ChallengeApp() {
           />
         </section>
 
-        <section className="mt-10">
+        <section className={challengeAppClasses.statusSection}>
           <StatusBanner
             loading={loading}
             error={error}

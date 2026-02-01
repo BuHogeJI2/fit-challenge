@@ -1,1 +1,1 @@
-export { ChallengeApp } from "./challenge";
+export { ChallengeApp } from "./challenge-app";

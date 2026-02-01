@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
-import type { DayRow } from "./types";
-import { CHALLENGE_TABLE_NAME } from "./utils";
+import type { TDayRow } from "./challenge.types";
+import { CHALLENGE_TABLE_NAME } from "./challenge.constants";
 
 export const useChallengeDays = () => {
-  const [days, setDays] = useState<DayRow[]>([]);
+  const [days, setDays] = useState<TDayRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
