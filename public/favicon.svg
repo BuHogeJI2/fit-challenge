@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="128" fill="url(#grad)" opacity="0.1"/>
+
+  <!-- Dumbbell -->
+  <g transform="translate(128, 128)">
+    <!-- Left weight -->
+    <rect x="-60" y="-15" width="25" height="30" rx="3" fill="url(#grad)"/>
+    <!-- Bar -->
+    <rect x="-35" y="-8" width="70" height="16" rx="4" fill="url(#grad)"/>
+    <!-- Right weight -->
+    <rect x="35" y="-15" width="25" height="30" rx="3" fill="url(#grad)"/>
+
+    <!-- Progress arrow pointing up -->
+    <path d="M 0 -65 L -15 -35 L -5 -35 L -5 -5 L 5 -5 L 5 -35 L 15 -35 Z" fill="url(#grad)"/>
+  </g>
+</svg>
