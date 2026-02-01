@@ -4,14 +4,15 @@ import type { IDaySummaryTooltipProps } from "./day-summary-tooltip.types";
 export function DaySummaryTooltip({
   dateLabel,
   exercisesLabel,
-  onMouseLeave,
-  onMouseEnter,
+  state,
 }: IDaySummaryTooltipProps) {
   return (
     <div
-      className={daySummaryTooltipClasses.tooltip}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      className={`${daySummaryTooltipClasses.tooltip} ${
+        state === "closing"
+          ? daySummaryTooltipClasses.closing
+          : daySummaryTooltipClasses.open
+      }`}
     >
       <div className={daySummaryTooltipClasses.date}>{dateLabel}</div>
       <div className={daySummaryTooltipClasses.exercises}>{exercisesLabel}</div>

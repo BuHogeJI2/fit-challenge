@@ -47,6 +47,8 @@ const dayNumber = clsx("shrink-0 text-sm font-semibold");
 
 const daySummary = clsx("truncate text-[11px] leading-tight text-slate-400");
 
+const tooltipWrapper = clsx("absolute inset-0 pointer-events-none");
+
 const iconMuted = clsx(
   "inline-flex h-6 w-6 items-center justify-center rounded-full",
   "border border-slate-700/70 bg-slate-950/70",
@@ -81,6 +83,7 @@ export const monthOverviewClasses = {
   dayHeader,
   dayNumber,
   daySummary,
+  tooltipWrapper,
   iconMuted,
   iconDone,
   iconMissed,

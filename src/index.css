@@ -35,3 +35,35 @@
         min-height: 100vh;
     }
 }
+
+@layer utilities {
+    @keyframes tooltip-in {
+        0% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.96);
+        }
+        100% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+    }
+
+    @keyframes tooltip-out {
+        0% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        100% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.96);
+        }
+    }
+
+    .animate-tooltip-in {
+        animation: tooltip-in 160ms ease-out forwards;
+    }
+
+    .animate-tooltip-out {
+        animation: tooltip-out 160ms ease-in forwards;
+    }
+}

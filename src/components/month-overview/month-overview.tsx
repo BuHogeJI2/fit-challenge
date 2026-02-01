@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { WEEK_DAYS } from "../../lib/challenge";
 import { DaySummaryTooltip } from "../day-summary-tooltip/day-summary-tooltip";
 import { monthOverviewClasses } from "./month-overview.styles";
@@ -12,6 +12,53 @@ export function MonthOverview({
   calendarDays,
 }: IMonthOverviewProps) {
   const [activeDayKey, setActiveDayKey] = useState<string | null>(null);
+  const [closingDayKey, setClosingDayKey] = useState<string | null>(null);
+  const closeTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        window.clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const clearCloseTimeout = () => {
+    if (closeTimeoutRef.current) {
+      window.clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (!activeDayKey) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      const tooltipEl = document.querySelector(
+        `[data-tooltip-day="${activeDayKey}"]`,
+      );
+
+      if (tooltipEl && target && tooltipEl.contains(target)) {
+        return;
+      }
+
+      if (closeTimeoutRef.current) {
+        window.clearTimeout(closeTimeoutRef.current);
+        closeTimeoutRef.current = null;
+      }
+      setClosingDayKey(activeDayKey);
+      closeTimeoutRef.current = window.setTimeout(() => {
+        setActiveDayKey(null);
+        setClosingDayKey(null);
+      }, 180);
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, [activeDayKey]);
 
   return (
     <div className={monthOverviewClasses.card}>
@@ -49,19 +96,23 @@ export function MonthOverview({
                   monthOverviewClasses.dayCardPast,
                 day.isDone && monthOverviewClasses.dayCardDone,
               )}
-              onClick={() => setActiveDayKey(day.dateKey)}
-              onMouseLeave={() => {
-                if (activeDayKey === day.dateKey) {
-                  setActiveDayKey(null);
-                }
+              onClick={() => {
+                clearCloseTimeout();
+                setClosingDayKey(null);
+                setActiveDayKey(day.dateKey);
               }}
             >
               {isTooltipVisible ? (
-                <DaySummaryTooltip
-                  dateLabel={dayDateLabel}
-                  exercisesLabel={exercisesLabel}
-                  onMouseLeave={() => setActiveDayKey(null)}
-                />
+                <div
+                  data-tooltip-day={day.dateKey}
+                  className={monthOverviewClasses.tooltipWrapper}
+                >
+                  <DaySummaryTooltip
+                    dateLabel={dayDateLabel}
+                    exercisesLabel={exercisesLabel}
+                    state={closingDayKey === day.dateKey ? "closing" : "open"}
+                  />
+                </div>
               ) : null}
               <div className={monthOverviewClasses.dayHeader}>
                 <span className={monthOverviewClasses.dayNumber}>
