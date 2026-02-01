@@ -19,21 +19,29 @@ const weekCell = clsx("text-center");
 const grid = clsx("mt-3 grid grid-cols-7 gap-2");
 
 const dayCardBase = clsx(
-  "flex flex-col justify-between gap-2 overflow-hidden",
+  "relative flex flex-col justify-center gap-2",
   "rounded-2xl border px-2.5 py-2.5 text-xs transition",
 );
 
-const dayCardToday = clsx("border-emerald-400/60 bg-emerald-500/10 text-emerald-50");
+const dayCardToday = clsx(
+  "border-emerald-400/60 bg-emerald-500/10 text-emerald-50",
+);
 
-const dayCardLocked = clsx("border-slate-900/80 bg-slate-950/70 text-slate-600");
+const dayCardLocked = clsx(
+  "border-slate-900/80 bg-slate-950/70 text-slate-600",
+);
 
-const dayCardFuture = clsx("border-slate-800/70 bg-slate-950/60 text-slate-500");
+const dayCardFuture = clsx(
+  "border-slate-800/70 bg-slate-950/60 text-slate-500",
+);
 
 const dayCardPast = clsx("border-slate-800/80 bg-slate-900/70 text-slate-300");
 
-const dayCardDone = clsx("border-emerald-400/40 bg-emerald-500/15 text-emerald-100");
+const dayCardDone = clsx(
+  "border-emerald-400/40 bg-emerald-500/15 text-emerald-100",
+);
 
-const dayHeader = clsx("flex min-w-0 items-center justify-between gap-2");
+const dayHeader = clsx("flex min-w-0 items-center justify-center gap-2");
 
 const dayNumber = clsx("shrink-0 text-sm font-semibold");
 
