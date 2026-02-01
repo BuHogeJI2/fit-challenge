@@ -4,7 +4,7 @@
 - Frontend: Vite + React + TypeScript (SPA).
 - Styling: Tailwind CSS v4 with PostCSS plugin.
 - Data access: Supabase client in `src/lib/supabaseClient.ts`.
-- UI entry point: `src/components/challenge/ChallengeApp.tsx` rendered by `src/App.tsx`.
+- UI entry point: `src/components/challenge-app/challenge-app.tsx` rendered by `src/main.tsx`.
 
 ## Database Schema (Supabase)
 Table: `Days`
@@ -27,7 +27,7 @@ Table: `Days`
 
 ## Data & UI Conventions
 - Date keys are generated with local time as `YYYY-MM-DD` for comparisons.
-- Challenge start is anchored in `src/components/challenge/utils.ts`.
+- Challenge start is anchored in `src/lib/challenge/challenge.constants.ts`.
 - Calendar shows the month containing the challenge focus date; future dates are labeled "Upcoming".
 - Read-only MVP: no mutation calls; update Supabase data directly.
 - Exercises are parsed by splitting on commas and trimming whitespace.
