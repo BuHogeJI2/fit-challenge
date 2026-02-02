@@ -183,6 +183,17 @@ export function ChallengeApp() {
             daysCount={days.length}
           />
         </section>
+
+        <footer className={challengeAppClasses.footer}>
+          <a
+            className={challengeAppClasses.footerLink}
+            href="https://github.com/BuHogeJI2/fit-challenge"
+            target="_blank"
+            rel="noreferrer"
+          >
+            View on GitHub
+          </a>
+        </footer>
       </div>
     </div>
   );
