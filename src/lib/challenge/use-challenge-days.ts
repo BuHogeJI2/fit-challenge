@@ -16,7 +16,7 @@ export const useChallengeDays = () => {
       setError(null);
       const { data, error } = await supabase
         .from(CHALLENGE_TABLE_NAME)
-        .select("id,date,exercises,is_done")
+        .select("id,date,exercises,count,is_done")
         .order("date", { ascending: true });
 
       if (!isMounted) return;

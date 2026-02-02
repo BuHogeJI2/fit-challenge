@@ -165,6 +165,7 @@ export function ChallengeApp() {
             title={cardTitle}
             description={cardDescription}
             exercises={focusExercises}
+            count={focusRow?.count ?? null}
             emptyMessage={emptyMessage}
           />
 

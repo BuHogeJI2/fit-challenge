@@ -2,6 +2,7 @@ export type TDayRow = {
   id: number;
   date: string;
   exercises: string | null;
+  count: number | null;
   is_done: boolean | null;
 };
 

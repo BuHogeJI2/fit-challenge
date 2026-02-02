@@ -7,6 +7,7 @@ export function CurrentDayCard({
   title,
   description,
   exercises,
+  count,
   emptyMessage,
 }: ICurrentDayCardProps) {
   return (
@@ -27,6 +28,9 @@ export function CurrentDayCard({
               >
                 <span className={currentDayCardClasses.bullet} />
                 <span>{exercise}</span>
+                {count !== null && count !== undefined ? (
+                  <span className={currentDayCardClasses.count}>× {count}</span>
+                ) : null}
               </li>
             ))}
           </ul>

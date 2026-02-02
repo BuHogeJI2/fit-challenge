@@ -28,6 +28,8 @@ const bullet = clsx(
   "rounded-full bg-emerald-300",
 );
 
+const count = clsx("text-emerald-200/80");
+
 const empty = clsx("text-sm text-slate-300");
 
 export const currentDayCardClasses = {
@@ -39,5 +41,6 @@ export const currentDayCardClasses = {
   list,
   listItem,
   bullet,
+  count,
   empty,
 };

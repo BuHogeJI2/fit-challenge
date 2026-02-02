@@ -24,7 +24,8 @@ const dayCardBase = clsx(
 );
 
 const dayCardToday = clsx(
-  "border-emerald-400/60 bg-emerald-500/10 text-emerald-50",
+  "border-sky-400/70 bg-sky-500/15 text-sky-50",
+  "shadow-[0_0_0_1px_rgba(56,189,248,0.35)]",
 );
 
 const dayCardLocked = clsx(
@@ -43,7 +44,7 @@ const dayCardDone = clsx(
 
 const dayHeader = clsx("flex min-w-0 items-center justify-center gap-2");
 
-const dayNumber = clsx("shrink-0 text-sm font-semibold");
+const dayNumber = clsx("shrink-0 text-sm font-semibold cursor-default");
 
 const daySummary = clsx("truncate text-[11px] leading-tight text-slate-400");
 

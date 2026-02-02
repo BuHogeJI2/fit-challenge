@@ -4,5 +4,6 @@ export interface ICurrentDayCardProps {
   title: string;
   description: string;
   exercises: string[];
+  count?: number | null;
   emptyMessage: string;
 }
