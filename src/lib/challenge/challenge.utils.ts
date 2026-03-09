@@ -65,15 +65,11 @@ export const getDayStateLabel = (state: TDayState) => {
 
 export const formatExerciseTarget = (exercise: TDayExercise) => {
   if (exercise.targetReps !== null) {
-    return `${exercise.targetReps} reps${
-      exercise.restSeconds ? ` • ${exercise.restSeconds}s rest` : ""
-    }`;
+    return `${exercise.targetReps} reps`;
   }
 
   if (exercise.targetSeconds !== null) {
-    return `${exercise.targetSeconds}s${
-      exercise.restSeconds ? ` • ${exercise.restSeconds}s rest` : ""
-    }`;
+    return `${exercise.targetSeconds}s`;
   }
 
   return "Target to be defined";

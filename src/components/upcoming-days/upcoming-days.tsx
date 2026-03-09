@@ -25,9 +25,9 @@ export function UpcomingDays({ days, onOpenDay }: IUpcomingDaysProps) {
             >
               <div className={upcomingDaysClasses.topRow}>
                 <span className={upcomingDaysClasses.dayLabel}>
-                  {day.relativeLabel}
+                  {day.shortDateLabel}
                 </span>
-                <span className={upcomingDaysClasses.date}>{day.shortDateLabel}</span>
+                <span className={upcomingDaysClasses.date}>{day.relativeLabel}</span>
               </div>
               <div className={upcomingDaysClasses.cardTitle}>{day.title}</div>
               <div className={upcomingDaysClasses.meta}>

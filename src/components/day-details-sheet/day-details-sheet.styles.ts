@@ -23,7 +23,7 @@ const title = clsx("mt-2 text-2xl font-semibold text-[var(--ink-strong)]");
 const date = clsx("mt-2 text-sm text-[var(--ink-soft)]");
 
 const closeButton = clsx(
-  "inline-flex min-h-10 items-center justify-center rounded-full border border-white/12 bg-white/6 px-4",
+  "inline-flex min-h-10 cursor-pointer items-center justify-center rounded-full border border-white/12 bg-white/6 px-4",
   "text-sm font-semibold text-[var(--ink-strong)] transition hover:bg-white/10",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-lime)]",
 );
@@ -45,17 +45,27 @@ const sectionTitle = clsx("mb-3 text-sm font-semibold uppercase tracking-[0.18em
 const exerciseList = clsx("mt-5 space-y-3");
 
 const exerciseCard = clsx(
-  "rounded-[1.3rem] border border-white/10 bg-black/18 px-4 py-4",
+  "flex items-start justify-between gap-3 rounded-[1.3rem] border border-white/10 bg-black/18 px-4 py-4",
 );
 
-const exerciseName = clsx("text-base font-semibold text-[var(--ink-strong)]");
+const exerciseMain = clsx("min-w-0");
+
+const exerciseNameBadge = clsx(
+  "inline-flex items-center rounded-full border border-[var(--brand-lime)]/25 bg-[var(--brand-lime)]/10 px-3 py-1",
+  "text-[0.78rem] font-semibold uppercase tracking-[0.12em] text-[var(--brand-lime)]",
+);
 
 const exerciseMeta = clsx("mt-1 text-sm text-[var(--ink-muted)]");
+
+const exerciseTarget = clsx(
+  "inline-flex shrink-0 items-center rounded-full border border-[var(--brand-hot)]/30 bg-[var(--brand-hot)]/12 px-3 py-1.5",
+  "text-sm font-semibold text-[var(--brand-peach)]",
+);
 
 const actionRow = clsx("mt-5 flex flex-col gap-3 sm:flex-row");
 
 const actionButton = clsx(
-  "inline-flex min-h-12 items-center justify-center rounded-full px-5 text-sm font-semibold transition",
+  "inline-flex min-h-12 cursor-pointer items-center justify-center rounded-full px-5 text-sm font-semibold transition",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-lime)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-900)]",
 );
 
@@ -79,8 +89,10 @@ export const dayDetailsSheetClasses = {
   sectionTitle,
   exerciseList,
   exerciseCard,
-  exerciseName,
+  exerciseMain,
+  exerciseNameBadge,
   exerciseMeta,
+  exerciseTarget,
   actionRow,
   primaryAction,
   secondaryAction,

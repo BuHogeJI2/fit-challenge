@@ -296,7 +296,8 @@ Phase 1 content operations should follow these rules:
 ### Phase 3: Flexible Challenge Modes
 
 - add private and custom challenge runs
-- add organizer tools for challenge creation and editing
+- add a simple admin panel for challenge data management
+- expand organizer tools for challenge creation and editing
 - add notifications and reminders
 - add richer analytics and progress summaries
 

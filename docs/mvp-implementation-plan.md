@@ -11,7 +11,7 @@ progress.
 - authentication
 - per-user server-side progress
 - private or custom challenge modes
-- organizer UI
+- organizer UI or admin panel
 - notifications
 - routing to multiple pages
 

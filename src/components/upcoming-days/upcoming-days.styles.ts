@@ -14,7 +14,7 @@ const description = clsx("text-sm text-[var(--ink-muted)]");
 const list = clsx("mt-4 space-y-3");
 
 const card = clsx(
-  "w-full rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4 text-left",
+  "w-full cursor-pointer rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4 text-left",
   "transition hover:border-[var(--brand-lime)]/30 hover:bg-white/8",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-lime)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-900)]",
 );

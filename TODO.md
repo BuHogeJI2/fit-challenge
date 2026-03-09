@@ -21,7 +21,8 @@
 ## Phase 3: Flexible Challenge Modes
 
 - Add private and custom challenges.
-- Add organizer tools for creating and editing challenge content.
+- Add a simple admin panel for working with challenge data in the database.
+- Expand organizer tools for creating and editing challenge content.
 - Add workout templates, validation, and richer content editing.
 - Add reminders and notifications.
 - Add analytics and progress insights.

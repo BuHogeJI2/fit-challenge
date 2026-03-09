@@ -61,17 +61,22 @@ export function DayDetailsSheet({
                       key={exercise.id}
                       className={dayDetailsSheetClasses.exerciseCard}
                     >
-                      <div className={dayDetailsSheetClasses.exerciseName}>
-                        {exercise.exerciseName}
+                      <div className={dayDetailsSheetClasses.exerciseMain}>
+                        <div className={dayDetailsSheetClasses.exerciseNameBadge}>
+                          {exercise.exerciseName}
+                        </div>
+                        <div className={dayDetailsSheetClasses.exerciseMeta}>
+                          Daily target
+                        </div>
+                        {exercise.notes ? (
+                          <div className={dayDetailsSheetClasses.exerciseMeta}>
+                            {exercise.notes}
+                          </div>
+                        ) : null}
                       </div>
-                      <div className={dayDetailsSheetClasses.exerciseMeta}>
+                      <div className={dayDetailsSheetClasses.exerciseTarget}>
                         {formatExerciseTarget(exercise)}
                       </div>
-                      {exercise.notes ? (
-                        <div className={dayDetailsSheetClasses.exerciseMeta}>
-                          {exercise.notes}
-                        </div>
-                      ) : null}
                     </div>
                   ))}
                 </div>

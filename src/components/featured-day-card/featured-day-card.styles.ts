@@ -35,25 +35,38 @@ const item = clsx(
   "flex items-start justify-between gap-3 rounded-[1.25rem] border border-white/8 bg-black/20 px-4 py-3",
 );
 
-const itemName = clsx("text-base font-semibold text-[var(--ink-strong)]");
+const itemMain = clsx("min-w-0");
+
+const itemNameBadge = clsx(
+  "inline-flex items-center rounded-full border border-[var(--brand-hot)]/25 bg-[var(--brand-hot)]/10 px-3 py-1",
+  "text-[0.78rem] font-semibold uppercase tracking-[0.12em] text-[var(--brand-peach)]",
+);
 
 const itemMeta = clsx("mt-1 text-sm text-[var(--ink-muted)]");
+
+const itemTarget = clsx(
+  "inline-flex shrink-0 items-center rounded-full border border-[var(--brand-lime)]/30 bg-[var(--brand-lime)]/14 px-3 py-1.5",
+  "text-sm font-semibold text-[var(--brand-lime)]",
+);
 
 const actions = clsx("mt-5 flex flex-col gap-3 sm:flex-row");
 
 const primaryButton = clsx(
-  "inline-flex min-h-12 items-center justify-center rounded-full bg-[var(--brand-hot)] px-5",
-  "text-sm font-semibold text-[var(--surface-900)] transition hover:brightness-110",
+  "inline-flex min-h-12 cursor-pointer items-center justify-center rounded-full border border-[var(--brand-peach)]/18 bg-[var(--brand-peach)]/10 px-5",
+  "text-sm font-semibold text-[var(--ink-strong)] transition hover:border-[var(--brand-peach)]/30 hover:bg-[var(--brand-peach)]/14",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-lime)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-900)]",
 );
 
 const secondaryButton = clsx(
-  "inline-flex min-h-12 items-center justify-center rounded-full border border-white/12 bg-white/6 px-5",
+  "inline-flex min-h-12 cursor-pointer items-center justify-center rounded-full border border-white/12 bg-white/6 px-5",
   "text-sm font-semibold text-[var(--ink-strong)] transition hover:bg-white/10",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-lime)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-900)]",
 );
 
-const disabledButton = clsx(secondaryButton, "cursor-not-allowed opacity-60 hover:bg-white/6");
+const disabledButton = clsx(
+  secondaryButton,
+  "cursor-not-allowed opacity-60 hover:bg-white/6 hover:border-white/12",
+);
 
 export const featuredDayCardClasses = {
   wrapper,
@@ -68,8 +81,10 @@ export const featuredDayCardClasses = {
   statValue,
   list,
   item,
-  itemName,
+  itemMain,
+  itemNameBadge,
   itemMeta,
+  itemTarget,
   actions,
   primaryButton,
   secondaryButton,

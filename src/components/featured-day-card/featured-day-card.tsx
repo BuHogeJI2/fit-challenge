@@ -70,13 +70,16 @@ export function FeaturedDayCard({
       <div className={featuredDayCardClasses.list}>
         {day.exercises.map((exercise) => (
           <div key={exercise.id} className={featuredDayCardClasses.item}>
-            <div>
-              <div className={featuredDayCardClasses.itemName}>
+            <div className={featuredDayCardClasses.itemMain}>
+              <div className={featuredDayCardClasses.itemNameBadge}>
                 {exercise.exerciseName}
               </div>
               <div className={featuredDayCardClasses.itemMeta}>
-                {formatExerciseTarget(exercise)}
+                Daily target
               </div>
+            </div>
+            <div className={featuredDayCardClasses.itemTarget}>
+              {formatExerciseTarget(exercise)}
             </div>
           </div>
         ))}

@@ -22,7 +22,8 @@ const grid = clsx("mt-3 grid grid-cols-7 gap-2");
 const emptyCell = clsx("aspect-square rounded-[1rem] border border-transparent");
 
 const dayButtonBase = clsx(
-  "flex aspect-square flex-col items-start justify-between rounded-[1.1rem] border px-2.5 py-2 text-left transition",
+  "flex aspect-square cursor-pointer items-center justify-center rounded-[1.1rem] border px-2.5 py-2 text-center transition",
+  "sm:items-start sm:justify-between sm:text-left",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-lime)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-900)]",
 );
 
@@ -46,9 +47,11 @@ const dayButtonUpcoming = clsx(
   "hover:border-white/18 hover:bg-white/7",
 );
 
-const dayNumber = clsx("text-sm font-semibold");
+const dayNumber = clsx("text-sm font-semibold sm:text-[0.95rem]");
 
-const state = clsx("text-[0.62rem] font-semibold uppercase tracking-[0.12em]");
+const state = clsx(
+  "hidden text-[0.62rem] font-semibold uppercase tracking-[0.12em] sm:inline",
+);
 
 export const challengeCalendarClasses = {
   wrapper,

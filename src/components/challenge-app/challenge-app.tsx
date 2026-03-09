@@ -111,6 +111,20 @@ export function ChallengeApp() {
             />
           </>
         )}
+
+        <footer className={challengeAppClasses.footer}>
+          <p className={challengeAppClasses.footerMeta}>
+            Built by <span className={challengeAppClasses.footerAuthor}>BuHogeJI</span>
+          </p>
+          <a
+            className={challengeAppClasses.footerLink}
+            href="https://github.com/BuHogeJI2/fit-challenge"
+            target="_blank"
+            rel="noreferrer"
+          >
+            GitHub
+          </a>
+        </footer>
       </div>
     </div>
   );
