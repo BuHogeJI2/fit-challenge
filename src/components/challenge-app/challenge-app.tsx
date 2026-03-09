@@ -1,199 +1,116 @@
-import { useMemo } from "react";
-import { ChallengeHeader } from "../challenge-header/challenge-header";
-import { CurrentDayCard } from "../current-day-card/current-day-card";
-import { MonthOverview } from "../month-overview/month-overview";
-import { StatusBanner } from "../status-banner/status-banner";
-import type { TCalendarDay } from "../../lib/challenge";
+import { useMemo, useState } from "react";
 import {
-  CHALLENGE_LENGTH_DAYS,
-  CHALLENGE_START_DATE,
-  addDays,
-  clampDate,
-  formatDate,
-  getDateKey,
-  parseExercises,
-  parseIsoDate,
-  useChallengeDays,
+  buildChallengeViewModel,
+  useFeaturedChallenge,
+  useLocalChallengeProgress,
+  type TChallengeDayView,
 } from "../../lib/challenge";
+import { ChallengeCalendar } from "../challenge-calendar";
+import { ChallengeHero } from "../challenge-hero";
+import { ChallengeStatus } from "../challenge-status";
+import { DayDetailsSheet } from "../day-details-sheet";
+import { FeaturedDayCard } from "../featured-day-card";
+import { ProgressSummary } from "../progress-summary";
+import { UpcomingDays } from "../upcoming-days";
 import { challengeAppClasses } from "./challenge-app.styles";
 
 export function ChallengeApp() {
-  const { days, loading, error } = useChallengeDays();
+  const { challenge, loading, error } = useFeaturedChallenge();
+  const { progressMap, toggleDayDone } = useLocalChallengeProgress(
+    challenge?.run.slug ?? null,
+  );
+  const [selectedDayId, setSelectedDayId] = useState<number | null>(null);
 
-  const today = useMemo(() => new Date(), []);
-  const challengeStart = useMemo(() => parseIsoDate(CHALLENGE_START_DATE), []);
-  const challengeEnd = useMemo(
-    () => addDays(challengeStart, CHALLENGE_LENGTH_DAYS - 1),
-    [challengeStart],
+  const viewModel = useMemo(
+    () => buildChallengeViewModel(challenge, progressMap),
+    [challenge, progressMap],
   );
 
-  const todayKey = useMemo(() => getDateKey(today), [today]);
-  const challengeStartKey = useMemo(
-    () => getDateKey(challengeStart),
-    [challengeStart],
-  );
-  const challengeEndKey = useMemo(
-    () => getDateKey(challengeEnd),
-    [challengeEnd],
-  );
+  const selectedDay = useMemo<TChallengeDayView | null>(() => {
+    if (!viewModel) return null;
+    return (
+      viewModel.days.find((day) => day.id === selectedDayId) ??
+      viewModel.featuredDay
+    );
+  }, [selectedDayId, viewModel]);
 
-  const focusDate = useMemo(
-    () => clampDate(today, challengeStart, challengeEnd),
-    [today, challengeStart, challengeEnd],
-  );
-  const focusKey = useMemo(() => getDateKey(focusDate), [focusDate]);
+  const handleOpenDay = (dayId: number) => {
+    setSelectedDayId(dayId);
+  };
 
-  const isBeforeStart = todayKey < challengeStartKey;
-  const isAfterEnd = todayKey > challengeEndKey;
-
-  const monthLabel = useMemo(
-    () =>
-      new Intl.DateTimeFormat("en-US", {
-        month: "long",
-        year: "numeric",
-      }).format(focusDate),
-    [focusDate],
-  );
-
-  const daysByKey = useMemo(() => {
-    return new Map(days.map((day) => [day.date, day]));
-  }, [days]);
-
-  const daysInMonth = useMemo(
-    () =>
-      new Date(focusDate.getFullYear(), focusDate.getMonth() + 1, 0).getDate(),
-    [focusDate],
-  );
-  const startOffset = useMemo(
-    () => new Date(focusDate.getFullYear(), focusDate.getMonth(), 1).getDay(),
-    [focusDate],
-  );
-
-  const calendarDays = useMemo<TCalendarDay[]>(
-    () =>
-      Array.from({ length: daysInMonth }, (_, index) => {
-        const date = new Date(
-          focusDate.getFullYear(),
-          focusDate.getMonth(),
-          index + 1,
-        );
-        const dateKey = getDateKey(date);
-        const row = daysByKey.get(dateKey);
-        const isToday = dateKey === focusKey;
-        const isFuture = dateKey > focusKey;
-        const isPast = dateKey < focusKey;
-        const isDone = Boolean(row?.is_done);
-        const isLocked =
-          dateKey < challengeStartKey || dateKey > challengeEndKey;
-
-        let status = "Locked";
-        if (!isLocked) {
-          if (isToday) {
-            status = "Today";
-          } else if (isFuture) {
-            status = "Upcoming";
-          } else if (isDone) {
-            status = "Done";
-          } else {
-            status = row ? "Missed" : "No Plan";
-          }
-        }
-
-        return {
-          date,
-          dateKey,
-          row,
-          isToday,
-          isFuture,
-          isPast,
-          isDone,
-          isLocked,
-          status,
-        };
-      }),
-    [
-      challengeEndKey,
-      challengeStartKey,
-      daysByKey,
-      daysInMonth,
-      focusDate,
-      focusKey,
-    ],
-  );
-
-  const focusRow = daysByKey.get(focusKey);
-  const focusExercises = parseExercises(focusRow?.exercises);
-  const completedCount = days.filter((day) => day.is_done).length;
-
-  const cardLabel = isBeforeStart
-    ? "Challenge Starts"
-    : isAfterEnd
-      ? "Challenge Ended"
-      : "Current Day";
-
-  const cardTitle = isBeforeStart
-    ? "Day 1 Preview"
-    : isAfterEnd
-      ? "Final Day Recap"
-      : "Today's Goal";
-
-  const cardDescription = isBeforeStart
-    ? `The 30-day plan begins on ${formatDate(
-        challengeStart,
-      )}. Here's the first workout.`
-    : isAfterEnd
-      ? `You wrapped up the challenge on ${formatDate(
-          challengeEnd,
-        )}. Take a look at the final day.`
-      : focusRow?.exercises
-        ? "Finish the workout below and keep your streak alive."
-        : "No exercises were scheduled for today.";
-
-  const emptyMessage = isBeforeStart
-    ? "No exercises listed for day 1 yet."
-    : "No exercises listed. Check back later or update the plan in Supabase.";
+  const handleToggleDayDone = (dayNumber: number) => {
+    toggleDayDone(dayNumber);
+  };
 
   return (
     <div className={challengeAppClasses.container}>
       <div className={challengeAppClasses.content}>
-        <ChallengeHeader completedCount={completedCount} />
-
-        <section className={challengeAppClasses.mainGrid}>
-          <CurrentDayCard
-            label={cardLabel}
-            dateLabel={formatDate(focusDate)}
-            title={cardTitle}
-            description={cardDescription}
-            exercises={focusExercises}
-            count={focusRow?.count ?? null}
-            emptyMessage={emptyMessage}
+        {loading ? (
+          <ChallengeStatus
+            tone="loading"
+            title="Loading challenge"
+            body="Fetching the featured run and preparing today's plan."
           />
-
-          <MonthOverview
-            monthLabel={monthLabel}
-            startOffset={startOffset}
-            calendarDays={calendarDays}
+        ) : error ? (
+          <ChallengeStatus
+            tone="error"
+            title="Unable to load the challenge"
+            body={error}
           />
-        </section>
-
-        <section className={challengeAppClasses.statusSection}>
-          <StatusBanner
-            loading={loading}
-            error={error}
-            daysCount={days.length}
+        ) : !viewModel ? (
+          <ChallengeStatus
+            tone="empty"
+            title="No featured challenge"
+            body="Seed a challenge run in Supabase and publish it to surface the mobile experience."
           />
-        </section>
+        ) : (
+          <>
+            <ChallengeHero
+              title={viewModel.title}
+              description={viewModel.description}
+              rangeLabel={viewModel.rangeLabel}
+              statusLabel={viewModel.statusLabel}
+              coverNote={viewModel.coverNote}
+              localCompletedDays={viewModel.localCompletedDays}
+              totalDays={viewModel.scheduleTotalDays}
+            />
 
-        <footer className={challengeAppClasses.footer}>
-          <a
-            className={challengeAppClasses.footerLink}
-            href="https://github.com/BuHogeJI2/fit-challenge"
-            target="_blank"
-            rel="noreferrer"
-          >
-            View on GitHub
-          </a>
-        </footer>
+            {viewModel.featuredDay ? (
+              <FeaturedDayCard
+                day={viewModel.featuredDay}
+                runPhase={viewModel.runPhase}
+                onOpenDay={handleOpenDay}
+                onToggleDayDone={handleToggleDayDone}
+              />
+            ) : null}
+
+            <UpcomingDays days={viewModel.nextDays} onOpenDay={handleOpenDay} />
+
+            <ProgressSummary
+              scheduleCompletedDays={viewModel.scheduleCompletedDays}
+              scheduleTotalDays={viewModel.scheduleTotalDays}
+              localCompletedDays={viewModel.localCompletedDays}
+              remainingDays={viewModel.remainingDays}
+              phaseLabel={viewModel.progressLabel}
+            />
+
+            <ChallengeCalendar
+              months={viewModel.calendarMonths}
+              onOpenDay={handleOpenDay}
+            />
+
+            <DayDetailsSheet
+              open={selectedDayId !== null}
+              day={selectedDay}
+              onOpenChange={(open) => {
+                if (!open) {
+                  setSelectedDayId(null);
+                }
+              }}
+              onToggleDayDone={handleToggleDayDone}
+            />
+          </>
+        )}
       </div>
     </div>
   );

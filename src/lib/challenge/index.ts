@@ -1,16 +1,31 @@
+export { fetchFeaturedChallenge } from "./challenge.api";
+export { getChallengeStorageKey } from "./challenge.storage";
+export type {
+  TCalendarMonth,
+  TChallengeDay,
+  TChallengeDayView,
+  TChallengeRun,
+  TChallengeTemplate,
+  TChallengeViewModel,
+  TDayExercise,
+  TDayState,
+  TFeaturedChallenge,
+  TLocalProgressEntry,
+  TLocalProgressMap,
+  TRunPhase,
+  TRunStatus,
+} from "./challenge.types";
+export { WEEKDAY_SHORT_LABELS } from "./challenge.types";
+export { useFeaturedChallenge } from "./use-featured-challenge";
+export { useLocalChallengeProgress } from "./use-local-challenge-progress";
 export {
-  CHALLENGE_LENGTH_DAYS,
-  CHALLENGE_START_DATE,
-  CHALLENGE_TABLE_NAME,
-  WEEK_DAYS,
-} from "./challenge.constants";
-export { useChallengeDays } from "./use-challenge-days";
-export type { TCalendarDay, TDayRow } from "./challenge.types";
-export {
-  addDays,
-  clampDate,
-  formatDate,
+  buildChallengeViewModel,
+  formatExerciseTarget,
+  formatLongDate,
+  formatRangeLabel,
+  formatShortDate,
   getDateKey,
-  parseExercises,
+  getDayStateLabel,
   parseIsoDate,
+  pickFeaturedRun,
 } from "./challenge.utils";
