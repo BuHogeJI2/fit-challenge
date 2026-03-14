@@ -1,6 +1,6 @@
-# Fit Challenge
+# Challenge Forge
 
-Fit Challenge is a mobile-first React app for a public monthly fitness
+Challenge Forge is a mobile-first React app for a public monthly fitness
 challenge. The current build shows one featured challenge run, highlights the
 current or most relevant day, lets users inspect the full calendar, and stores
 completion locally on the current device.
@@ -45,6 +45,7 @@ pnpm dev
 
 ```bash
 pnpm lint
+pnpm typecheck
 pnpm test
 pnpm build
 ```

@@ -1,6 +1,6 @@
 # AGENTS
 
-Fit Challenge is a Vite + React + TypeScript single-page app for one public
+Challenge Forge is a Vite + React + TypeScript single-page app for one public
 featured fitness challenge run at a time. The current frontend is already on
 the Phase 1 architecture: it loads structured challenge data from Supabase,
 derives mobile-first day state locally, and stores per-device completion

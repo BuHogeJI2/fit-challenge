@@ -2,7 +2,7 @@
 
 ## Summary
 
-Fit Challenge uses a semantic dark theme. Colors are assigned by meaning, not
+Challenge Forge uses a semantic dark theme. Colors are assigned by meaning, not
 by component ownership. Interactive actions, status messaging, and passive
 content accents must not reuse the same tone without a clear semantic reason.
 

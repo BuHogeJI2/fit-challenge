@@ -2,7 +2,7 @@
 
 ## Product Overview
 
-Fit Challenge is a mobile-first web app for a shared fitness challenge. The
+Challenge Forge is a mobile-first web app for a shared fitness challenge. The
 current product focuses on one featured public run at a time and is optimized
 for a fast daily check-in flow on phones.
 

@@ -1,23 +1,34 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Challenge Forge favicon">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+    <linearGradient id="calendarBg" x1="24" y1="20" x2="228" y2="236" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#132131" />
+      <stop offset="1" stop-color="#071018" />
+    </linearGradient>
+    <linearGradient id="infoCell" x1="78" y1="102" x2="134" y2="158" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6dc7ff" />
+      <stop offset="1" stop-color="#8ad7ff" />
+    </linearGradient>
+    <linearGradient id="successCheck" x1="142" y1="146" x2="194" y2="198" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9bf75f" />
+      <stop offset="1" stop-color="#b6ff4f" />
     </linearGradient>
   </defs>
-  <!-- Background circle -->
-  <circle cx="128" cy="128" r="128" fill="url(#grad)" opacity="0.1"/>
 
-  <!-- Dumbbell -->
-  <g transform="translate(128, 128)">
-    <!-- Left weight -->
-    <rect x="-60" y="-15" width="25" height="30" rx="3" fill="url(#grad)"/>
-    <!-- Bar -->
-    <rect x="-35" y="-8" width="70" height="16" rx="4" fill="url(#grad)"/>
-    <!-- Right weight -->
-    <rect x="35" y="-15" width="25" height="30" rx="3" fill="url(#grad)"/>
+  <rect x="16" y="16" width="224" height="224" rx="56" fill="url(#calendarBg)" />
+  <rect x="28" y="28" width="200" height="200" rx="46" fill="none" stroke="#34506a" stroke-width="4" />
 
-    <!-- Progress arrow pointing up -->
-    <path d="M 0 -65 L -15 -35 L -5 -35 L -5 -5 L 5 -5 L 5 -35 L 15 -35 Z" fill="url(#grad)"/>
-  </g>
+  <rect x="48" y="54" width="160" height="132" rx="26" fill="#0d1722" stroke="#223244" stroke-width="4" />
+  <path d="M48 92h160" stroke="#34506a" stroke-width="4" />
+  <rect x="68" y="42" width="18" height="28" rx="9" fill="#ff9a6b" />
+  <rect x="170" y="42" width="18" height="28" rx="9" fill="#ff9a6b" />
+
+  <rect x="68" y="108" width="34" height="30" rx="10" fill="#1a2a3d" />
+  <rect x="112" y="108" width="34" height="30" rx="10" fill="url(#infoCell)" />
+  <rect x="156" y="108" width="34" height="30" rx="10" fill="#1a2a3d" />
+  <rect x="68" y="148" width="34" height="30" rx="10" fill="#1a2a3d" />
+  <rect x="112" y="148" width="34" height="30" rx="10" fill="#1a2a3d" />
+  <rect x="156" y="148" width="34" height="30" rx="10" fill="#1a2a3d" />
+
+  <circle cx="176" cy="176" r="28" fill="url(#successCheck)" stroke="#071018" stroke-width="6" />
+  <path d="M163 176.5l9 9 18-21" fill="none" stroke="#081019" stroke-linecap="round" stroke-linejoin="round" stroke-width="8" />
 </svg>
