@@ -79,6 +79,49 @@ export const formatExerciseTarget = (exercise: TDayExercise) => {
   return "Target to be defined";
 };
 
+export const formatFeaturedExerciseProgress = (
+  exercise: Pick<
+    TChallengeDayExerciseView,
+    "loggedRepsTotal" | "targetReps" | "sets" | "targetSeconds"
+  >,
+) => {
+  if (exercise.sets.length === 0) {
+    if (exercise.targetReps !== null) {
+      return `${exercise.targetReps} reps`;
+    }
+
+    if (exercise.targetSeconds !== null) {
+      return `${exercise.targetSeconds}s`;
+    }
+
+    return "Target to be defined";
+  }
+
+  if (exercise.targetReps !== null) {
+    return `${exercise.loggedRepsTotal} / ${exercise.targetReps}`;
+  }
+
+  if (exercise.targetSeconds !== null) {
+    return `${exercise.targetSeconds}s`;
+  }
+
+  return "Target to be defined";
+};
+
+export const getFeaturedExerciseStatusLabel = (
+  exercise: Pick<TChallengeDayExerciseView, "sets" | "isGoalReached">,
+) => {
+  if (exercise.sets.length === 0) {
+    return "Daily target";
+  }
+
+  if (exercise.isGoalReached) {
+    return "Goal reached";
+  }
+
+  return `${exercise.sets.length} set${exercise.sets.length === 1 ? "" : "s"} logged`;
+};
+
 export const formatExerciseNameForDisplay = (value: string) =>
   value
     .split(" ")

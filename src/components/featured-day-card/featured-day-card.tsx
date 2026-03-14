@@ -1,7 +1,8 @@
 import { useRef } from "react";
 import {
   formatExerciseNameForDisplay,
-  formatExerciseTarget,
+  formatFeaturedExerciseProgress,
+  getFeaturedExerciseStatusLabel,
   getDayStateLabel,
   type TChallengeDayView,
 } from "../../lib/challenge";
@@ -107,11 +108,17 @@ export function FeaturedDayCard({
                 />
               </div>
               <div className={featuredDayCardClasses.itemMeta}>
-                Daily target
+                {getFeaturedExerciseStatusLabel(exercise)}
               </div>
             </div>
-            <div className={featuredDayCardClasses.itemTarget}>
-              {formatExerciseTarget(exercise)}
+            <div
+              className={
+                exercise.isGoalReached && exercise.sets.length > 0
+                  ? featuredDayCardClasses.itemTargetComplete
+                  : featuredDayCardClasses.itemTarget
+              }
+            >
+              {formatFeaturedExerciseProgress(exercise)}
             </div>
           </div>
         ))}

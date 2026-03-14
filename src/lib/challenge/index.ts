@@ -26,10 +26,12 @@ export { celebrateDayCompletion } from "./challenge.effects";
 export {
   buildChallengeViewModel,
   formatExerciseNameForDisplay,
+  formatFeaturedExerciseProgress,
   formatExerciseTarget,
   formatLongDate,
   formatRangeLabel,
   formatShortDate,
+  getFeaturedExerciseStatusLabel,
   getCompletionPercent,
   getDateKey,
   getDayStateLabel,

@@ -66,6 +66,11 @@ const itemTarget = clsx(
   "text-sm font-semibold text-[var(--tone-info-text)]",
 );
 
+const itemTargetComplete = clsx(
+  "inline-flex shrink-0 items-center rounded-full border border-[var(--tone-success-border)] bg-[var(--tone-success-soft)] px-3 py-1.5",
+  "text-sm font-semibold text-[var(--tone-success-text)]",
+);
+
 const actions = clsx("mt-5 flex flex-col gap-3 sm:flex-row");
 
 const actionButton = clsx(
@@ -125,6 +130,7 @@ export const featuredDayCardClasses = {
   itemName,
   itemMeta,
   itemTarget,
+  itemTargetComplete,
   actions,
   readyButton,
   primaryButton,

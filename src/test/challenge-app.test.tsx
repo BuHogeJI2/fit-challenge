@@ -283,7 +283,13 @@ describe("ChallengeApp", () => {
 
     render(<ChallengeApp />);
 
+    const featuredCard = screen.getByRole("button", { name: "Mark done" }).closest("section");
+    expect(featuredCard).not.toBeNull();
+    const featuredWithin = within(featuredCard!);
+
     expect(screen.queryByText(/reps logged/i)).not.toBeInTheDocument();
+    expect(featuredWithin.getAllByText("60 reps")).toHaveLength(2);
+    expect(featuredWithin.getAllByText("Daily target").slice(-2)).toHaveLength(2);
 
     fireEvent.click(screen.getByRole("button", { name: "Open day details" }));
 
@@ -292,12 +298,19 @@ describe("ChallengeApp", () => {
     });
     fireEvent.click(screen.getAllByRole("button", { name: "Add set" })[0]);
 
+    expect(featuredWithin.getByText("60 / 60")).toBeInTheDocument();
+    expect(featuredWithin.getByText("Goal reached")).toBeInTheDocument();
+    expect(featuredWithin.getByText("60 reps")).toBeInTheDocument();
+    expect(featuredWithin.getAllByText("Daily target").slice(-1)).toHaveLength(1);
+
     fireEvent.change(screen.getByLabelText("Add reps for Sit-Ups"), {
       target: { value: "60" },
     });
     fireEvent.click(screen.getAllByRole("button", { name: "Add set" })[1]);
 
     expect(screen.getByText("120/120 reps logged")).toBeInTheDocument();
+    expect(featuredWithin.getAllByText("60 / 60")).toHaveLength(2);
+    expect(featuredWithin.getAllByText("Goal reached")).toHaveLength(2);
     expect(
       screen.getByText(
         "Targets reached. Mark the day done when you are ready.",
@@ -307,6 +320,10 @@ describe("ChallengeApp", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Remove" })[0]);
 
     expect(screen.getByText("60/120 reps logged")).toBeInTheDocument();
+    expect(featuredWithin.getByText("60 reps")).toBeInTheDocument();
+    expect(featuredWithin.getAllByText("Daily target").slice(-1)).toHaveLength(1);
+    expect(featuredWithin.getByText("60 / 60")).toBeInTheDocument();
+    expect(featuredWithin.getByText("Goal reached")).toBeInTheDocument();
     expect(
       screen.queryByText(
         "Targets reached. Mark the day done when you are ready.",
