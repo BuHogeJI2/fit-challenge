@@ -13,11 +13,8 @@ progress in `localStorage`.
 3. `docs/architecture.md` for runtime flow, state derivation, and UI assembly.
 4. `docs/db-structure.md` for Supabase schema and local-progress boundaries.
 5. `docs/testing.md` for Vitest coverage, commands, and current gaps.
-6. `docs/mvp-implementation-plan.md` for shipped Phase 1 scope and remaining
-   implementation follow-ups.
-7. `docs/product-plan.md` for higher-level product direction beyond the current
-   codebase.
-8. `docs/roadmap.md` for repo-specific follow-up work discovered during review.
+6. `docs/roadmap.md` for the canonical product, MVP, Phase 1, shipped-state,
+   and future-direction document.
 
 ## Current App Constraints
 

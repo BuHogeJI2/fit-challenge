@@ -56,6 +56,4 @@ pnpm build
 - `docs/architecture.md`
 - `docs/db-structure.md`
 - `docs/testing.md`
-- `docs/mvp-implementation-plan.md`
-- `docs/product-plan.md`
 - `docs/roadmap.md`
