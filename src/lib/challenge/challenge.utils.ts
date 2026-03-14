@@ -1,6 +1,7 @@
 import type {
   TCalendarMonth,
   TChallengeDay,
+  TChallengeDayExerciseView,
   TChallengeDayView,
   TChallengeRun,
   TChallengeViewModel,
@@ -77,6 +78,23 @@ export const formatExerciseTarget = (exercise: TDayExercise) => {
 
   return "Target to be defined";
 };
+
+const getExerciseLoggedRepsTotal = (
+  dayNumber: number,
+  exerciseId: number,
+  progressMap: TLocalProgressMap,
+) =>
+  (
+    progressMap[String(dayNumber)]?.exerciseProgress?.[String(exerciseId)]?.sets ??
+    []
+  ).reduce((total, set) => total + set.reps, 0);
+
+const getExerciseSets = (
+  dayNumber: number,
+  exerciseId: number,
+  progressMap: TLocalProgressMap,
+) =>
+  progressMap[String(dayNumber)]?.exerciseProgress?.[String(exerciseId)]?.sets ?? [];
 
 const compareDateKeys = (left: string, right: string) =>
   left.localeCompare(right);
@@ -286,14 +304,55 @@ export const buildChallengeViewModel = (
       state = "elapsed";
     }
 
+    const exercises = day.exercises.map<TChallengeDayExerciseView>((exercise) => {
+      const loggedRepsTotal = getExerciseLoggedRepsTotal(
+        day.dayNumber,
+        exercise.id,
+        progressMap,
+      );
+      const targetReps = exercise.targetReps ?? 0;
+      const remainingReps = Math.max(targetReps - loggedRepsTotal, 0);
+      const progressPercent =
+        targetReps > 0 ? getCompletionPercent(loggedRepsTotal, targetReps) : 0;
+      const sets = getExerciseSets(day.dayNumber, exercise.id, progressMap);
+
+      return {
+        ...exercise,
+        loggedRepsTotal,
+        remainingReps,
+        isGoalReached: targetReps > 0 && loggedRepsTotal >= targetReps,
+        progressPercent,
+        sets,
+      };
+    });
+    const dayLoggedRepsTotal = exercises.reduce(
+      (total, exercise) => total + exercise.loggedRepsTotal,
+      0,
+    );
+    const dayTargetRepsTotal = exercises.reduce(
+      (total, exercise) => total + (exercise.targetReps ?? 0),
+      0,
+    );
+    const hasLoggedProgress = exercises.some((exercise) => exercise.sets.length > 0);
+    const allExerciseGoalsReached =
+      exercises.length > 0 &&
+      exercises.every((exercise) =>
+        exercise.targetReps !== null ? exercise.isGoalReached : false,
+      );
+
     return {
       ...day,
+      exercises,
       state,
       isActionable: state === "today" || state === "elapsed" || state === "done_local",
       isUpdated: Boolean(day.changeNote),
       shortDateLabel: formatShortDate(day.date),
       longDateLabel: formatLongDate(day.date),
       relativeLabel: getRelativeLabel(day, todayKey, runPhase, featuredDayNumber),
+      dayLoggedRepsTotal,
+      dayTargetRepsTotal,
+      allExerciseGoalsReached,
+      hasLoggedProgress,
     };
   });
 

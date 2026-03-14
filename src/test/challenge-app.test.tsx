@@ -249,4 +249,46 @@ describe("ChallengeApp", () => {
     expect(window.localStorage.getItem(storedKey)).toBe("{}");
     expect(confetti).toHaveBeenCalledTimes(1);
   });
+
+  it("keeps set logging optional and highlights readiness after targets are logged", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-15T10:00:00.000Z"));
+    mockUseFeaturedChallenge.mockReturnValue({
+      challenge: featuredChallenge,
+      loading: false,
+      error: null,
+    });
+
+    render(<ChallengeApp />);
+
+    expect(screen.queryByText(/reps logged/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Open day details" }));
+
+    fireEvent.change(screen.getByLabelText("Add reps for pushups"), {
+      target: { value: "60" },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: "Add set" })[0]);
+
+    fireEvent.change(screen.getByLabelText("Add reps for sit-ups"), {
+      target: { value: "60" },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: "Add set" })[1]);
+
+    expect(screen.getByText("120/120 reps logged")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Targets reached. Mark the day done when you are ready.",
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Remove" })[0]);
+
+    expect(screen.getByText("60/120 reps logged")).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Targets reached. Mark the day done when you are ready.",
+      ),
+    ).not.toBeInTheDocument();
+  });
 });

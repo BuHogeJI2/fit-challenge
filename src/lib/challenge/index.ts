@@ -3,6 +3,7 @@ export { getChallengeStorageKey } from "./challenge.storage";
 export type {
   TCalendarMonth,
   TChallengeDay,
+  TChallengeDayExerciseView,
   TChallengeDayView,
   TChallengeRun,
   TChallengeTemplate,
@@ -10,8 +11,10 @@ export type {
   TDayExercise,
   TDayState,
   TFeaturedChallenge,
+  TLocalExerciseProgress,
   TLocalProgressEntry,
   TLocalProgressMap,
+  TLocalSetEntry,
   TToggleDayDoneOptions,
   TRunPhase,
   TRunStatus,

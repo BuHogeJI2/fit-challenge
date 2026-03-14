@@ -53,6 +53,16 @@ export type TDayExercise = {
   substitution: string | null;
 };
 
+export type TLocalSetEntry = {
+  id: string;
+  reps: number;
+  createdAt: string;
+};
+
+export type TLocalExerciseProgress = {
+  sets: TLocalSetEntry[];
+};
+
 export type TChallengeDay = {
   id: number;
   runId: number;
@@ -76,7 +86,8 @@ export type TFeaturedChallenge = {
 
 export type TLocalProgressEntry = {
   done: boolean;
-  completedAt: string;
+  completedAt: string | null;
+  exerciseProgress?: Record<string, TLocalExerciseProgress>;
 };
 
 export type TLocalProgressMap = Record<string, TLocalProgressEntry>;
@@ -86,13 +97,26 @@ export type TToggleDayDoneOptions = {
   triggerElement?: HTMLElement | null;
 };
 
-export type TChallengeDayView = TChallengeDay & {
+export type TChallengeDayExerciseView = TDayExercise & {
+  loggedRepsTotal: number;
+  remainingReps: number;
+  isGoalReached: boolean;
+  progressPercent: number;
+  sets: TLocalSetEntry[];
+};
+
+export type TChallengeDayView = Omit<TChallengeDay, "exercises"> & {
   state: TDayState;
   isActionable: boolean;
   isUpdated: boolean;
   shortDateLabel: string;
   longDateLabel: string;
   relativeLabel: string;
+  dayLoggedRepsTotal: number;
+  dayTargetRepsTotal: number;
+  allExerciseGoalsReached: boolean;
+  hasLoggedProgress: boolean;
+  exercises: TChallengeDayExerciseView[];
 };
 
 export type TCalendarMonth = {

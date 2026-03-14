@@ -34,6 +34,8 @@ const changeNote = clsx(
 
 const summary = clsx("mt-4 text-sm leading-6 text-[var(--ink-muted)]");
 
+const trackerNote = clsx("mt-4 text-sm leading-6 text-[var(--ink-soft)]");
+
 const scrollArea = clsx("mt-5 overflow-y-auto pr-1");
 
 const notesCard = clsx(
@@ -45,8 +47,10 @@ const sectionTitle = clsx("mb-3 text-sm font-semibold uppercase tracking-[0.18em
 const exerciseList = clsx("mt-5 space-y-3");
 
 const exerciseCard = clsx(
-  "flex items-start justify-between gap-3 rounded-[1.3rem] border border-white/10 bg-black/18 px-4 py-4",
+  "rounded-[1.3rem] border border-white/10 bg-black/18 px-4 py-4",
 );
+
+const exerciseTop = clsx("flex items-start justify-between gap-3");
 
 const exerciseMain = clsx("min-w-0");
 
@@ -62,6 +66,52 @@ const exerciseTarget = clsx(
   "text-sm font-semibold text-[var(--brand-peach)]",
 );
 
+const trackerStats = clsx("mt-3 grid grid-cols-3 gap-2");
+
+const trackerStat = clsx(
+  "rounded-[1rem] border border-white/10 bg-white/5 px-3 py-2",
+);
+
+const trackerStatLabel = clsx(
+  "text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-[var(--ink-dim)]",
+);
+
+const trackerStatValue = clsx("mt-1 text-base font-semibold text-[var(--ink-strong)]");
+
+const inputRow = clsx("mt-3 flex flex-col gap-2 sm:flex-row");
+
+const repsInput = clsx(
+  "min-h-11 w-full rounded-[1rem] border border-white/12 bg-[rgba(255,255,255,0.04)] px-4 text-base text-[var(--ink-strong)]",
+  "placeholder:text-[var(--ink-dim)] focus:border-[var(--brand-lime)]/45 focus:outline-none focus:ring-2 focus:ring-[var(--brand-lime)]/20",
+);
+
+const addSetButton = clsx(
+  "inline-flex min-h-11 cursor-pointer items-center justify-center rounded-[1rem] border border-[var(--brand-peach)]/18 bg-[var(--brand-peach)]/10 px-4",
+  "text-sm font-semibold text-[var(--ink-strong)] transition hover:border-[var(--brand-peach)]/30 hover:bg-[var(--brand-peach)]/14",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-lime)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-900)]",
+);
+
+const disabledAddSetButton = clsx(
+  addSetButton,
+  "cursor-not-allowed opacity-60 hover:border-[var(--brand-peach)]/18 hover:bg-[var(--brand-peach)]/10",
+);
+
+const setsList = clsx("mt-3 space-y-2");
+
+const setItem = clsx(
+  "flex items-center justify-between gap-3 rounded-[1rem] border border-white/10 bg-white/5 px-3 py-2",
+);
+
+const setMeta = clsx("text-sm text-[var(--ink-soft)]");
+
+const setValue = clsx("font-semibold text-[var(--ink-strong)]");
+
+const removeSetButton = clsx(
+  "inline-flex cursor-pointer items-center justify-center rounded-full border border-[rgba(242,97,63,0.22)] bg-[rgba(242,97,63,0.08)] px-3 py-1",
+  "text-xs font-semibold uppercase tracking-[0.14em] text-[var(--brand-peach)] transition hover:border-[rgba(242,97,63,0.34)] hover:bg-[rgba(242,97,63,0.12)] hover:text-[var(--ink-strong)]",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-hot)]",
+);
+
 const actionRow = clsx("mt-5 flex flex-col gap-3 sm:flex-row");
 
 const actionButton = clsx(
@@ -70,6 +120,12 @@ const actionButton = clsx(
 );
 
 const primaryAction = clsx(
+  actionButton,
+  "border border-[var(--brand-lime)]/22 bg-[var(--brand-lime)]/16",
+  "text-[var(--ink-strong)] shadow-[0_12px_28px_rgba(182,255,79,0.10)] hover:border-[var(--brand-lime)]/34 hover:bg-[var(--brand-lime)]/20 active:scale-[0.985]",
+);
+
+const readyAction = clsx(
   actionButton,
   "border border-[var(--brand-lime)]/30 bg-[linear-gradient(180deg,rgba(182,255,79,0.96),rgba(147,230,70,0.96))]",
   "text-[var(--surface-900)] shadow-[0_18px_36px_rgba(182,255,79,0.22)] hover:brightness-[1.04] active:scale-[0.985]",
@@ -97,17 +153,33 @@ export const dayDetailsSheetClasses = {
   closeButton,
   changeNote,
   summary,
+  trackerNote,
   scrollArea,
   notesCard,
   sectionTitle,
   exerciseList,
   exerciseCard,
+  exerciseTop,
   exerciseMain,
   exerciseNameBadge,
   exerciseMeta,
   exerciseTarget,
+  trackerStats,
+  trackerStat,
+  trackerStatLabel,
+  trackerStatValue,
+  inputRow,
+  repsInput,
+  addSetButton,
+  disabledAddSetButton,
+  setsList,
+  setItem,
+  setMeta,
+  setValue,
+  removeSetButton,
   actionRow,
   primaryAction,
+  readyAction,
   completedAction,
   secondaryAction,
 };

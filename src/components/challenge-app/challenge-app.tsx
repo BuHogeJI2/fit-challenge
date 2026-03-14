@@ -19,9 +19,12 @@ import { challengeAppClasses } from "./challenge-app.styles";
 
 export function ChallengeApp() {
   const { challenge, loading, error } = useFeaturedChallenge();
-  const { progressMap, toggleDayDone } = useLocalChallengeProgress(
-    challenge?.run.slug ?? null,
-  );
+  const {
+    progressMap,
+    toggleDayDone,
+    addExerciseSet,
+    removeExerciseSet,
+  } = useLocalChallengeProgress(challenge?.run.slug ?? null);
   const [selectedDayId, setSelectedDayId] = useState<number | null>(null);
 
   const viewModel = useMemo(
@@ -123,6 +126,8 @@ export function ChallengeApp() {
                   setSelectedDayId(null);
                 }
               }}
+              onAddExerciseSet={addExerciseSet}
+              onRemoveExerciseSet={removeExerciseSet}
               onToggleDayDone={handleToggleDayDone}
             />
           </>

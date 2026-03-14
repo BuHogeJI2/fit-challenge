@@ -41,6 +41,11 @@ export function FeaturedDayCard({
 }: IFeaturedDayCardProps) {
   const actionButtonRef = useRef<HTMLButtonElement | null>(null);
   const isDone = day.state === "done_local";
+  const actionButtonClassName = isDone
+    ? featuredDayCardClasses.completedButton
+    : day.allExerciseGoalsReached
+      ? featuredDayCardClasses.readyButton
+      : featuredDayCardClasses.primaryButton;
 
   return (
     <section className={featuredDayCardClasses.wrapper}>
@@ -55,6 +60,22 @@ export function FeaturedDayCard({
       <p className={featuredDayCardClasses.description}>
         {getDescription(day, runPhase)}
       </p>
+
+      {day.hasLoggedProgress ? (
+        <div className={featuredDayCardClasses.progressBanner}>
+          <div className={featuredDayCardClasses.progressValue}>
+            {day.dayLoggedRepsTotal}/{day.dayTargetRepsTotal} reps logged
+          </div>
+          <div className={featuredDayCardClasses.progressMeta}>
+            Optional set tracking from day details.
+          </div>
+          {day.allExerciseGoalsReached && !isDone ? (
+            <div className={featuredDayCardClasses.progressHint}>
+              Targets reached. Mark the day done when you are ready.
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className={featuredDayCardClasses.stats}>
         <div className={featuredDayCardClasses.statCard}>
@@ -94,9 +115,7 @@ export function FeaturedDayCard({
           <button
             ref={actionButtonRef}
             type="button"
-            className={isDone
-              ? featuredDayCardClasses.completedButton
-              : featuredDayCardClasses.successButton}
+            className={actionButtonClassName}
             onClick={() =>
               onToggleDayDone(day.dayNumber, {
                 willMarkDone: !isDone,

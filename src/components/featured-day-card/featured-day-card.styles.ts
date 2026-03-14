@@ -18,6 +18,16 @@ const title = clsx("mt-4 text-[1.85rem] font-semibold leading-none text-[var(--i
 
 const description = clsx("mt-3 text-sm leading-6 text-[var(--ink-muted)]");
 
+const progressBanner = clsx(
+  "mt-4 rounded-[1.3rem] border border-white/10 bg-white/5 px-4 py-3",
+);
+
+const progressValue = clsx("text-lg font-semibold text-[var(--ink-strong)]");
+
+const progressMeta = clsx("mt-1 text-sm text-[var(--ink-soft)]");
+
+const progressHint = clsx("mt-2 text-sm font-medium text-[var(--brand-lime)]");
+
 const stats = clsx("mt-5 grid grid-cols-2 gap-3");
 
 const statCard = clsx(
@@ -56,10 +66,16 @@ const actionButton = clsx(
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-lime)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-900)]",
 );
 
-const successButton = clsx(
+const readyButton = clsx(
   actionButton,
   "cursor-pointer border border-[var(--brand-lime)]/30 bg-[linear-gradient(180deg,rgba(182,255,79,0.96),rgba(147,230,70,0.96))]",
   "text-[var(--surface-900)] shadow-[0_18px_36px_rgba(182,255,79,0.22)] hover:brightness-[1.04] active:scale-[0.985]",
+);
+
+const primaryButton = clsx(
+  actionButton,
+  "cursor-pointer border border-[var(--brand-lime)]/22 bg-[var(--brand-lime)]/16",
+  "text-[var(--ink-strong)] shadow-[0_12px_28px_rgba(182,255,79,0.10)] hover:border-[var(--brand-lime)]/34 hover:bg-[var(--brand-lime)]/20 active:scale-[0.985]",
 );
 
 const completedButton = clsx(
@@ -70,8 +86,8 @@ const completedButton = clsx(
 
 const secondaryButton = clsx(
   actionButton,
-  "cursor-pointer border border-[var(--brand-peach)]/18 bg-[var(--brand-peach)]/10",
-  "text-[var(--ink-strong)] hover:border-[var(--brand-peach)]/30 hover:bg-[var(--brand-peach)]/14 active:scale-[0.985]",
+  "cursor-pointer border border-white/12 bg-white/6",
+  "text-[var(--ink-strong)] hover:bg-white/10 active:scale-[0.985]",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-lime)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-900)]",
 );
 
@@ -87,6 +103,10 @@ export const featuredDayCardClasses = {
   date,
   title,
   description,
+  progressBanner,
+  progressValue,
+  progressMeta,
+  progressHint,
   stats,
   statCard,
   statLabel,
@@ -98,7 +118,8 @@ export const featuredDayCardClasses = {
   itemMeta,
   itemTarget,
   actions,
-  successButton,
+  readyButton,
+  primaryButton,
   completedButton,
   secondaryButton,
   disabledButton,
