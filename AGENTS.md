@@ -11,9 +11,11 @@ progress in `localStorage`.
 1. `README.md` for local setup and day-to-day commands.
 2. `docs/project-structure.md` for the folder map and ownership boundaries.
 3. `docs/architecture.md` for runtime flow, state derivation, and UI assembly.
-4. `docs/db-structure.md` for Supabase schema and local-progress boundaries.
-5. `docs/testing.md` for Vitest coverage, commands, and current gaps.
-6. `docs/roadmap.md` for the canonical product, MVP, Phase 1, shipped-state,
+4. `docs/theme-system.md` for semantic palette rules and component color
+   mapping.
+5. `docs/db-structure.md` for Supabase schema and local-progress boundaries.
+6. `docs/testing.md` for Vitest coverage, commands, and current gaps.
+7. `docs/roadmap.md` for the canonical product, MVP, Phase 1, shipped-state,
    and future-direction document.
 
 ## Current App Constraints
@@ -25,6 +27,8 @@ progress in `localStorage`.
 - UI composition: screen-level assembly lives in
   `src/components/challenge-app/challenge-app.tsx`.
 - Styling: Tailwind CSS v4 via component-local `*.styles.ts` files and `clsx`.
+- Theme semantics: canonical color usage rules live in `docs/theme-system.md`
+  and the token source of truth lives in `src/index.css`.
 - State model: no global state library; the app relies on local hooks plus
   derived view models.
 
@@ -37,8 +41,8 @@ progress in `localStorage`.
   - `challenge_days`
   - `day_exercises`
 - Store completion progress locally per device and key it by run slug.
-- Treat past unfinished days as `elapsed`, not automatically complete.
-- Allow done/undo only for `today`, `elapsed`, and `done_local` days.
+- Treat past unfinished days as `missed`, not automatically complete.
+- Allow done/undo only for `today`, `missed`, and `done_local` days.
 - Show future days, but keep them non-actionable.
 - Surface future content edits with an `Updated` badge and `change_note`.
 - Keep auth, private runs, notifications, and admin tooling out of scope for

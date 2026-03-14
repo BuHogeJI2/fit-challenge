@@ -53,7 +53,7 @@ the current date, and local progress.
 
 - `today`: the calendar day matches today and is not locally complete
 - `upcoming`: future day
-- `elapsed`: past unfinished day
+- `missed`: past unfinished day
 - `done_local`: day marked complete on this device
 
 ### Screen Derivations

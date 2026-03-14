@@ -60,8 +60,8 @@ export const getDayStateLabel = (state: TDayState) => {
       return "Today";
     case "done_local":
       return "Done";
-    case "elapsed":
-      return "Elapsed";
+    case "missed":
+      return "Missed";
     default:
       return "Upcoming";
   }
@@ -78,6 +78,19 @@ export const formatExerciseTarget = (exercise: TDayExercise) => {
 
   return "Target to be defined";
 };
+
+export const formatExerciseNameForDisplay = (value: string) =>
+  value
+    .split(" ")
+    .map((word) =>
+      word
+        .split("-")
+        .map((segment) =>
+          segment ? `${segment.charAt(0).toUpperCase()}${segment.slice(1)}` : segment,
+        )
+        .join("-"),
+    )
+    .join(" ");
 
 const getExerciseLoggedRepsTotal = (
   dayNumber: number,
@@ -301,7 +314,7 @@ export const buildChallengeViewModel = (
     } else if (compareDateKeys(day.date, todayKey) > 0) {
       state = "upcoming";
     } else {
-      state = "elapsed";
+      state = "missed";
     }
 
     const exercises = day.exercises.map<TChallengeDayExerciseView>((exercise) => {
@@ -344,7 +357,7 @@ export const buildChallengeViewModel = (
       ...day,
       exercises,
       state,
-      isActionable: state === "today" || state === "elapsed" || state === "done_local",
+      isActionable: state === "today" || state === "missed" || state === "done_local",
       isUpdated: Boolean(day.changeNote),
       shortDateLabel: formatShortDate(day.date),
       longDateLabel: formatLongDate(day.date),

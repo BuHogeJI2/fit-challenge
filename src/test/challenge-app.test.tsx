@@ -220,6 +220,28 @@ describe("ChallengeApp", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows past unfinished days as missed in the calendar", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-15T10:00:00.000Z"));
+    mockUseFeaturedChallenge.mockReturnValue({
+      challenge: featuredChallenge,
+      loading: false,
+      error: null,
+    });
+
+    render(<ChallengeApp />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Open Day 2 for Friday, March 13. Missed.",
+      }),
+    );
+
+    expect(
+      within(screen.getByRole("dialog")).getByText("Pushups and abs."),
+    ).toBeInTheDocument();
+  });
+
   it("persists local progress by run slug and supports undo", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-03-15T10:00:00.000Z"));
@@ -265,12 +287,12 @@ describe("ChallengeApp", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open day details" }));
 
-    fireEvent.change(screen.getByLabelText("Add reps for pushups"), {
+    fireEvent.change(screen.getByLabelText("Add reps for Pushups"), {
       target: { value: "60" },
     });
     fireEvent.click(screen.getAllByRole("button", { name: "Add set" })[0]);
 
-    fireEvent.change(screen.getByLabelText("Add reps for sit-ups"), {
+    fireEvent.change(screen.getByLabelText("Add reps for Sit-Ups"), {
       target: { value: "60" },
     });
     fireEvent.click(screen.getAllByRole("button", { name: "Add set" })[1]);

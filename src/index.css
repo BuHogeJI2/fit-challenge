@@ -4,16 +4,51 @@
 @layer base {
   :root {
     color-scheme: dark;
-    --surface-900: #09101d;
-    --surface-850: #10192a;
-    --surface-800: #182336;
-    --ink-strong: #fff3e8;
-    --ink-soft: #f7d8c3;
-    --ink-muted: #cbb7a6;
-    --ink-dim: #8b7b71;
-    --brand-hot: #f2613f;
-    --brand-peach: #ffbf9f;
-    --brand-lime: #b6ff4f;
+    /* Semantic foundation */
+    --bg-app: #071018;
+    --bg-panel: #0d1722;
+    --bg-elevated: #132131;
+    --bg-soft: #1a2a3d;
+    --bg-overlay: rgba(4, 9, 16, 0.78);
+    --border-subtle: #223244;
+    --border-strong: #34506a;
+
+    /* Semantic text */
+    --text-primary: #f7efe6;
+    --text-secondary: #d8c9ba;
+    --text-muted: #9d8f83;
+    --text-inverse: #081019;
+
+    /* Semantic tones */
+    --tone-display-fill: #ff9a6b;
+    --tone-display-soft: rgba(255, 154, 107, 0.14);
+    --tone-display-border: rgba(255, 154, 107, 0.28);
+    --tone-display-text: #ffd2bb;
+
+    --tone-info-fill: #6dc7ff;
+    --tone-info-soft: rgba(109, 199, 255, 0.14);
+    --tone-info-border: rgba(109, 199, 255, 0.28);
+    --tone-info-text: #cceeff;
+
+    --tone-success-fill: #9bf75f;
+    --tone-success-strong: #b6ff4f;
+    --tone-success-soft: rgba(155, 247, 95, 0.16);
+    --tone-success-border: rgba(155, 247, 95, 0.3);
+    --tone-success-text: #ebffd4;
+
+    --tone-warning-fill: #f6c86b;
+    --tone-warning-soft: rgba(246, 200, 107, 0.14);
+    --tone-warning-border: rgba(246, 200, 107, 0.28);
+    --tone-warning-text: #ffe7b3;
+
+    --tone-danger-fill: #ff7d72;
+    --tone-danger-soft: rgba(255, 125, 114, 0.12);
+    --tone-danger-border: rgba(255, 125, 114, 0.24);
+    --tone-danger-text: #ffc5bf;
+
+    --tone-neutral-soft: rgba(255, 255, 255, 0.05);
+    --tone-neutral-border: rgba(255, 255, 255, 0.12);
+    --tone-neutral-text: #d8c9ba;
   }
 
   * {
@@ -22,28 +57,28 @@
 
   html {
     min-height: 100%;
-    background-color: var(--surface-900);
+    background-color: var(--bg-app);
   }
 
   body {
     min-height: 100vh;
-    color: var(--ink-strong);
+    color: var(--text-primary);
     font-family: "Space Grotesk", "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: var(--surface-900);
+    background-color: var(--bg-app);
     background-image:
       radial-gradient(
         900px 500px at 15% 0%,
-        rgba(242, 97, 63, 0.18),
+        var(--tone-display-soft),
         transparent 58%
       ),
       radial-gradient(
         880px 460px at 90% 5%,
-        rgba(182, 255, 79, 0.14),
+        var(--tone-success-soft),
         transparent 55%
       ),
-      linear-gradient(180deg, #050912 0%, #09101d 46%, #0b1323 100%);
+      linear-gradient(180deg, #050a10 0%, var(--bg-app) 46%, #0b1521 100%);
   }
 
   body::before {
@@ -111,6 +146,21 @@
     }
   }
 
+  @keyframes exercise-accent-in {
+    from {
+      opacity: 0;
+      transform: translateX(-14px) scaleX(0.2);
+    }
+    60% {
+      opacity: 1;
+      transform: translateX(0) scaleX(1.06);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scaleX(1);
+    }
+  }
+
   .animate-overlay-in {
     animation: overlay-in 180ms ease-out forwards;
   }
@@ -127,11 +177,16 @@
     animation: sheet-out 180ms ease-in forwards;
   }
 
+  .animate-exercise-accent {
+    animation: exercise-accent-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-overlay-in,
     .animate-overlay-out,
     .animate-sheet-in,
-    .animate-sheet-out {
+    .animate-sheet-out,
+    .animate-exercise-accent {
       animation: none;
     }
   }

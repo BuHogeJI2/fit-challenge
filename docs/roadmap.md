@@ -25,8 +25,8 @@ Core rules:
 - one featured public run surfaced in the UI
 - challenge content loaded from Supabase
 - local progress stored per device and keyed by run slug
-- past unfinished days shown as `elapsed`, not auto-completed
-- only `today`, `elapsed`, and `done_local` days can be marked done or undone
+- past unfinished days shown as `missed`, not auto-completed
+- only `today`, `missed`, and `done_local` days can be marked done or undone
 - future days stay visible but cannot be marked done
 - future content edits can be surfaced with an `Updated` treatment and
   `change_note`
@@ -79,6 +79,7 @@ This repo does not yet include:
 - add an admin panel for managing templates, runs, days, and edits
 - support custom challenges beyond the single featured public run
 - expand organizer workflows for publishing and updating challenge content
+- add user-selectable theme variants on top of the semantic token system
 
 ### Near-Term Repo Follow-Ups
 

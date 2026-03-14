@@ -17,7 +17,7 @@ export type TRunStatus =
 
 export type TRunPhase = "before" | "during" | "after";
 
-export type TDayState = "today" | "upcoming" | "elapsed" | "done_local";
+export type TDayState = "today" | "upcoming" | "missed" | "done_local";
 
 export type TChallengeTemplate = {
   id: number;

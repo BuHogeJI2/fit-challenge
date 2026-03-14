@@ -25,6 +25,7 @@ export { useLocalChallengeProgress } from "./use-local-challenge-progress";
 export { celebrateDayCompletion } from "./challenge.effects";
 export {
   buildChallengeViewModel,
+  formatExerciseNameForDisplay,
   formatExerciseTarget,
   formatLongDate,
   formatRangeLabel,

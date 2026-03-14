@@ -1,6 +1,10 @@
 import { useMemo, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { formatExerciseTarget, getDayStateLabel } from "../../lib/challenge";
+import {
+  formatExerciseNameForDisplay,
+  formatExerciseTarget,
+  getDayStateLabel,
+} from "../../lib/challenge";
 import { dayDetailsSheetClasses } from "./day-details-sheet.styles";
 import type { IDayDetailsSheetProps } from "./day-details-sheet.types";
 
@@ -100,10 +104,14 @@ export function DayDetailsSheet({
                     >
                       <div className={dayDetailsSheetClasses.exerciseTop}>
                         <div className={dayDetailsSheetClasses.exerciseMain}>
-                          <div
-                            className={dayDetailsSheetClasses.exerciseNameBadge}
-                          >
-                            {exercise.exerciseName}
+                          <div className={dayDetailsSheetClasses.exerciseHeading}>
+                            <div className={dayDetailsSheetClasses.exerciseName}>
+                              {formatExerciseNameForDisplay(exercise.exerciseName)}
+                            </div>
+                            <span
+                              aria-hidden="true"
+                              className={dayDetailsSheetClasses.exerciseAccent}
+                            />
                           </div>
                           <div className={dayDetailsSheetClasses.exerciseMeta}>
                             Daily target
@@ -162,7 +170,7 @@ export function DayDetailsSheet({
 
                       <div className={dayDetailsSheetClasses.inputRow}>
                         <input
-                          aria-label={`Add reps for ${exercise.exerciseName}`}
+                          aria-label={`Add reps for ${formatExerciseNameForDisplay(exercise.exerciseName)}`}
                           className={dayDetailsSheetClasses.repsInput}
                           inputMode="numeric"
                           min={1}

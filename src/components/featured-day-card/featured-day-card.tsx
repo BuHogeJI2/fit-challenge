@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import {
+  formatExerciseNameForDisplay,
   formatExerciseTarget,
   getDayStateLabel,
   type TChallengeDayView,
@@ -96,8 +97,14 @@ export function FeaturedDayCard({
         {day.exercises.map((exercise) => (
           <div key={exercise.id} className={featuredDayCardClasses.item}>
             <div className={featuredDayCardClasses.itemMain}>
-              <div className={featuredDayCardClasses.itemNameBadge}>
-                {exercise.exerciseName}
+              <div className={featuredDayCardClasses.itemHeading}>
+                <div className={featuredDayCardClasses.itemName}>
+                  {formatExerciseNameForDisplay(exercise.exerciseName)}
+                </div>
+                <span
+                  aria-hidden="true"
+                  className={featuredDayCardClasses.itemAccent}
+                />
               </div>
               <div className={featuredDayCardClasses.itemMeta}>
                 Daily target

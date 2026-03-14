@@ -9,8 +9,8 @@ const getDayButtonClassName = (state: string) => {
       return challengeCalendarClasses.dayButtonToday;
     case "done_local":
       return challengeCalendarClasses.dayButtonDone;
-    case "elapsed":
-      return challengeCalendarClasses.dayButtonElapsed;
+    case "missed":
+      return challengeCalendarClasses.dayButtonMissed;
     default:
       return challengeCalendarClasses.dayButtonUpcoming;
   }
