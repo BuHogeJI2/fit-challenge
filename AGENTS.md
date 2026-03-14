@@ -1,64 +1,57 @@
 # AGENTS
 
-## Architecture
-- Frontend: Vite + React + TypeScript SPA.
-- Styling: Tailwind CSS v4 with component-local `*.styles.ts` files and `clsx`.
+Fit Challenge is a Vite + React + TypeScript single-page app for one public
+featured fitness challenge run at a time. The current frontend is already on
+the Phase 1 architecture: it loads structured challenge data from Supabase,
+derives mobile-first day state locally, and stores per-device completion
+progress in `localStorage`.
+
+## Read This Order
+
+1. `README.md` for local setup and day-to-day commands.
+2. `docs/project-structure.md` for the folder map and ownership boundaries.
+3. `docs/architecture.md` for runtime flow, state derivation, and UI assembly.
+4. `docs/db-structure.md` for Supabase schema and local-progress boundaries.
+5. `docs/testing.md` for Vitest coverage, commands, and current gaps.
+6. `docs/mvp-implementation-plan.md` for shipped Phase 1 scope and remaining
+   implementation follow-ups.
+7. `docs/product-plan.md` for higher-level product direction beyond the current
+   codebase.
+8. `docs/roadmap.md` for repo-specific follow-up work discovered during review.
+
+## Current App Constraints
+
+- Frontend only: Vite SPA with `src/main.tsx` as the entry point.
 - Data access: Supabase client in `src/lib/supabaseClient.ts`.
-- App entry: `src/main.tsx`.
-- Phase 1 may fully rewrite existing frontend code. Current components are not a compatibility target.
+- Domain logic: challenge fetching, normalization, view-model building, and
+  local storage live in `src/lib/challenge/`.
+- UI composition: screen-level assembly lives in
+  `src/components/challenge-app/challenge-app.tsx`.
+- Styling: Tailwind CSS v4 via component-local `*.styles.ts` files and `clsx`.
+- State model: no global state library; the app relies on local hooks plus
+  derived view models.
 
-## Product Context
-- Product vision and MVP scope: `docs/product-plan.md`
-- Database schema and seeded challenge data: `docs/db-structure.md`
-- Phase 1 execution plan: `docs/mvp-implementation-plan.md`
+## Phase 1 Product Rules
 
-## Current Phase 1 Rules
-- Build a mobile-first public challenge experience for one featured run at a time.
-- Use the structured Supabase schema:
+- Surface one featured public challenge run in the UI.
+- Use the structured Supabase tables:
   - `challenge_templates`
   - `challenge_runs`
   - `challenge_days`
   - `day_exercises`
-- The seeded challenge run starts on `2026-03-12` and lasts 30 days.
-- Progress in Phase 1 is per-device only and stored locally in the browser.
-- Past days are `elapsed`, not automatically completed.
-- Users may mark `today` and `elapsed` days as done locally and undo that later.
-- Future days are visible but cannot be marked done.
-- Future day edits should surface with an `Updated` badge and `change_note`.
-- Auth, private runs, notifications, and admin tooling are out of scope.
-
-## UI and UX Conventions
-- Mobile-first layout is the source of truth. Desktop is an enhancement, not the primary design target.
-- The main screen order should be:
-  - challenge intro
-  - today card
-  - next 3 days
-  - progress summary
-  - calendar
-  - day details sheet
-- Use external UI primitives only where they reduce accessibility risk, such as dialog or sheet behavior.
-- Do not adopt a generic component-library visual theme. Keep the product look custom and intentional.
-- Interactive day surfaces must be semantic buttons, keyboard reachable, and have visible focus states.
-- Status must not rely on color alone.
-
-## Data and State Conventions
-- Derive user-facing day state from run dates plus local progress:
-  - `today`
-  - `upcoming`
-  - `elapsed`
-  - `done_local`
-- Keep data flow explicit and local; do not introduce a broad global state or query library for Phase 1.
-- Normalize Supabase results in `src/lib` before they reach presentational components.
-- Local progress storage must be keyed by challenge run slug to avoid collisions between runs.
+- Store completion progress locally per device and key it by run slug.
+- Treat past unfinished days as `elapsed`, not automatically complete.
+- Allow done/undo only for `today`, `elapsed`, and `done_local` days.
+- Show future days, but keep them non-actionable.
+- Surface future content edits with an `Updated` badge and `change_note`.
+- Keep auth, private runs, notifications, and admin tooling out of scope for
+  the current implementation.
 
 ## Implementation Conventions
-- Keep components focused and small.
-- Keep view logic in `*.tsx`, styles in `*.styles.ts`, and local types in `*.types.ts`.
-- Shared hooks, storage helpers, and normalization utilities belong in `src/lib`.
-- Favor replacement over adaptation when old code is tightly coupled to the obsolete `Days` model.
 
-## Quality Gates
-- Cover loading, error, empty, scheduled, active, and completed run states.
-- Verify the main experience at narrow mobile widths before desktop.
-- Respect reduced-motion preferences for non-essential motion.
-- Add Vitest + React Testing Library coverage for the core Phase 1 flows.
+- Keep view logic in `*.tsx`, styles in `*.styles.ts`, and local interfaces in
+  `*.types.ts`.
+- Keep normalization utilities, storage helpers, and shared hooks in `src/lib`.
+- Prefer explicit local data flow over broad abstraction layers for this phase.
+- Preserve the custom mobile-first UI instead of introducing a generic
+  component-library theme.
