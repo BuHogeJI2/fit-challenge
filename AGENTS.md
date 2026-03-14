@@ -13,9 +13,11 @@ progress in `localStorage`.
 3. `docs/architecture.md` for runtime flow, state derivation, and UI assembly.
 4. `docs/theme-system.md` for semantic palette rules and component color
    mapping.
-5. `docs/db-structure.md` for Supabase schema and local-progress boundaries.
-6. `docs/testing.md` for Vitest coverage, commands, and current gaps.
-7. `docs/roadmap.md` for the canonical product, MVP, Phase 1, shipped-state,
+5. `docs/design-style-guide.md` for component semantics, interaction roles, and
+   passive-vs-interactive UI rules.
+6. `docs/db-structure.md` for Supabase schema and local-progress boundaries.
+7. `docs/testing.md` for Vitest coverage, commands, and current gaps.
+8. `docs/roadmap.md` for the canonical product, MVP, Phase 1, shipped-state,
    and future-direction document.
 
 ## Current App Constraints
@@ -29,6 +31,9 @@ progress in `localStorage`.
 - Styling: Tailwind CSS v4 via component-local `*.styles.ts` files and `clsx`.
 - Theme semantics: canonical color usage rules live in `docs/theme-system.md`
   and the token source of truth lives in `src/index.css`.
+- Component semantics: shared button/input/panel rules live in
+  `docs/design-style-guide.md` and reusable primitives live in
+  `src/components/ui/`.
 - State model: no global state library; the app relies on local hooks plus
   derived view models.
 
@@ -56,3 +61,5 @@ progress in `localStorage`.
 - Prefer explicit local data flow over broad abstraction layers for this phase.
 - Preserve the custom mobile-first UI instead of introducing a generic
   component-library theme.
+- Reuse the shared `ui` primitives for interaction semantics before adding new
+  one-off button, input, or panel styles.

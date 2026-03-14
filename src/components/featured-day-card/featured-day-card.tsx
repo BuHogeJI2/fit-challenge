@@ -50,15 +50,34 @@ export function FeaturedDayCard({
       : featuredDayCardClasses.primaryButton;
 
   return (
-    <section className={featuredDayCardClasses.wrapper}>
+    <section
+      className={
+        isDone
+          ? featuredDayCardClasses.completedWrapper
+          : featuredDayCardClasses.wrapper
+      }
+    >
       <div className={featuredDayCardClasses.labelRow}>
-        <span className={featuredDayCardClasses.pill}>{getEyebrowLabel(runPhase)}</span>
+        <span
+          className={
+            isDone
+              ? featuredDayCardClasses.completedPill
+              : featuredDayCardClasses.pill
+          }
+        >
+          {isDone ? "Day complete" : getEyebrowLabel(runPhase)}
+        </span>
         <span className={featuredDayCardClasses.date}>
           {day.longDateLabel} • {getDayStateLabel(day.state)}
         </span>
       </div>
 
       <h2 className={featuredDayCardClasses.title}>{day.title}</h2>
+      {isDone ? (
+        <div className={featuredDayCardClasses.completedCallout}>
+          Completed on this device. Reopen details if you want to review or adjust logged sets.
+        </div>
+      ) : null}
       <p className={featuredDayCardClasses.description}>
         {getDescription(day, runPhase)}
       </p>

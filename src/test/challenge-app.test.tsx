@@ -253,6 +253,8 @@ describe("ChallengeApp", () => {
 
     render(<ChallengeApp />);
 
+    expect(screen.queryByText("Completed on this device. Reopen details if you want to review or adjust logged sets.")).not.toBeInTheDocument();
+
     expect(
       screen.getByText("0 of 3 days marked done on this device"),
     ).toBeInTheDocument();
@@ -264,11 +266,18 @@ describe("ChallengeApp", () => {
     expect(
       screen.getByText("1 of 3 days marked done on this device"),
     ).toBeInTheDocument();
+    expect(screen.getByText("Day complete")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Completed on this device. Reopen details if you want to review or adjust logged sets.",
+      ),
+    ).toBeInTheDocument();
     expect(confetti).toHaveBeenCalledTimes(1);
 
     fireEvent.click(screen.getByRole("button", { name: "Undo completion" }));
 
     expect(window.localStorage.getItem(storedKey)).toBe("{}");
+    expect(screen.queryByText("Day complete")).not.toBeInTheDocument();
     expect(confetti).toHaveBeenCalledTimes(1);
   });
 
@@ -293,6 +302,14 @@ describe("ChallengeApp", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open day details" }));
 
+    const dialog = screen.getByRole("dialog");
+    const overlayMarkDoneButton = within(dialog).getByRole("button", {
+      name: "Mark done",
+    });
+    expect(overlayMarkDoneButton.className).not.toContain(
+      "bg-[linear-gradient(180deg,var(--tone-success-strong),var(--tone-success-fill))]",
+    );
+
     fireEvent.change(screen.getByLabelText("Add reps for Pushups"), {
       target: { value: "60" },
     });
@@ -316,6 +333,11 @@ describe("ChallengeApp", () => {
         "Targets reached. Mark the day done when you are ready.",
       ),
     ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("button", { name: "Mark done" }).className,
+    ).toContain(
+      "bg-[linear-gradient(180deg,var(--tone-success-strong),var(--tone-success-fill))]",
+    );
 
     fireEvent.click(screen.getAllByRole("button", { name: "Remove" })[0]);
 
@@ -329,5 +351,10 @@ describe("ChallengeApp", () => {
         "Targets reached. Mark the day done when you are ready.",
       ),
     ).not.toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("button", { name: "Mark done" }).className,
+    ).not.toContain(
+      "bg-[linear-gradient(180deg,var(--tone-success-strong),var(--tone-success-fill))]",
+    );
   });
 });

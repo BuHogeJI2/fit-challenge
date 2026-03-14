@@ -5,6 +5,7 @@ import {
   formatExerciseTarget,
   getDayStateLabel,
 } from "../../lib/challenge";
+import { Badge, Button, Input, Panel } from "../ui";
 import { dayDetailsSheetClasses } from "./day-details-sheet.styles";
 import type { IDayDetailsSheetProps } from "./day-details-sheet.types";
 
@@ -66,8 +67,14 @@ export function DayDetailsSheet({
                     {day.longDateLabel}
                   </Dialog.Description>
                 </div>
-                <Dialog.Close className={dayDetailsSheetClasses.closeButton}>
-                  Close
+                <Dialog.Close asChild>
+                  <Button
+                    className={dayDetailsSheetClasses.closeButton}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    Close
+                  </Button>
                 </Dialog.Close>
               </div>
 
@@ -88,19 +95,23 @@ export function DayDetailsSheet({
 
               <div className={dayDetailsSheetClasses.scrollArea}>
                 {day.notes ? (
-                  <div className={dayDetailsSheetClasses.notesCard}>
+                  <Panel
+                    className={dayDetailsSheetClasses.notesCard}
+                    variant="list"
+                  >
                     <div className={dayDetailsSheetClasses.sectionTitle}>
                       Notes
                     </div>
                     {day.notes}
-                  </div>
+                  </Panel>
                 ) : null}
 
                 <div className={dayDetailsSheetClasses.exerciseList}>
                   {day.exercises.map((exercise) => (
-                    <div
+                    <Panel
                       key={exercise.id}
                       className={dayDetailsSheetClasses.exerciseCard}
+                      variant="surface"
                     >
                       <div className={dayDetailsSheetClasses.exerciseTop}>
                         <div className={dayDetailsSheetClasses.exerciseMain}>
@@ -114,7 +125,7 @@ export function DayDetailsSheet({
                             />
                           </div>
                           <div className={dayDetailsSheetClasses.exerciseMeta}>
-                            Daily target
+                            Exercise target
                           </div>
                           {exercise.notes ? (
                             <div
@@ -124,13 +135,19 @@ export function DayDetailsSheet({
                             </div>
                           ) : null}
                         </div>
-                        <div className={dayDetailsSheetClasses.exerciseTarget}>
+                        <Badge
+                          className={dayDetailsSheetClasses.exerciseTarget}
+                          variant="info"
+                        >
                           {formatExerciseTarget(exercise)}
-                        </div>
+                        </Badge>
                       </div>
 
                       <div className={dayDetailsSheetClasses.trackerStats}>
-                        <div className={dayDetailsSheetClasses.trackerStat}>
+                        <Panel
+                          className={dayDetailsSheetClasses.trackerStat}
+                          variant="stat"
+                        >
                           <div
                             className={dayDetailsSheetClasses.trackerStatLabel}
                           >
@@ -141,8 +158,11 @@ export function DayDetailsSheet({
                           >
                             {exercise.loggedRepsTotal}
                           </div>
-                        </div>
-                        <div className={dayDetailsSheetClasses.trackerStat}>
+                        </Panel>
+                        <Panel
+                          className={dayDetailsSheetClasses.trackerStat}
+                          variant="stat"
+                        >
                           <div
                             className={dayDetailsSheetClasses.trackerStatLabel}
                           >
@@ -153,8 +173,11 @@ export function DayDetailsSheet({
                           >
                             {exercise.remainingReps}
                           </div>
-                        </div>
-                        <div className={dayDetailsSheetClasses.trackerStat}>
+                        </Panel>
+                        <Panel
+                          className={dayDetailsSheetClasses.trackerStat}
+                          variant="stat"
+                        >
                           <div
                             className={dayDetailsSheetClasses.trackerStatLabel}
                           >
@@ -165,93 +188,110 @@ export function DayDetailsSheet({
                           >
                             {exercise.sets.length}
                           </div>
-                        </div>
+                        </Panel>
                       </div>
 
-                      <div className={dayDetailsSheetClasses.inputRow}>
-                        <input
-                          aria-label={`Add reps for ${formatExerciseNameForDisplay(exercise.exerciseName)}`}
-                          className={dayDetailsSheetClasses.repsInput}
-                          inputMode="numeric"
-                          min={1}
-                          pattern="[0-9]*"
-                          placeholder="Reps in this set"
-                          type="number"
-                          value={inputValues[getInputKey(exercise.id)] ?? ""}
-                          onChange={(event) =>
-                            setInputValues((current) => ({
-                              ...current,
-                              [getInputKey(exercise.id)]: event.target.value,
-                            }))
-                          }
-                        />
-                        <button
-                          type="button"
-                          className={
-                            canAddSet(exercise.id)
-                              ? dayDetailsSheetClasses.addSetButton
-                              : dayDetailsSheetClasses.disabledAddSetButton
-                          }
-                          disabled={!canAddSet(exercise.id)}
-                          onClick={() => {
-                            const reps = Number(
-                              inputValues[getInputKey(exercise.id)],
-                            );
-                            onAddExerciseSet(day.dayNumber, exercise.id, reps);
-                            setInputValues((current) => ({
-                              ...current,
-                              [getInputKey(exercise.id)]: "",
-                            }));
-                          }}
-                        >
-                          Add set
-                        </button>
-                      </div>
+                      <Panel
+                        className={dayDetailsSheetClasses.formBlock}
+                        variant="form"
+                      >
+                        <div className={dayDetailsSheetClasses.formLabel}>
+                          Track next set
+                        </div>
+                        <div className={dayDetailsSheetClasses.formHint}>
+                          Enter reps and add one completed set.
+                        </div>
+                        <div className={dayDetailsSheetClasses.inputRow}>
+                          <Input
+                            aria-label={`Add reps for ${formatExerciseNameForDisplay(exercise.exerciseName)}`}
+                            className={dayDetailsSheetClasses.repsInput}
+                            inputMode="numeric"
+                            min={1}
+                            pattern="[0-9]*"
+                            placeholder="Reps in this set"
+                            type="number"
+                            value={inputValues[getInputKey(exercise.id)] ?? ""}
+                            onChange={(event) =>
+                              setInputValues((current) => ({
+                                ...current,
+                                [getInputKey(exercise.id)]: event.target.value,
+                              }))
+                            }
+                          />
+                          <Button
+                            className={dayDetailsSheetClasses.addSetButton}
+                            disabled={!canAddSet(exercise.id)}
+                            type="button"
+                            variant="info"
+                            onClick={() => {
+                              const reps = Number(
+                                inputValues[getInputKey(exercise.id)],
+                              );
+                              onAddExerciseSet(day.dayNumber, exercise.id, reps);
+                              setInputValues((current) => ({
+                                ...current,
+                                [getInputKey(exercise.id)]: "",
+                              }));
+                            }}
+                          >
+                            Add set
+                          </Button>
+                        </div>
+                      </Panel>
 
                       {exercise.sets.length ? (
-                        <div className={dayDetailsSheetClasses.setsList}>
-                          {exercise.sets.map((set, index) => (
-                            <div
-                              key={set.id}
-                              className={dayDetailsSheetClasses.setItem}
-                            >
-                              <div className={dayDetailsSheetClasses.setMeta}>
-                                Set {index + 1} •{" "}
-                                <span
-                                  className={dayDetailsSheetClasses.setValue}
-                                >
-                                  {set.reps} reps
-                                </span>
-                              </div>
-                              <button
-                                type="button"
-                                className={
-                                  dayDetailsSheetClasses.removeSetButton
-                                }
-                                onClick={() =>
-                                  onRemoveExerciseSet(
-                                    day.dayNumber,
-                                    exercise.id,
-                                    set.id,
-                                  )
-                                }
+                        <div className={dayDetailsSheetClasses.setsGroup}>
+                          <div className={dayDetailsSheetClasses.sectionTitle}>
+                            Logged sets
+                          </div>
+                          <div className={dayDetailsSheetClasses.setsList}>
+                            {exercise.sets.map((set, index) => (
+                              <Panel
+                                key={set.id}
+                                className={dayDetailsSheetClasses.setItem}
+                                variant="list"
                               >
-                                Remove
-                              </button>
-                            </div>
-                          ))}
+                                <div className={dayDetailsSheetClasses.setMeta}>
+                                  Set {index + 1} •{" "}
+                                  <span
+                                    className={dayDetailsSheetClasses.setValue}
+                                  >
+                                    {set.reps} reps
+                                  </span>
+                                </div>
+                                <Button
+                                  className={
+                                    dayDetailsSheetClasses.removeSetButton
+                                  }
+                                  size="sm"
+                                  type="button"
+                                  variant="destructive"
+                                  onClick={() =>
+                                    onRemoveExerciseSet(
+                                      day.dayNumber,
+                                      exercise.id,
+                                      set.id,
+                                    )
+                                  }
+                                >
+                                  Remove
+                                </Button>
+                              </Panel>
+                            ))}
+                          </div>
                         </div>
                       ) : null}
-                    </div>
+                    </Panel>
                   ))}
                 </div>
 
                 <div className={dayDetailsSheetClasses.actionRow}>
                   {day.isActionable ? (
-                    <button
+                    <Button
                       ref={actionButtonRef}
-                      type="button"
                       className={actionClassName}
+                      type="button"
+                      variant="secondary"
                       onClick={() =>
                         onToggleDayDone(day.dayNumber, {
                           willMarkDone: !isDone,
@@ -260,12 +300,15 @@ export function DayDetailsSheet({
                       }
                     >
                       {isDone ? "Undo completion" : "Mark done"}
-                    </button>
+                    </Button>
                   ) : null}
-                  <Dialog.Close
-                    className={dayDetailsSheetClasses.secondaryAction}
-                  >
-                    Back to challenge
+                  <Dialog.Close asChild>
+                    <Button
+                      className={dayDetailsSheetClasses.secondaryAction}
+                      variant="secondary"
+                    >
+                      Back to challenge
+                    </Button>
                   </Dialog.Close>
                 </div>
               </div>

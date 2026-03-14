@@ -5,6 +5,11 @@ const wrapper = clsx(
   "px-5 py-5 shadow-[0_25px_60px_rgba(3,8,20,0.4)]",
 );
 
+const completedWrapper = clsx(
+  "rounded-[2rem] border border-[var(--tone-success-border)] bg-[linear-gradient(180deg,rgba(24,42,28,0.98),rgba(13,23,34,0.98))]",
+  "px-5 py-5 shadow-[0_28px_68px_rgba(155,247,95,0.12)] ring-1 ring-[rgba(155,247,95,0.16)]",
+);
+
 const labelRow = clsx("flex flex-wrap items-center justify-between gap-3");
 
 const pill = clsx(
@@ -12,11 +17,21 @@ const pill = clsx(
   "text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--tone-display-text)]",
 );
 
+const completedPill = clsx(
+  "inline-flex items-center rounded-full border border-[var(--tone-success-border)] bg-[var(--tone-success-soft)] px-3 py-1",
+  "text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--tone-success-text)]",
+);
+
 const date = clsx("text-sm font-medium text-[var(--text-secondary)]");
 
 const title = clsx("mt-4 text-[1.85rem] font-semibold leading-none text-[var(--text-primary)]");
 
 const description = clsx("mt-3 text-sm leading-6 text-[var(--text-muted)]");
+
+const completedCallout = clsx(
+  "mt-4 rounded-[1.1rem] border border-[var(--tone-success-border)] bg-[rgba(155,247,95,0.10)] px-4 py-3",
+  "text-sm font-medium leading-6 text-[var(--tone-success-text)]",
+);
 
 const progressBanner = clsx(
   "mt-4 rounded-[1.3rem] border border-[var(--tone-neutral-border)] bg-[var(--tone-neutral-soft)] px-4 py-3",
@@ -109,10 +124,13 @@ const disabledButton = clsx(
 
 export const featuredDayCardClasses = {
   wrapper,
+  completedWrapper,
   labelRow,
   pill,
+  completedPill,
   date,
   title,
+  completedCallout,
   description,
   progressBanner,
   progressValue,

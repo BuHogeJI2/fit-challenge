@@ -6,6 +6,10 @@ Challenge Forge uses a semantic dark theme. Colors are assigned by meaning, not
 by component ownership. Interactive actions, status messaging, and passive
 content accents must not reuse the same tone without a clear semantic reason.
 
+Component semantics and interaction roles are defined separately in
+`docs/design-style-guide.md`. Theme tokens answer "what color meaning does this
+role use?", while the design guide answers "what kind of UI element is this?".
+
 The current implementation keeps the hero and page background slightly
 expressive, but the main UI system follows strict semantic roles.
 

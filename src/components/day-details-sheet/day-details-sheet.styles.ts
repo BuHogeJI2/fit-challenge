@@ -23,9 +23,7 @@ const title = clsx("mt-2 text-2xl font-semibold text-[var(--text-primary)]");
 const date = clsx("mt-2 text-sm text-[var(--text-secondary)]");
 
 const closeButton = clsx(
-  "inline-flex min-h-10 cursor-pointer items-center justify-center rounded-full border border-[var(--tone-neutral-border)] bg-[var(--tone-neutral-soft)] px-4",
-  "text-sm font-semibold text-[var(--text-primary)] transition hover:bg-[rgba(255,255,255,0.08)]",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tone-info-fill)]",
+  "self-start sm:self-auto",
 );
 
 const changeNote = clsx(
@@ -39,15 +37,15 @@ const trackerNote = clsx("mt-4 text-sm leading-6 text-[var(--text-secondary)]");
 const scrollArea = clsx("mt-5 overflow-y-auto pr-1");
 
 const notesCard = clsx(
-  "rounded-[1.4rem] border border-[var(--tone-neutral-border)] bg-[var(--tone-neutral-soft)] px-4 py-4 text-sm leading-6 text-[var(--text-secondary)]",
+  "px-4 py-4 text-sm leading-6 text-[var(--text-secondary)]",
 );
 
 const sectionTitle = clsx("mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]");
 
-const exerciseList = clsx("mt-5 space-y-3");
+const exerciseList = clsx("mt-5 space-y-4");
 
 const exerciseCard = clsx(
-  "rounded-[1.3rem] border border-[var(--tone-neutral-border)] bg-[rgba(0,0,0,0.18)] px-4 py-4",
+  "px-4 py-4",
 );
 
 const exerciseTop = clsx("flex items-start justify-between gap-3");
@@ -69,85 +67,65 @@ const exerciseName = clsx(
 const exerciseMeta = clsx("mt-2 text-sm text-[var(--text-muted)]");
 
 const exerciseTarget = clsx(
-  "inline-flex shrink-0 items-center rounded-full border border-[var(--tone-info-border)] bg-[var(--tone-info-soft)] px-3 py-1.5",
-  "text-sm font-semibold text-[var(--tone-info-text)]",
+  "text-sm",
 );
 
-const trackerStats = clsx("mt-3 grid grid-cols-3 gap-2");
+const trackerStats = clsx("mt-4 grid grid-cols-3 gap-2");
 
-const trackerStat = clsx(
-  "rounded-[1rem] border border-[var(--tone-neutral-border)] bg-[var(--tone-neutral-soft)] px-3 py-2",
-);
+const trackerStat = clsx("px-3 py-2.5");
 
 const trackerStatLabel = clsx(
   "text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]",
 );
 
-const trackerStatValue = clsx("mt-1 text-base font-semibold text-[var(--tone-info-text)]");
+const trackerStatValue = clsx("mt-1 text-base font-semibold text-[var(--text-primary)]");
+
+const formBlock = clsx("mt-4 px-3 py-3");
+
+const formLabel = clsx("text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--tone-info-text)]");
+
+const formHint = clsx("mt-1 text-sm text-[var(--text-secondary)]");
 
 const inputRow = clsx("mt-3 flex flex-col gap-2 sm:flex-row");
 
-const repsInput = clsx(
-  "min-h-11 w-full rounded-[1rem] border border-[var(--tone-neutral-border)] bg-[rgba(255,255,255,0.04)] px-4 text-base text-[var(--text-primary)]",
-  "placeholder:text-[var(--text-muted)] focus:border-[var(--tone-info-border)] focus:outline-none focus:ring-2 focus:ring-[var(--tone-info-soft)]",
-);
+const repsInput = clsx("sm:flex-1");
 
-const addSetButton = clsx(
-  "inline-flex min-h-11 cursor-pointer items-center justify-center rounded-[1rem] border border-[var(--tone-info-border)] bg-[var(--tone-info-soft)] px-4",
-  "text-sm font-semibold text-[var(--tone-info-text)] transition hover:border-[var(--tone-info-fill)]/42 hover:bg-[rgba(109,199,255,0.18)]",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tone-info-fill)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-app)]",
-);
+const addSetButton = clsx("sm:min-w-[132px]");
 
-const disabledAddSetButton = clsx(
-  addSetButton,
-  "cursor-not-allowed opacity-60 hover:border-[var(--tone-info-border)] hover:bg-[var(--tone-info-soft)]",
-);
+const setsGroup = clsx("mt-4");
 
 const setsList = clsx("mt-3 space-y-2");
 
 const setItem = clsx(
-  "flex items-center justify-between gap-3 rounded-[1rem] border border-[var(--tone-neutral-border)] bg-[var(--tone-neutral-soft)] px-3 py-2",
+  "flex items-center justify-between gap-3 px-3 py-2.5",
 );
 
 const setMeta = clsx("text-sm text-[var(--text-secondary)]");
 
 const setValue = clsx("font-semibold text-[var(--text-primary)]");
 
-const removeSetButton = clsx(
-  "inline-flex cursor-pointer items-center justify-center rounded-full border border-[var(--tone-danger-border)] bg-[var(--tone-danger-soft)] px-3 py-1",
-  "text-xs font-semibold uppercase tracking-[0.14em] text-[var(--tone-danger-text)] transition hover:border-[rgba(255,125,114,0.34)] hover:bg-[rgba(255,125,114,0.16)] hover:text-[var(--text-primary)]",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tone-danger-fill)]",
-);
+const removeSetButton = clsx("rounded-full px-3 py-1");
 
 const actionRow = clsx("mt-5 flex flex-col gap-3 sm:flex-row");
 
-const actionButton = clsx(
-  "inline-flex min-h-12 cursor-pointer items-center justify-center rounded-full px-5 text-sm font-semibold transition",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-app)]",
-);
-
 const primaryAction = clsx(
-  actionButton,
-  "border border-[var(--tone-success-border)] bg-[var(--tone-success-soft)]",
-  "text-[var(--text-primary)] shadow-[0_12px_28px_rgba(155,247,95,0.10)] hover:border-[var(--tone-success-fill)]/34 hover:bg-[rgba(155,247,95,0.2)] active:scale-[0.985] focus-visible:ring-[var(--tone-success-fill)]",
+  "w-full sm:w-auto border-[var(--tone-success-border)] bg-[var(--tone-success-soft)] text-[var(--text-primary)]",
+  "shadow-[0_12px_28px_rgba(155,247,95,0.10)] hover:border-[var(--tone-success-fill)]/34 hover:bg-[rgba(155,247,95,0.2)]",
+  "focus-visible:ring-[var(--tone-success-fill)]",
 );
 
 const readyAction = clsx(
-  actionButton,
-  "border border-[var(--tone-success-border)] bg-[linear-gradient(180deg,var(--tone-success-strong),var(--tone-success-fill))]",
-  "text-[var(--text-inverse)] shadow-[0_18px_36px_rgba(155,247,95,0.22)] hover:brightness-[1.04] active:scale-[0.985] focus-visible:ring-[var(--tone-success-fill)]",
+  "w-full sm:w-auto border-[var(--tone-success-border)] bg-[linear-gradient(180deg,var(--tone-success-strong),var(--tone-success-fill))]",
+  "!text-[var(--text-inverse)] shadow-[0_18px_36px_rgba(155,247,95,0.22)] hover:brightness-[1.04]",
+  "focus-visible:ring-[var(--tone-success-fill)]",
 );
 
 const completedAction = clsx(
-  actionButton,
-  "border border-[var(--tone-success-border)] bg-[var(--tone-success-soft)] text-[var(--tone-success-text)]",
-  "hover:bg-[rgba(155,247,95,0.2)] active:scale-[0.985] focus-visible:ring-[var(--tone-success-fill)]",
+  "w-full sm:w-auto border-[var(--tone-warning-border)] bg-[var(--tone-warning-soft)] text-[var(--tone-warning-text)]",
+  "hover:border-[rgba(246,200,107,0.38)] hover:bg-[rgba(246,200,107,0.2)] focus-visible:ring-[var(--tone-warning-fill)]",
 );
 
-const secondaryAction = clsx(
-  actionButton,
-  "border border-[var(--tone-neutral-border)] bg-[var(--tone-neutral-soft)] text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.08)] active:scale-[0.985] focus-visible:ring-[var(--tone-info-fill)]",
-);
+const secondaryAction = clsx("w-full sm:w-auto");
 
 export const dayDetailsSheetClasses = {
   overlay,
@@ -177,10 +155,13 @@ export const dayDetailsSheetClasses = {
   trackerStat,
   trackerStatLabel,
   trackerStatValue,
+  formBlock,
+  formLabel,
+  formHint,
   inputRow,
   repsInput,
   addSetButton,
-  disabledAddSetButton,
+  setsGroup,
   setsList,
   setItem,
   setMeta,
