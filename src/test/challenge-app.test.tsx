@@ -198,6 +198,81 @@ describe("ChallengeApp", () => {
     expect(within(dialog).getByText("Pushups and abs.")).toBeInTheDocument();
   });
 
+  it("renders upcoming day overlays as read-only even if future progress exists locally", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-12T10:00:00.000Z"));
+    mockUseFeaturedChallenge.mockReturnValue({
+      challenge: featuredChallenge,
+      loading: false,
+      error: null,
+    });
+
+    window.localStorage.setItem(
+      getChallengeStorageKey(featuredChallenge.run.slug),
+      JSON.stringify({
+        2: {
+          done: false,
+          completedAt: null,
+          exerciseProgress: {
+            3: {
+              sets: [
+                {
+                  id: "future-set-1",
+                  reps: 62,
+                  createdAt: "2026-03-12T08:00:00.000Z",
+                },
+              ],
+            },
+          },
+        },
+      }),
+    );
+
+    render(<ChallengeApp />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open Day 2 for Mar 13" }),
+    );
+
+    const dialog = screen.getByRole("dialog");
+    const dialogWithin = within(dialog);
+
+    expect(dialogWithin.getByText("Pushups and abs.")).toBeInTheDocument();
+    expect(
+      dialogWithin.getByText(
+        "This day is coming up next. Review the plan now; tracking unlocks on the day.",
+      ),
+    ).toBeInTheDocument();
+    expect(dialogWithin.getByText("Pushups")).toBeInTheDocument();
+    expect(dialogWithin.getByText("Abs")).toBeInTheDocument();
+    expect(dialogWithin.getAllByText("62 reps")).toHaveLength(2);
+    expect(
+      dialogWithin.queryByText(
+        "Want to track sets? Add reps as you go. You can still mark the day done without it.",
+      ),
+    ).not.toBeInTheDocument();
+    expect(dialogWithin.queryByText("Logged")).not.toBeInTheDocument();
+    expect(dialogWithin.queryByText("Remaining")).not.toBeInTheDocument();
+    expect(dialogWithin.queryByText("Sets")).not.toBeInTheDocument();
+    expect(dialogWithin.queryByText("Logged sets")).not.toBeInTheDocument();
+    expect(dialogWithin.queryByText("Goal reached")).not.toBeInTheDocument();
+    expect(
+      dialogWithin.queryByLabelText("Add reps for Pushups"),
+    ).not.toBeInTheDocument();
+    expect(
+      dialogWithin.queryByRole("button", { name: "Add set" }),
+    ).not.toBeInTheDocument();
+    expect(
+      dialogWithin.queryByRole("button", { name: "Mark done" }),
+    ).not.toBeInTheDocument();
+    expect(
+      dialogWithin.queryByRole("button", { name: "Remove" }),
+    ).not.toBeInTheDocument();
+    expect(
+      dialogWithin.getByRole("button", { name: "Back to challenge" }),
+    ).toBeInTheDocument();
+  });
+
   it("opens day details from the calendar", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-03-12T10:00:00.000Z"));
