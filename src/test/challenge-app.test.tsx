@@ -315,6 +315,11 @@ describe("ChallengeApp", () => {
     });
     fireEvent.click(screen.getAllByRole("button", { name: "Add set" })[0]);
 
+    expect(within(dialog).getByText("Goal reached")).toBeInTheDocument();
+    expect(
+      within(dialog).getAllByText("Goal reached"),
+    ).toHaveLength(1);
+
     expect(featuredWithin.getByText("60 / 60")).toBeInTheDocument();
     expect(featuredWithin.getByText("Goal reached")).toBeInTheDocument();
     expect(featuredWithin.getByText("60 reps")).toBeInTheDocument();
@@ -342,6 +347,7 @@ describe("ChallengeApp", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Remove" })[0]);
 
     expect(screen.getByText("60/120 reps logged")).toBeInTheDocument();
+    expect(within(dialog).getAllByText("Goal reached")).toHaveLength(1);
     expect(featuredWithin.getByText("60 reps")).toBeInTheDocument();
     expect(featuredWithin.getAllByText("Daily target").slice(-1)).toHaveLength(1);
     expect(featuredWithin.getByText("60 / 60")).toBeInTheDocument();

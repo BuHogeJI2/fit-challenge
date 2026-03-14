@@ -111,7 +111,7 @@ export function DayDetailsSheet({
                     <Panel
                       key={exercise.id}
                       className={dayDetailsSheetClasses.exerciseCard}
-                      variant="surface"
+                      variant={exercise.isGoalReached ? "success" : "surface"}
                     >
                       <div className={dayDetailsSheetClasses.exerciseTop}>
                         <div className={dayDetailsSheetClasses.exerciseMain}>
@@ -135,12 +135,22 @@ export function DayDetailsSheet({
                             </div>
                           ) : null}
                         </div>
-                        <Badge
-                          className={dayDetailsSheetClasses.exerciseTarget}
-                          variant="info"
-                        >
-                          {formatExerciseTarget(exercise)}
-                        </Badge>
+                        <div className={dayDetailsSheetClasses.exerciseTopActions}>
+                          <Badge
+                            className={dayDetailsSheetClasses.exerciseTarget}
+                            variant="info"
+                          >
+                            {formatExerciseTarget(exercise)}
+                          </Badge>
+                          {exercise.isGoalReached ? (
+                            <Badge
+                              className={dayDetailsSheetClasses.exerciseCompletedBadge}
+                              variant="success"
+                            >
+                              Goal reached
+                            </Badge>
+                          ) : null}
+                        </div>
                       </div>
 
                       <div className={dayDetailsSheetClasses.trackerStats}>

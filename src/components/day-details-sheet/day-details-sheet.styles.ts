@@ -70,6 +70,12 @@ const exerciseTarget = clsx(
   "text-sm",
 );
 
+const exerciseTopActions = clsx(
+  "flex shrink-0 flex-col items-end gap-2",
+);
+
+const exerciseCompletedBadge = clsx("text-xs");
+
 const trackerStats = clsx("mt-4 grid grid-cols-3 gap-2");
 
 const trackerStat = clsx("px-3 py-2.5");
@@ -151,6 +157,8 @@ export const dayDetailsSheetClasses = {
   exerciseName,
   exerciseMeta,
   exerciseTarget,
+  exerciseTopActions,
+  exerciseCompletedBadge,
   trackerStats,
   trackerStat,
   trackerStatLabel,

@@ -16,6 +16,10 @@ const variantClasses: Record<TPanelVariant, string> = {
   list: clsx(
     "rounded-[0.95rem] border border-[var(--tone-neutral-border)] bg-[rgba(4,9,16,0.52)]",
   ),
+  success: clsx(
+    "rounded-[1.45rem] border border-[var(--tone-success-border)] bg-[linear-gradient(180deg,rgba(24,42,28,0.92),rgba(10,18,16,0.98))]",
+    "shadow-[0_14px_32px_rgba(155,247,95,0.10)] ring-1 ring-[rgba(155,247,95,0.14)]",
+  ),
 };
 
 export const getPanelClassName = (variant: TPanelVariant) => variantClasses[variant];
