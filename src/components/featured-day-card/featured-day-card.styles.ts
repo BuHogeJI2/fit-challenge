@@ -51,21 +51,33 @@ const itemTarget = clsx(
 
 const actions = clsx("mt-5 flex flex-col gap-3 sm:flex-row");
 
-const primaryButton = clsx(
-  "inline-flex min-h-12 cursor-pointer items-center justify-center rounded-full border border-[var(--brand-peach)]/18 bg-[var(--brand-peach)]/10 px-5",
-  "text-sm font-semibold text-[var(--ink-strong)] transition hover:border-[var(--brand-peach)]/30 hover:bg-[var(--brand-peach)]/14",
+const actionButton = clsx(
+  "inline-flex min-h-12 items-center justify-center rounded-full px-5 text-sm font-semibold transition",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-lime)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-900)]",
 );
 
+const successButton = clsx(
+  actionButton,
+  "cursor-pointer border border-[var(--brand-lime)]/30 bg-[linear-gradient(180deg,rgba(182,255,79,0.96),rgba(147,230,70,0.96))]",
+  "text-[var(--surface-900)] shadow-[0_18px_36px_rgba(182,255,79,0.22)] hover:brightness-[1.04] active:scale-[0.985]",
+);
+
+const completedButton = clsx(
+  actionButton,
+  "cursor-pointer border border-[var(--brand-lime)]/25 bg-[var(--brand-lime)]/14 text-[var(--brand-lime)]",
+  "hover:bg-[var(--brand-lime)]/18 active:scale-[0.985]",
+);
+
 const secondaryButton = clsx(
-  "inline-flex min-h-12 cursor-pointer items-center justify-center rounded-full border border-white/12 bg-white/6 px-5",
-  "text-sm font-semibold text-[var(--ink-strong)] transition hover:bg-white/10",
+  actionButton,
+  "cursor-pointer border border-[var(--brand-peach)]/18 bg-[var(--brand-peach)]/10",
+  "text-[var(--ink-strong)] hover:border-[var(--brand-peach)]/30 hover:bg-[var(--brand-peach)]/14 active:scale-[0.985]",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-lime)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-900)]",
 );
 
 const disabledButton = clsx(
-  secondaryButton,
-  "cursor-not-allowed opacity-60 hover:bg-white/6 hover:border-white/12",
+  actionButton,
+  "cursor-not-allowed border border-white/12 bg-white/6 text-[var(--ink-strong)] opacity-60",
 );
 
 export const featuredDayCardClasses = {
@@ -86,7 +98,8 @@ export const featuredDayCardClasses = {
   itemMeta,
   itemTarget,
   actions,
-  primaryButton,
+  successButton,
+  completedButton,
   secondaryButton,
   disabledButton,
 };

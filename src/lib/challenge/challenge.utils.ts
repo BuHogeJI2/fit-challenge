@@ -50,6 +50,9 @@ export const formatLongDate = (value: string) =>
 export const formatRangeLabel = (start: string, end: string) =>
   `${formatShortDate(start)} - ${formatShortDate(end)}`;
 
+export const getCompletionPercent = (completed: number, total: number) =>
+  Math.min(Math.max(Math.round((completed / Math.max(total, 1)) * 100), 0), 100);
+
 export const getDayStateLabel = (state: TDayState) => {
   switch (state) {
     case "today":

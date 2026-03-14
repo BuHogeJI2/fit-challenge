@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import {
   buildChallengeViewModel,
+  celebrateDayCompletion,
   useFeaturedChallenge,
   useLocalChallengeProgress,
   type TChallengeDayView,
+  type TToggleDayDoneOptions,
 } from "../../lib/challenge";
 import { ChallengeCalendar } from "../challenge-calendar";
 import { ChallengeHero } from "../challenge-hero";
@@ -11,6 +13,7 @@ import { ChallengeStatus } from "../challenge-status";
 import { DayDetailsSheet } from "../day-details-sheet";
 import { FeaturedDayCard } from "../featured-day-card";
 import { ProgressSummary } from "../progress-summary";
+import { TopProgressBar } from "../top-progress-bar";
 import { UpcomingDays } from "../upcoming-days";
 import { challengeAppClasses } from "./challenge-app.styles";
 
@@ -38,8 +41,15 @@ export function ChallengeApp() {
     setSelectedDayId(dayId);
   };
 
-  const handleToggleDayDone = (dayNumber: number) => {
+  const handleToggleDayDone = (
+    dayNumber: number,
+    options: TToggleDayDoneOptions,
+  ) => {
     toggleDayDone(dayNumber);
+
+    if (options.willMarkDone) {
+      celebrateDayCompletion(options.triggerElement);
+    }
   };
 
   return (
@@ -65,6 +75,12 @@ export function ChallengeApp() {
           />
         ) : (
           <>
+            <TopProgressBar
+              localCompletedDays={viewModel.localCompletedDays}
+              totalDays={viewModel.scheduleTotalDays}
+              scheduleCompletedDays={viewModel.scheduleCompletedDays}
+            />
+
             <ChallengeHero
               title={viewModel.title}
               description={viewModel.description}

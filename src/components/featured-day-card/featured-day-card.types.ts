@@ -1,8 +1,12 @@
-import type { TChallengeDayView, TRunPhase } from "../../lib/challenge";
+import type {
+  TChallengeDayView,
+  TRunPhase,
+  TToggleDayDoneOptions,
+} from "../../lib/challenge";
 
 export interface IFeaturedDayCardProps {
   day: TChallengeDayView;
   runPhase: TRunPhase;
   onOpenDay: (dayId: number) => void;
-  onToggleDayDone: (dayNumber: number) => void;
+  onToggleDayDone: (dayNumber: number, options: TToggleDayDoneOptions) => void;
 }

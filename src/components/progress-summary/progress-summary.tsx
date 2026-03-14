@@ -1,3 +1,4 @@
+import { getCompletionPercent } from "../../lib/challenge";
 import { progressSummaryClasses } from "./progress-summary.styles";
 import type { IProgressSummaryProps } from "./progress-summary.types";
 
@@ -8,11 +9,13 @@ export function ProgressSummary({
   remainingDays,
   phaseLabel,
 }: IProgressSummaryProps) {
-  const schedulePercent = Math.round(
-    (scheduleCompletedDays / Math.max(scheduleTotalDays, 1)) * 100,
+  const schedulePercent = getCompletionPercent(
+    scheduleCompletedDays,
+    scheduleTotalDays,
   );
-  const localPercent = Math.round(
-    (localCompletedDays / Math.max(scheduleTotalDays, 1)) * 100,
+  const localPercent = getCompletionPercent(
+    localCompletedDays,
+    scheduleTotalDays,
   );
 
   return (

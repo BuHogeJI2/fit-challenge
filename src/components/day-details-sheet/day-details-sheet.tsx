@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   formatExerciseTarget,
@@ -12,6 +13,9 @@ export function DayDetailsSheet({
   onOpenChange,
   onToggleDayDone,
 }: IDayDetailsSheetProps) {
+  const actionButtonRef = useRef<HTMLButtonElement | null>(null);
+  const isDone = day?.state === "done_local";
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -84,13 +88,19 @@ export function DayDetailsSheet({
                 <div className={dayDetailsSheetClasses.actionRow}>
                   {day.isActionable ? (
                     <button
+                      ref={actionButtonRef}
                       type="button"
-                      className={day.state === "done_local"
-                        ? dayDetailsSheetClasses.secondaryAction
+                      className={isDone
+                        ? dayDetailsSheetClasses.completedAction
                         : dayDetailsSheetClasses.primaryAction}
-                      onClick={() => onToggleDayDone(day.dayNumber)}
+                      onClick={() =>
+                        onToggleDayDone(day.dayNumber, {
+                          willMarkDone: !isDone,
+                          triggerElement: actionButtonRef.current,
+                        })
+                      }
                     >
-                      {day.state === "done_local" ? "Undo completion" : "Mark done"}
+                      {isDone ? "Undo completion" : "Mark done"}
                     </button>
                   ) : null}
                   <Dialog.Close className={dayDetailsSheetClasses.secondaryAction}>

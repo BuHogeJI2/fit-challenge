@@ -1,10 +1,15 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import confetti from "canvas-confetti";
 import { ChallengeApp } from "../components/challenge-app";
 import { getChallengeStorageKey } from "../lib/challenge";
 import type { TFeaturedChallenge } from "../lib/challenge";
 
 const mockUseFeaturedChallenge = vi.fn();
+
+vi.mock("canvas-confetti", () => ({
+  default: vi.fn(),
+}));
 
 vi.mock("../lib/challenge", async () => {
   const actual = await vi.importActual<typeof import("../lib/challenge")>(
@@ -226,13 +231,22 @@ describe("ChallengeApp", () => {
 
     render(<ChallengeApp />);
 
+    expect(
+      screen.getByText("0 of 3 days marked done on this device"),
+    ).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole("button", { name: "Mark done" }));
 
     const storedKey = getChallengeStorageKey(featuredChallenge.run.slug);
     expect(window.localStorage.getItem(storedKey)).toContain('"1"');
+    expect(
+      screen.getByText("1 of 3 days marked done on this device"),
+    ).toBeInTheDocument();
+    expect(confetti).toHaveBeenCalledTimes(1);
 
     fireEvent.click(screen.getByRole("button", { name: "Undo completion" }));
 
     expect(window.localStorage.getItem(storedKey)).toBe("{}");
+    expect(confetti).toHaveBeenCalledTimes(1);
   });
 });

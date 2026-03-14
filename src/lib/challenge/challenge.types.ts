@@ -81,6 +81,11 @@ export type TLocalProgressEntry = {
 
 export type TLocalProgressMap = Record<string, TLocalProgressEntry>;
 
+export type TToggleDayDoneOptions = {
+  willMarkDone: boolean;
+  triggerElement?: HTMLElement | null;
+};
+
 export type TChallengeDayView = TChallengeDay & {
   state: TDayState;
   isActionable: boolean;

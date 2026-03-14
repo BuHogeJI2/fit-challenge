@@ -69,9 +69,22 @@ const actionButton = clsx(
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-lime)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-900)]",
 );
 
-const primaryAction = clsx(actionButton, "bg-[var(--brand-hot)] text-[var(--surface-900)] hover:brightness-110");
+const primaryAction = clsx(
+  actionButton,
+  "border border-[var(--brand-lime)]/30 bg-[linear-gradient(180deg,rgba(182,255,79,0.96),rgba(147,230,70,0.96))]",
+  "text-[var(--surface-900)] shadow-[0_18px_36px_rgba(182,255,79,0.22)] hover:brightness-[1.04] active:scale-[0.985]",
+);
 
-const secondaryAction = clsx(actionButton, "border border-white/12 bg-white/6 text-[var(--ink-strong)] hover:bg-white/10");
+const completedAction = clsx(
+  actionButton,
+  "border border-[var(--brand-lime)]/25 bg-[var(--brand-lime)]/14 text-[var(--brand-lime)]",
+  "hover:bg-[var(--brand-lime)]/18 active:scale-[0.985]",
+);
+
+const secondaryAction = clsx(
+  actionButton,
+  "border border-white/12 bg-white/6 text-[var(--ink-strong)] hover:bg-white/10 active:scale-[0.985]",
+);
 
 export const dayDetailsSheetClasses = {
   overlay,
@@ -95,5 +108,6 @@ export const dayDetailsSheetClasses = {
   exerciseTarget,
   actionRow,
   primaryAction,
+  completedAction,
   secondaryAction,
 };

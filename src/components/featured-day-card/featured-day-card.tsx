@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import {
   formatExerciseTarget,
   getDayStateLabel,
@@ -38,6 +39,9 @@ export function FeaturedDayCard({
   onOpenDay,
   onToggleDayDone,
 }: IFeaturedDayCardProps) {
+  const actionButtonRef = useRef<HTMLButtonElement | null>(null);
+  const isDone = day.state === "done_local";
+
   return (
     <section className={featuredDayCardClasses.wrapper}>
       <div className={featuredDayCardClasses.labelRow}>
@@ -86,20 +90,21 @@ export function FeaturedDayCard({
       </div>
 
       <div className={featuredDayCardClasses.actions}>
-        <button
-          type="button"
-          className={featuredDayCardClasses.primaryButton}
-          onClick={() => onOpenDay(day.id)}
-        >
-          Open day details
-        </button>
         {day.isActionable ? (
           <button
+            ref={actionButtonRef}
             type="button"
-            className={featuredDayCardClasses.secondaryButton}
-            onClick={() => onToggleDayDone(day.dayNumber)}
+            className={isDone
+              ? featuredDayCardClasses.completedButton
+              : featuredDayCardClasses.successButton}
+            onClick={() =>
+              onToggleDayDone(day.dayNumber, {
+                willMarkDone: !isDone,
+                triggerElement: actionButtonRef.current,
+              })
+            }
           >
-            {day.state === "done_local" ? "Undo completion" : "Mark done"}
+            {isDone ? "Undo completion" : "Mark done"}
           </button>
         ) : (
           <button
@@ -110,6 +115,13 @@ export function FeaturedDayCard({
             Available on the day
           </button>
         )}
+        <button
+          type="button"
+          className={featuredDayCardClasses.secondaryButton}
+          onClick={() => onOpenDay(day.id)}
+        >
+          Open day details
+        </button>
       </div>
     </section>
   );
