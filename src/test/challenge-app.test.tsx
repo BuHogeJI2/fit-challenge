@@ -189,6 +189,22 @@ describe("ChallengeApp", () => {
 
     render(<ChallengeApp />);
 
+    const nextDaysSection = screen.getByRole("heading", { name: "Next 3 days" }).closest("section");
+    expect(nextDaysSection).not.toBeNull();
+    const nextDaysWithin = within(nextDaysSection!);
+    const dayTwoCard = screen.getByRole("button", { name: "Open Day 2 for Mar 13" });
+    const dayTwoCardWithin = within(dayTwoCard);
+
+    expect(nextDaysWithin.getByText("Mar 13")).toBeInTheDocument();
+    expect(nextDaysWithin.getByText("Tomorrow")).toBeInTheDocument();
+    expect(dayTwoCardWithin.getByText("Day 2")).toBeInTheDocument();
+    expect(dayTwoCardWithin.getByText("Pushups")).toBeInTheDocument();
+    expect(dayTwoCardWithin.getByText("Abs")).toBeInTheDocument();
+    expect(dayTwoCardWithin.getAllByText("62 reps")).toHaveLength(2);
+    expect(nextDaysWithin.queryByText("Pushups and abs.")).not.toBeInTheDocument();
+    expect(nextDaysWithin.queryByText("2 exercises")).not.toBeInTheDocument();
+    expect(nextDaysWithin.queryByText("Preview only")).not.toBeInTheDocument();
+
     fireEvent.click(
       screen.getByRole("button", { name: "Open Day 2 for Mar 13" }),
     );
@@ -566,11 +582,17 @@ describe("ChallengeApp", () => {
 
     render(<ChallengeApp />);
 
+    const featuredCard = screen
+      .getByRole("button", { name: "Available on the day" })
+      .closest("section");
+    expect(featuredCard).not.toBeNull();
+    const featuredWithin = within(featuredCard!);
+
     expect(
       screen.queryByRole("button", { name: "Track sets for Pushups" }),
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByText("Pushups"));
+    fireEvent.click(featuredWithin.getByText("Pushups"));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getAllByText("Tracking unlocks on the day")).toHaveLength(2);

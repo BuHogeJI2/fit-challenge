@@ -32,8 +32,10 @@ src/
 │   ├── challenge-hero/
 │   ├── challenge-status/
 │   ├── day-details-sheet/
+│   ├── exercise-tracker-sheet/
 │   ├── featured-day-card/
 │   ├── progress-summary/
+│   ├── set-sequence/
 │   └── upcoming-days/
 ├── lib/
 │   ├── challenge/
@@ -59,11 +61,15 @@ Holds presentational and screen-composition code.
 - `challenge-hero/`: challenge intro header with run metadata and progress
   snapshot.
 - `featured-day-card/`: the primary day card for the opening, current, or final
-  day depending on run phase.
-- `upcoming-days/`: preview list for the next three upcoming days.
+  day depending on run phase, including direct exercise tracking entry points.
+- `upcoming-days/`: preview list for the next three upcoming days with date and
+  exercise-target previews.
 - `progress-summary/`: schedule progress and device-local completion summary.
 - `challenge-calendar/`: month-grouped calendar navigation.
-- `day-details-sheet/`: Radix Dialog-based day details surface.
+- `day-details-sheet/`: Radix Dialog-based informational day review surface.
+- `exercise-tracker-sheet/`: focused exercise-level tracking flow for adding and
+  removing sets.
+- `set-sequence/`: shared step-style set history rows used by tracker surfaces.
 - `challenge-status/`: loading, error, and empty states.
 
 Each component folder follows the same local structure:

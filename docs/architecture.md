@@ -75,15 +75,38 @@ The main screen order matches the current product contract:
 4. Progress summary
 5. Calendar
 6. Day details sheet
+7. Exercise tracker sheet
 
-`ChallengeApp` owns the selected day id for the sheet and passes small callback
-props down to child components.
+`ChallengeApp` owns:
+
+- the selected day id for the informational day sheet
+- the selected tracked day id
+- the selected tracked exercise id
+
+It passes small callback props down to child components and swaps between the
+day review sheet and the focused tracker sheet as needed.
+
+### Current Surface Roles
+
+- `FeaturedDayCard`: primary interactive surface for the current featured day.
+  Actionable exercises open the focused tracker directly.
+- `UpcomingDays`: passive preview cards for the next three upcoming days,
+  showing date context plus each exercise target.
+- `ChallengeCalendar`: browse-and-open navigation only. Calendar taps open the
+  day review sheet and do not leave a selected action state behind.
+- `DayDetailsSheet`: informational review surface for any opened day. It shows
+  day metadata, notes, and exercise targets only.
+- `ExerciseTrackerSheet`: the only exercise-level editing surface. It supports
+  both direct featured-day tracking and past-day recovery flows.
+- Past actionable days (`missed` and past `done_local`) expose `Track sets` and
+  `Mark done` / `Undo completion` from the bottom of the day sheet. `Track
+  sets` hands off into the focused tracker sheet for that day.
 
 ## Accessibility And Interaction Notes
 
 - Interactive day surfaces are semantic `button` elements.
 - Calendar cells expose descriptive `aria-label` values.
-- The day details surface uses `@radix-ui/react-dialog`.
+- The day details and exercise tracker surfaces use `@radix-ui/react-dialog`.
 - Status is expressed with labels and text, not color alone.
 
 ## Error And Empty Handling

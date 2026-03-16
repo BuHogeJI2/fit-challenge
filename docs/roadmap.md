@@ -48,11 +48,14 @@ The current repo already includes the Phase 1 app:
   and lifecycle
 - normalized structured challenge models in `src/lib/challenge/`
 - a mobile-first main screen with hero, featured day, upcoming days, progress,
-  calendar, and day-details sheet
+  calendar, informational day-details sheet, and focused exercise-tracker sheet
 - local done/undo progress persisted in `localStorage` by run slug
 - day-details access from the featured card, upcoming list, and calendar
+- direct exercise tracking from the featured-day card
+- past-day recovery actions from the day-details sheet footer
+- next-days cards that preview date context plus exercise targets
 - baseline Vitest coverage for empty state, day-details opening, local progress
-  persistence, undo behavior, and load error handling
+  persistence, undo behavior, tracker flows, and load error handling
 
 ## Current Limits
 
@@ -85,5 +88,5 @@ This repo does not yet include:
 
 - add direct tests for `pickFeaturedRun()` and `buildChallengeViewModel()`
 - cover loading, scheduled, active, and completed UI states more explicitly
-- add done/undo interaction coverage from the day-details sheet
+- add focused utility coverage for date-label and next-days preview formatting
 - add a retry affordance for transient load failures

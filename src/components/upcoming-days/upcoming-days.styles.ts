@@ -23,15 +23,25 @@ const topRow = clsx("flex items-start justify-between gap-3");
 
 const dayLabel = clsx("text-sm font-semibold text-[var(--tone-info-text)]");
 
-const date = clsx("text-sm text-[var(--text-secondary)]");
+const weekday = clsx(
+  "text-[0.74rem] font-semibold uppercase tracking-[0.14em] text-[var(--text-secondary)]",
+);
 
 const cardTitle = clsx("mt-3 text-lg font-semibold text-[var(--text-primary)]");
 
-const meta = clsx("mt-2 text-sm leading-6 text-[var(--text-muted)]");
+const exerciseList = clsx("mt-4 space-y-2");
 
-const footer = clsx(
-  "mt-4 flex items-center justify-between gap-3 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--text-secondary)]",
+const exerciseRow = clsx(
+  "flex items-center justify-between gap-3 rounded-[1rem] border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] px-3 py-2.5",
 );
+
+const exerciseName = clsx("min-w-0 text-sm font-medium text-[var(--text-primary)]");
+
+const exerciseTarget = clsx(
+  "shrink-0 text-[0.78rem] font-semibold uppercase tracking-[0.08em] text-[var(--tone-info-text)]",
+);
+
+const fallback = clsx("mt-4 text-sm leading-6 text-[var(--text-muted)]");
 
 const empty = clsx("mt-4 text-sm leading-6 text-[var(--text-muted)]");
 
@@ -44,9 +54,12 @@ export const upcomingDaysClasses = {
   card,
   topRow,
   dayLabel,
-  date,
+  weekday,
   cardTitle,
-  meta,
-  footer,
+  exerciseList,
+  exerciseRow,
+  exerciseName,
+  exerciseTarget,
+  fallback,
   empty,
 };

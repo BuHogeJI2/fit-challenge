@@ -95,12 +95,18 @@ Use for non-interactive headings and meta labels.
 - Logged history should be visually separated from current input.
 - Button colors indicate action type, not content type.
 
-## Overlay Mapping
+## Sheet Mapping
 
-The day-details sheet should use these roles:
+The day-details sheet is now intentionally informational:
 
-- exercise section: `Surface`
-- logged/remaining/sets strip: `Stat Block`
+- day metadata and exercise sections: `Surface`
+- target indicator: `Badge`
+- footer recovery actions for past actionable days: `Form`-style action group
+- no inline progress stats, input fields, or logged history in this sheet
+
+The exercise-tracker sheet should use these roles:
+
+- compact summary row: `Surface` with passive progress metrics
 - reps entry area: `Form` block with `Input Field` + `info` action button
 - target indicator: `Badge`
 - logged sets: `Log Row`
@@ -112,7 +118,8 @@ This guide is overlay-first in implementation, but the same roles should be
 used across the rest of the app:
 
 - featured-day card rows should distinguish passive progress from actions
-- upcoming-day cards should remain surfaces, not pseudo-buttons everywhere
+- upcoming-day cards should stay compact plan previews with passive exercise
+  rows, not mini forms or progress dashboards
 - calendar cells should stay interactive but not look like buttons from other
   contexts
 - future admin screens should reuse the same button/input/panel roles instead
