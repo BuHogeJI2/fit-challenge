@@ -86,50 +86,20 @@ const trackerStatLabel = clsx(
 
 const trackerStatValue = clsx("mt-1 text-base font-semibold text-[var(--text-primary)]");
 
-const formBlock = clsx("mt-4 px-3 py-3");
-
-const formLabel = clsx("text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--tone-info-text)]");
-
-const formHint = clsx("mt-1 text-sm text-[var(--text-secondary)]");
-
-const inputRow = clsx("mt-3 flex flex-col gap-2 sm:flex-row");
-
-const repsInput = clsx("sm:flex-1");
-
-const addSetButton = clsx("sm:min-w-[132px]");
-
-const setsGroup = clsx("mt-4");
-
-const setsList = clsx("mt-3 space-y-2");
-
-const setItem = clsx(
-  "flex items-center justify-between gap-3 px-3 py-2.5",
-);
-
-const setMeta = clsx("text-sm text-[var(--text-secondary)]");
-
-const setValue = clsx("font-semibold text-[var(--text-primary)]");
-
-const removeSetButton = clsx("rounded-full px-3 py-1");
-
 const actionRow = clsx("mt-5 flex flex-col gap-3 sm:flex-row");
 
-const primaryAction = clsx(
-  "w-full sm:w-auto border-[var(--tone-success-border)] bg-[var(--tone-success-soft)] text-[var(--text-primary)]",
-  "shadow-[0_12px_28px_rgba(155,247,95,0.10)] hover:border-[var(--tone-success-fill)]/34 hover:bg-[rgba(155,247,95,0.2)]",
-  "focus-visible:ring-[var(--tone-success-fill)]",
+const pastActions = clsx(
+  "mt-5 rounded-[1.4rem] border border-[var(--tone-info-border)] bg-[rgba(109,199,255,0.08)] px-4 py-4",
+  "shadow-[0_14px_34px_rgba(109,199,255,0.08)]",
 );
 
-const readyAction = clsx(
-  "w-full sm:w-auto border-[var(--tone-success-border)] bg-[linear-gradient(180deg,var(--tone-success-strong),var(--tone-success-fill))]",
-  "!text-[var(--text-inverse)] shadow-[0_18px_36px_rgba(155,247,95,0.22)] hover:brightness-[1.04]",
-  "focus-visible:ring-[var(--tone-success-fill)]",
-);
+const pastActionsTitle = clsx("text-sm font-semibold text-[var(--text-primary)]");
 
-const completedAction = clsx(
-  "w-full sm:w-auto border-[var(--tone-warning-border)] bg-[var(--tone-warning-soft)] text-[var(--tone-warning-text)]",
-  "hover:border-[rgba(246,200,107,0.38)] hover:bg-[rgba(246,200,107,0.2)] focus-visible:ring-[var(--tone-warning-fill)]",
-);
+const pastActionsMeta = clsx("mt-1 text-sm leading-6 text-[var(--text-secondary)]");
+
+const pastActionsButtons = clsx("mt-4 flex flex-col gap-3 sm:flex-row");
+
+const primaryAction = clsx("w-full sm:w-auto");
 
 const secondaryAction = clsx("w-full sm:w-auto");
 
@@ -163,21 +133,11 @@ export const dayDetailsSheetClasses = {
   trackerStat,
   trackerStatLabel,
   trackerStatValue,
-  formBlock,
-  formLabel,
-  formHint,
-  inputRow,
-  repsInput,
-  addSetButton,
-  setsGroup,
-  setsList,
-  setItem,
-  setMeta,
-  setValue,
-  removeSetButton,
   actionRow,
+  pastActions,
+  pastActionsTitle,
+  pastActionsMeta,
+  pastActionsButtons,
   primaryAction,
-  readyAction,
-  completedAction,
   secondaryAction,
 };

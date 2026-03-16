@@ -1,39 +1,24 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   formatExerciseNameForDisplay,
   formatExerciseTarget,
   getDayStateLabel,
 } from "../../lib/challenge";
-import { Badge, Button, Input, Panel } from "../ui";
+import { Badge, Button, Panel } from "../ui";
 import { dayDetailsSheetClasses } from "./day-details-sheet.styles";
 import type { IDayDetailsSheetProps } from "./day-details-sheet.types";
 
 export function DayDetailsSheet({
   open,
   day,
+  showPastActions = false,
+  completionActionLabel,
   onOpenChange,
-  onToggleDayDone,
-  onAddExerciseSet,
-  onRemoveExerciseSet,
+  onTrackSets,
+  onToggleComplete,
 }: IDayDetailsSheetProps) {
-  const actionButtonRef = useRef<HTMLButtonElement | null>(null);
   const isUpcoming = day?.state === "upcoming";
-  const isDone = day?.state === "done_local";
-  const [inputValues, setInputValues] = useState<Record<string, string>>({});
-  const getInputKey = (exerciseId: number) =>
-    `${day?.id ?? "none"}:${exerciseId}`;
-
-  const canAddSet = (exerciseId: number) => {
-    const parsed = Number(inputValues[getInputKey(exerciseId)] ?? "");
-    return Number.isInteger(parsed) && parsed > 0;
-  };
-
-  const actionClassName = isDone
-    ? dayDetailsSheetClasses.completedAction
-    : day?.allExerciseGoalsReached
-      ? dayDetailsSheetClasses.readyAction
-      : dayDetailsSheetClasses.primaryAction;
 
   const helperText = useMemo(() => {
     if (!day) return null;
@@ -41,16 +26,12 @@ export function DayDetailsSheet({
       return "This day is coming up next. Review the plan now; tracking unlocks on the day.";
     }
 
-    if (!day.hasLoggedProgress) {
-      return "Want to track sets? Add reps as you go. You can still mark the day done without it.";
+    if (showPastActions) {
+      return "Review the plan for this day here. If you need to catch up, the progress actions are below.";
     }
 
-    if (day.allExerciseGoalsReached && !isDone) {
-      return "Your logged sets have reached today's targets. Mark the day done whenever you finish.";
-    }
-
-    return null;
-  }, [day, isDone, isUpcoming]);
+    return "Review the plan for this day here.";
+  }, [day, isUpcoming, showPastActions]);
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -116,11 +97,7 @@ export function DayDetailsSheet({
                     <Panel
                       key={exercise.id}
                       className={dayDetailsSheetClasses.exerciseCard}
-                      variant={
-                        !isUpcoming && exercise.isGoalReached
-                          ? "success"
-                          : "surface"
-                      }
+                      variant="surface"
                     >
                       <div className={dayDetailsSheetClasses.exerciseTop}>
                         <div className={dayDetailsSheetClasses.exerciseMain}>
@@ -151,191 +128,45 @@ export function DayDetailsSheet({
                           >
                             {formatExerciseTarget(exercise)}
                           </Badge>
-                          {!isUpcoming && exercise.isGoalReached ? (
-                            <Badge
-                              className={dayDetailsSheetClasses.exerciseCompletedBadge}
-                              variant="success"
-                            >
-                              Goal reached
-                            </Badge>
-                          ) : null}
                         </div>
                       </div>
-
-                      {!isUpcoming ? (
-                        <>
-                          <div className={dayDetailsSheetClasses.trackerStats}>
-                            <Panel
-                              className={dayDetailsSheetClasses.trackerStat}
-                              variant="stat"
-                            >
-                              <div
-                                className={dayDetailsSheetClasses.trackerStatLabel}
-                              >
-                                Logged
-                              </div>
-                              <div
-                                className={dayDetailsSheetClasses.trackerStatValue}
-                              >
-                                {exercise.loggedRepsTotal}
-                              </div>
-                            </Panel>
-                            <Panel
-                              className={dayDetailsSheetClasses.trackerStat}
-                              variant="stat"
-                            >
-                              <div
-                                className={dayDetailsSheetClasses.trackerStatLabel}
-                              >
-                                Remaining
-                              </div>
-                              <div
-                                className={dayDetailsSheetClasses.trackerStatValue}
-                              >
-                                {exercise.remainingReps}
-                              </div>
-                            </Panel>
-                            <Panel
-                              className={dayDetailsSheetClasses.trackerStat}
-                              variant="stat"
-                            >
-                              <div
-                                className={dayDetailsSheetClasses.trackerStatLabel}
-                              >
-                                Sets
-                              </div>
-                              <div
-                                className={dayDetailsSheetClasses.trackerStatValue}
-                              >
-                                {exercise.sets.length}
-                              </div>
-                            </Panel>
-                          </div>
-
-                          <Panel
-                            className={dayDetailsSheetClasses.formBlock}
-                            variant="form"
-                          >
-                            <div className={dayDetailsSheetClasses.formLabel}>
-                              Track next set
-                            </div>
-                            <div className={dayDetailsSheetClasses.formHint}>
-                              Enter reps and add one completed set.
-                            </div>
-                            <div className={dayDetailsSheetClasses.inputRow}>
-                              <Input
-                                aria-label={`Add reps for ${formatExerciseNameForDisplay(exercise.exerciseName)}`}
-                                className={dayDetailsSheetClasses.repsInput}
-                                inputMode="numeric"
-                                min={1}
-                                pattern="[0-9]*"
-                                placeholder="Reps in this set"
-                                type="number"
-                                value={inputValues[getInputKey(exercise.id)] ?? ""}
-                                onChange={(event) =>
-                                  setInputValues((current) => ({
-                                    ...current,
-                                    [getInputKey(exercise.id)]:
-                                      event.target.value,
-                                  }))
-                                }
-                              />
-                              <Button
-                                className={dayDetailsSheetClasses.addSetButton}
-                                disabled={!canAddSet(exercise.id)}
-                                type="button"
-                                variant="info"
-                                onClick={() => {
-                                  const reps = Number(
-                                    inputValues[getInputKey(exercise.id)],
-                                  );
-                                  onAddExerciseSet(
-                                    day.dayNumber,
-                                    exercise.id,
-                                    reps,
-                                  );
-                                  setInputValues((current) => ({
-                                    ...current,
-                                    [getInputKey(exercise.id)]: "",
-                                  }));
-                                }}
-                              >
-                                Add set
-                              </Button>
-                            </div>
-                          </Panel>
-
-                          {exercise.sets.length ? (
-                            <div className={dayDetailsSheetClasses.setsGroup}>
-                              <div
-                                className={dayDetailsSheetClasses.sectionTitle}
-                              >
-                                Logged sets
-                              </div>
-                              <div className={dayDetailsSheetClasses.setsList}>
-                                {exercise.sets.map((set, index) => (
-                                  <Panel
-                                    key={set.id}
-                                    className={dayDetailsSheetClasses.setItem}
-                                    variant="list"
-                                  >
-                                    <div
-                                      className={dayDetailsSheetClasses.setMeta}
-                                    >
-                                      Set {index + 1} •{" "}
-                                      <span
-                                        className={
-                                          dayDetailsSheetClasses.setValue
-                                        }
-                                      >
-                                        {set.reps} reps
-                                      </span>
-                                    </div>
-                                    <Button
-                                      className={
-                                        dayDetailsSheetClasses.removeSetButton
-                                      }
-                                      size="sm"
-                                      type="button"
-                                      variant="destructive"
-                                      onClick={() =>
-                                        onRemoveExerciseSet(
-                                          day.dayNumber,
-                                          exercise.id,
-                                          set.id,
-                                        )
-                                      }
-                                    >
-                                      Remove
-                                    </Button>
-                                  </Panel>
-                                ))}
-                              </div>
-                            </div>
-                          ) : null}
-                        </>
-                      ) : null}
                     </Panel>
                   ))}
                 </div>
 
+                {showPastActions ? (
+                  <Panel
+                    className={dayDetailsSheetClasses.pastActions}
+                    variant="form"
+                  >
+                    <div className={dayDetailsSheetClasses.pastActionsTitle}>
+                      Catch up on this day
+                    </div>
+                    <div className={dayDetailsSheetClasses.pastActionsMeta}>
+                      Track missed sets or update completion without leaving this review.
+                    </div>
+                    <div className={dayDetailsSheetClasses.pastActionsButtons}>
+                      <Button
+                        className={dayDetailsSheetClasses.primaryAction}
+                        type="button"
+                        variant="info"
+                        onClick={onTrackSets}
+                      >
+                        Track sets
+                      </Button>
+                      <Button
+                        className={dayDetailsSheetClasses.secondaryAction}
+                        type="button"
+                        variant="secondary"
+                        onClick={() => onToggleComplete?.()}
+                      >
+                        {completionActionLabel}
+                      </Button>
+                    </div>
+                  </Panel>
+                ) : null}
+
                 <div className={dayDetailsSheetClasses.actionRow}>
-                  {!isUpcoming && day.isActionable ? (
-                    <Button
-                      ref={actionButtonRef}
-                      className={actionClassName}
-                      type="button"
-                      variant="secondary"
-                      onClick={() =>
-                        onToggleDayDone(day.dayNumber, {
-                          willMarkDone: !isDone,
-                          triggerElement: actionButtonRef.current,
-                        })
-                      }
-                    >
-                      {isDone ? "Undo completion" : "Mark done"}
-                    </Button>
-                  ) : null}
                   <Dialog.Close asChild>
                     <Button
                       className={dayDetailsSheetClasses.secondaryAction}

@@ -2,8 +2,8 @@ import clsx from "clsx";
 
 const wrapper = clsx(
   "relative overflow-hidden rounded-[2rem] border border-[var(--border-subtle)]",
-  "bg-[linear-gradient(160deg,var(--tone-display-soft),rgba(13,23,34,0.96)_52%,var(--tone-success-soft))]",
-  "px-5 py-6 shadow-[0_30px_80px_rgba(3,8,20,0.45)]",
+  "bg-[linear-gradient(160deg,var(--tone-display-soft),rgba(13,23,34,0.96)_50%,rgba(8,14,22,0.98))]",
+  "px-5 py-6 shadow-[0_30px_80px_rgba(3,8,20,0.45)] ring-1 ring-[rgba(255,255,255,0.03)]",
   "sm:px-6 sm:py-7",
 );
 
@@ -30,14 +30,14 @@ const description = clsx(
 );
 
 const note = clsx(
-  "relative mt-5 rounded-[1.4rem] border border-[var(--tone-neutral-border)] bg-[rgba(0,0,0,0.16)] px-4 py-3",
+  "relative mt-5 rounded-[1.4rem] border border-[var(--tone-neutral-border)] bg-[rgba(4,9,16,0.52)] px-4 py-3",
   "text-sm leading-6 text-[var(--text-secondary)]",
 );
 
 const stats = clsx("relative mt-5 grid grid-cols-2 gap-3 sm:max-w-xl");
 
 const statCard = clsx(
-  "rounded-[1.4rem] border border-[var(--tone-neutral-border)] bg-[rgba(0,0,0,0.14)] px-4 py-3",
+  "rounded-[1.15rem] border border-[var(--tone-neutral-border)] bg-[rgba(255,255,255,0.035)] px-4 py-3",
   "backdrop-blur-sm",
 );
 

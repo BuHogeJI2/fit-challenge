@@ -246,11 +246,6 @@ describe("ChallengeApp", () => {
     expect(dialogWithin.getByText("Pushups")).toBeInTheDocument();
     expect(dialogWithin.getByText("Abs")).toBeInTheDocument();
     expect(dialogWithin.getAllByText("62 reps")).toHaveLength(2);
-    expect(
-      dialogWithin.queryByText(
-        "Want to track sets? Add reps as you go. You can still mark the day done without it.",
-      ),
-    ).not.toBeInTheDocument();
     expect(dialogWithin.queryByText("Logged")).not.toBeInTheDocument();
     expect(dialogWithin.queryByText("Remaining")).not.toBeInTheDocument();
     expect(dialogWithin.queryByText("Sets")).not.toBeInTheDocument();
@@ -317,6 +312,105 @@ describe("ChallengeApp", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders logged day details as read-only review content", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-15T10:00:00.000Z"));
+    mockUseFeaturedChallenge.mockReturnValue({
+      challenge: featuredChallenge,
+      loading: false,
+      error: null,
+    });
+
+    window.localStorage.setItem(
+      getChallengeStorageKey(featuredChallenge.run.slug),
+      JSON.stringify({
+        1: {
+          done: false,
+          completedAt: null,
+          exerciseProgress: {
+            1: {
+              sets: [
+                {
+                  id: "set-1",
+                  reps: 20,
+                  createdAt: "2026-03-15T08:00:00.000Z",
+                },
+                {
+                  id: "set-2",
+                  reps: 40,
+                  createdAt: "2026-03-15T08:05:00.000Z",
+                },
+              ],
+            },
+          },
+        },
+      }),
+    );
+
+    render(<ChallengeApp />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Open day details" }));
+
+    const dialogWithin = within(screen.getByRole("dialog"));
+
+    expect(
+      dialogWithin.getByText(
+        "Review the plan for this day here. If you need to catch up, the progress actions are below.",
+      ),
+    ).toBeInTheDocument();
+    expect(dialogWithin.queryByText("Logged")).not.toBeInTheDocument();
+    expect(dialogWithin.queryByText("Remaining")).not.toBeInTheDocument();
+    expect(dialogWithin.queryByText("Sets")).not.toBeInTheDocument();
+    expect(dialogWithin.queryByText("Logged sets")).not.toBeInTheDocument();
+    expect(dialogWithin.queryByText("20 reps")).not.toBeInTheDocument();
+    expect(dialogWithin.queryByText("40 reps")).not.toBeInTheDocument();
+    expect(dialogWithin.queryByText("Goal reached")).not.toBeInTheDocument();
+    expect(
+      dialogWithin.queryByLabelText("Add reps for Pushups"),
+    ).not.toBeInTheDocument();
+    expect(
+      dialogWithin.queryByRole("button", { name: "Add set" }),
+    ).not.toBeInTheDocument();
+    expect(
+      dialogWithin.queryByRole("button", { name: "Remove" }),
+    ).not.toBeInTheDocument();
+    expect(
+      dialogWithin.queryByRole("button", { name: "Mark done" }),
+    ).toBeInTheDocument();
+    expect(
+      dialogWithin.getByRole("button", { name: "Track sets" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps current-day overlays informational without footer actions", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-14T10:00:00.000Z"));
+    mockUseFeaturedChallenge.mockReturnValue({
+      challenge: featuredChallenge,
+      loading: false,
+      error: null,
+    });
+
+    render(<ChallengeApp />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Open day details" }));
+
+    const dialogWithin = within(screen.getByRole("dialog"));
+
+    expect(
+      dialogWithin.getByText("Review the plan for this day here."),
+    ).toBeInTheDocument();
+    expect(
+      dialogWithin.queryByRole("button", { name: "Track sets" }),
+    ).not.toBeInTheDocument();
+    expect(
+      dialogWithin.queryByRole("button", { name: "Mark done" }),
+    ).not.toBeInTheDocument();
+    expect(
+      dialogWithin.queryByRole("button", { name: "Undo completion" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("persists local progress by run slug and supports undo", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-03-15T10:00:00.000Z"));
@@ -356,7 +450,7 @@ describe("ChallengeApp", () => {
     expect(confetti).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps set logging optional and highlights readiness after targets are logged", async () => {
+  it("opens the focused tracker from actionable featured exercises and updates progress", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-03-15T10:00:00.000Z"));
     mockUseFeaturedChallenge.mockReturnValue({
@@ -375,35 +469,57 @@ describe("ChallengeApp", () => {
     expect(featuredWithin.getAllByText("60 reps")).toHaveLength(2);
     expect(featuredWithin.getAllByText("Daily target").slice(-2)).toHaveLength(2);
 
-    fireEvent.click(screen.getByRole("button", { name: "Open day details" }));
-
-    const dialog = screen.getByRole("dialog");
-    const overlayMarkDoneButton = within(dialog).getByRole("button", {
-      name: "Mark done",
-    });
-    expect(overlayMarkDoneButton.className).not.toContain(
-      "bg-[linear-gradient(180deg,var(--tone-success-strong),var(--tone-success-fill))]",
+    fireEvent.click(
+      screen.getByRole("button", { name: "Track sets for Pushups" }),
     );
+
+    const tracker = screen.getByRole("dialog");
+    expect(
+      within(tracker).getByText(
+        "Track sets for this exercise here. The main screen updates as soon as you log or remove a set.",
+      ),
+    ).toBeInTheDocument();
+    expect(within(tracker).getByText("Exercise target")).toBeInTheDocument();
+    expect(
+      within(tracker).getByText("No sets logged for this exercise yet."),
+    ).toBeInTheDocument();
+    expect(
+      within(tracker).queryByRole("button", { name: "Mark done" }),
+    ).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Add reps for Pushups"), {
       target: { value: "60" },
     });
-    fireEvent.click(screen.getAllByRole("button", { name: "Add set" })[0]);
+    fireEvent.click(within(tracker).getByRole("button", { name: "Add set" }));
 
-    expect(within(dialog).getByText("Goal reached")).toBeInTheDocument();
-    expect(
-      within(dialog).getAllByText("Goal reached"),
-    ).toHaveLength(1);
+    expect(within(tracker).getByText("Goal reached")).toBeInTheDocument();
+    expect(within(tracker).getAllByText("60 reps")).toHaveLength(2);
+    expect(within(tracker).getByText("60 / 60")).toBeInTheDocument();
+    expect(within(tracker).getByText("1 set")).toBeInTheDocument();
 
     expect(featuredWithin.getByText("60 / 60")).toBeInTheDocument();
     expect(featuredWithin.getByText("Goal reached")).toBeInTheDocument();
     expect(featuredWithin.getByText("60 reps")).toBeInTheDocument();
-    expect(featuredWithin.getAllByText("Daily target").slice(-1)).toHaveLength(1);
+    expect(featuredWithin.getByText("1 set")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Exercise tracking now lives on the main card. Tap an exercise below to keep logging sets.",
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      within(tracker).getByRole("button", { name: "Back to challenge" }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Track sets for Sit-Ups" }));
+    const situpsTracker = screen.getByRole("dialog");
 
     fireEvent.change(screen.getByLabelText("Add reps for Sit-Ups"), {
       target: { value: "60" },
     });
-    fireEvent.click(screen.getAllByRole("button", { name: "Add set" })[1]);
+    fireEvent.click(
+      within(situpsTracker).getByRole("button", { name: "Add set" }),
+    );
 
     expect(screen.getByText("120/120 reps logged")).toBeInTheDocument();
     expect(featuredWithin.getAllByText("60 / 60")).toHaveLength(2);
@@ -413,16 +529,21 @@ describe("ChallengeApp", () => {
         "Targets reached. Mark the day done when you are ready.",
       ),
     ).toBeInTheDocument();
-    expect(
-      within(dialog).getByRole("button", { name: "Mark done" }).className,
-    ).toContain(
-      "bg-[linear-gradient(180deg,var(--tone-success-strong),var(--tone-success-fill))]",
+
+    fireEvent.click(
+      within(situpsTracker).getByRole("button", { name: "Back to challenge" }),
     );
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Remove" })[0]);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Track sets for Pushups" }),
+    );
+    const removeTracker = screen.getByRole("dialog");
+    fireEvent.click(
+      within(removeTracker).getByRole("button", { name: "Remove" }),
+    );
 
     expect(screen.getByText("60/120 reps logged")).toBeInTheDocument();
-    expect(within(dialog).getAllByText("Goal reached")).toHaveLength(1);
+    expect(within(removeTracker).queryByText("Goal reached")).not.toBeInTheDocument();
     expect(featuredWithin.getByText("60 reps")).toBeInTheDocument();
     expect(featuredWithin.getAllByText("Daily target").slice(-1)).toHaveLength(1);
     expect(featuredWithin.getByText("60 / 60")).toBeInTheDocument();
@@ -432,10 +553,121 @@ describe("ChallengeApp", () => {
         "Targets reached. Mark the day done when you are ready.",
       ),
     ).not.toBeInTheDocument();
+  });
+
+  it("does not open the focused tracker for non-actionable featured exercises", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-11T10:00:00.000Z"));
+    mockUseFeaturedChallenge.mockReturnValue({
+      challenge: featuredChallenge,
+      loading: false,
+      error: null,
+    });
+
+    render(<ChallengeApp />);
+
     expect(
-      within(dialog).getByRole("button", { name: "Mark done" }).className,
-    ).not.toContain(
-      "bg-[linear-gradient(180deg,var(--tone-success-strong),var(--tone-success-fill))]",
+      screen.queryByRole("button", { name: "Track sets for Pushups" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Pushups"));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Tracking unlocks on the day")).toHaveLength(2);
+  });
+
+  it("opens past-day tracking from the day overlay footer", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-15T10:00:00.000Z"));
+    mockUseFeaturedChallenge.mockReturnValue({
+      challenge: featuredChallenge,
+      loading: false,
+      error: null,
+    });
+
+    render(<ChallengeApp />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Open Day 2 for Friday, March 13. Missed.",
+      }),
     );
+
+    const details = screen.getByRole("dialog");
+    expect(
+      within(details).getByText(
+        "Review the plan for this day here. If you need to catch up, the progress actions are below.",
+      ),
+    ).toBeInTheDocument();
+    expect(within(details).getByRole("button", { name: "Track sets" })).toBeInTheDocument();
+    expect(within(details).getByRole("button", { name: "Mark done" })).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Selected calendar day actions"),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(within(details).getByRole("button", { name: "Track sets" }));
+
+    const picker = screen.getByRole("dialog");
+    expect(
+      within(picker).getByText("Choose which exercise you want to track for this day."),
+    ).toBeInTheDocument();
+    fireEvent.click(within(picker).getByRole("button", { name: /Pushups/i }));
+
+    const tracker = screen.getByRole("dialog");
+    expect(within(tracker).getByText("0 / 62")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Add reps for Pushups"), {
+      target: { value: "31" },
+    });
+    fireEvent.click(within(tracker).getByRole("button", { name: "Add set" }));
+
+    expect(within(tracker).getByText("31 / 62")).toBeInTheDocument();
+    expect(screen.getByText("1 set")).toBeInTheDocument();
+  });
+
+  it("toggles past-day completion inside the day overlay footer", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-15T10:00:00.000Z"));
+    mockUseFeaturedChallenge.mockReturnValue({
+      challenge: featuredChallenge,
+      loading: false,
+      error: null,
+    });
+
+    render(<ChallengeApp />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Open Day 2 for Friday, March 13. Missed.",
+      }),
+    );
+
+    const dialog = screen.getByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Mark done" }));
+
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Undo completion" })).toBeInTheDocument();
+  });
+
+  it("keeps past-day footer actions hidden for non-actionable overlays", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-12T10:00:00.000Z"));
+    mockUseFeaturedChallenge.mockReturnValue({
+      challenge: featuredChallenge,
+      loading: false,
+      error: null,
+    });
+
+    render(<ChallengeApp />);
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Open Day 3 for Saturday, March 14. Upcoming.",
+      }),
+    );
+
+    const dialog = within(screen.getByRole("dialog"));
+    expect(dialog.queryByRole("button", { name: "Track sets" })).not.toBeInTheDocument();
+    expect(dialog.queryByRole("button", { name: "Mark done" })).not.toBeInTheDocument();
+    expect(dialog.queryByRole("button", { name: "Undo completion" })).not.toBeInTheDocument();
   });
 });

@@ -34,6 +34,10 @@ export function UpcomingDays({ days, onOpenDay }: IUpcomingDaysProps) {
                 {day.summary ??
                   `${day.exercises.length} exercises scheduled for this session.`}
               </div>
+              <div className={upcomingDaysClasses.footer}>
+                <span>{day.exercises.length} exercises</span>
+                <span>{day.state === "upcoming" ? "Preview only" : day.relativeLabel}</span>
+              </div>
             </button>
           ))}
         </div>

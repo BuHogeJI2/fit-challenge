@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   buildChallengeViewModel,
   celebrateDayCompletion,
+  getDateKey,
   useFeaturedChallenge,
   useLocalChallengeProgress,
   type TChallengeDayView,
@@ -11,6 +12,7 @@ import { ChallengeCalendar } from "../challenge-calendar";
 import { ChallengeHero } from "../challenge-hero";
 import { ChallengeStatus } from "../challenge-status";
 import { DayDetailsSheet } from "../day-details-sheet";
+import { ExerciseTrackerSheet } from "../exercise-tracker-sheet";
 import { FeaturedDayCard } from "../featured-day-card";
 import { ProgressSummary } from "../progress-summary";
 import { TopProgressBar } from "../top-progress-bar";
@@ -26,11 +28,14 @@ export function ChallengeApp() {
     removeExerciseSet,
   } = useLocalChallengeProgress(challenge?.run.slug ?? null);
   const [selectedDayId, setSelectedDayId] = useState<number | null>(null);
+  const [selectedTrackedDayId, setSelectedTrackedDayId] = useState<number | null>(null);
+  const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
 
   const viewModel = useMemo(
     () => buildChallengeViewModel(challenge, progressMap),
     [challenge, progressMap],
   );
+  const todayKey = useMemo(() => getDateKey(new Date()), []);
 
   const selectedDay = useMemo<TChallengeDayView | null>(() => {
     if (!viewModel) return null;
@@ -41,7 +46,53 @@ export function ChallengeApp() {
   }, [selectedDayId, viewModel]);
 
   const handleOpenDay = (dayId: number) => {
+    setSelectedTrackedDayId(null);
+    setSelectedExerciseId(null);
     setSelectedDayId(dayId);
+  };
+
+  const selectedTrackedExercise = useMemo(() => {
+    if (!viewModel || selectedTrackedDayId === null || selectedExerciseId === null) {
+      return null;
+    }
+
+    return (
+      viewModel.days
+        .find((day) => day.id === selectedTrackedDayId)
+        ?.exercises.find(
+        (exercise) => exercise.id === selectedExerciseId,
+        ) ?? null
+    );
+  }, [selectedExerciseId, selectedTrackedDayId, viewModel]);
+
+  const selectedTrackedDay = useMemo<TChallengeDayView | null>(() => {
+    if (!viewModel || selectedTrackedDayId === null) {
+      return null;
+    }
+
+    return viewModel.days.find((day) => day.id === selectedTrackedDayId) ?? null;
+  }, [selectedTrackedDayId, viewModel]);
+
+  const handleOpenExerciseTracker = (exerciseId: number) => {
+    if (!viewModel?.featuredDay?.isActionable) {
+      return;
+    }
+
+    setSelectedDayId(null);
+    setSelectedTrackedDayId(viewModel.featuredDay.id);
+    setSelectedExerciseId(exerciseId);
+  };
+
+  const handleOpenPastDayTracker = () => {
+    if (!selectedDay) {
+      return;
+    }
+
+    setSelectedDayId(null);
+    setSelectedTrackedDayId(selectedDay.id);
+    setSelectedExerciseId(
+      selectedDay.exercises.length === 1 ? selectedDay.exercises[0]?.id ?? null : null,
+    );
   };
 
   const handleToggleDayDone = (
@@ -54,6 +105,18 @@ export function ChallengeApp() {
       celebrateDayCompletion(options.triggerElement);
     }
   };
+
+  const isPastEditableDay = useMemo(() => {
+    if (!selectedDay) {
+      return false;
+    }
+
+    return (
+      selectedDay.date < todayKey &&
+      selectedDay.isActionable &&
+      (selectedDay.state === "missed" || selectedDay.state === "done_local")
+    );
+  }, [selectedDay, todayKey]);
 
   return (
     <div className={challengeAppClasses.container}>
@@ -99,6 +162,7 @@ export function ChallengeApp() {
                 day={viewModel.featuredDay}
                 runPhase={viewModel.runPhase}
                 onOpenDay={handleOpenDay}
+                onOpenExerciseTracker={handleOpenExerciseTracker}
                 onToggleDayDone={handleToggleDayDone}
               />
             ) : null}
@@ -121,14 +185,43 @@ export function ChallengeApp() {
             <DayDetailsSheet
               open={selectedDayId !== null}
               day={selectedDay}
+              showPastActions={isPastEditableDay}
+              completionActionLabel={
+                selectedDay?.state === "done_local"
+                  ? "Undo completion"
+                  : "Mark done"
+              }
               onOpenChange={(open) => {
                 if (!open) {
                   setSelectedDayId(null);
                 }
               }}
+              onTrackSets={handleOpenPastDayTracker}
+              onToggleComplete={() => {
+                if (!selectedDay) {
+                  return;
+                }
+
+                handleToggleDayDone(selectedDay.dayNumber, {
+                  willMarkDone: selectedDay.state !== "done_local",
+                  triggerElement: null,
+                });
+              }}
+            />
+
+            <ExerciseTrackerSheet
+              open={selectedTrackedDay !== null}
+              day={selectedTrackedDay}
+              exercise={selectedTrackedExercise}
+              onOpenChange={(open) => {
+                if (!open) {
+                  setSelectedTrackedDayId(null);
+                  setSelectedExerciseId(null);
+                }
+              }}
+              onSelectExercise={setSelectedExerciseId}
               onAddExerciseSet={addExerciseSet}
               onRemoveExerciseSet={removeExerciseSet}
-              onToggleDayDone={handleToggleDayDone}
             />
           </>
         )}

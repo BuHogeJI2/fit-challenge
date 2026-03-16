@@ -1,8 +1,8 @@
 import clsx from "clsx";
 
 const wrapper = clsx(
-  "rounded-[2rem] border border-[var(--border-subtle)] bg-[rgba(13,23,34,0.88)] px-5 py-5",
-  "shadow-[0_22px_54px_rgba(3,8,20,0.34)]",
+  "rounded-[2rem] border border-[var(--border-subtle)] bg-[linear-gradient(180deg,rgba(19,33,49,0.96),rgba(8,14,22,0.98))] px-5 py-5",
+  "shadow-[0_22px_54px_rgba(3,8,20,0.34)] ring-1 ring-[rgba(255,255,255,0.03)]",
 );
 
 const header = clsx("flex flex-wrap items-center justify-between gap-3");
@@ -14,7 +14,7 @@ const phase = clsx("text-sm text-[var(--text-muted)]");
 const grid = clsx("mt-4 grid gap-3 sm:grid-cols-3");
 
 const card = clsx(
-  "rounded-[1.4rem] border border-[var(--tone-neutral-border)] bg-[var(--tone-neutral-soft)] px-4 py-4",
+  "rounded-[1.15rem] border border-[var(--tone-neutral-border)] bg-[rgba(255,255,255,0.035)] px-4 py-4",
   "backdrop-blur-sm",
 );
 

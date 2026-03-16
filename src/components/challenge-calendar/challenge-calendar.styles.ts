@@ -1,8 +1,8 @@
 import clsx from "clsx";
 
 const wrapper = clsx(
-  "rounded-[2rem] border border-[var(--border-subtle)] bg-[rgba(13,23,34,0.84)] px-5 py-5",
-  "shadow-[0_22px_54px_rgba(3,8,20,0.34)]",
+  "rounded-[2rem] border border-[var(--border-subtle)] bg-[linear-gradient(180deg,rgba(19,33,49,0.96),rgba(8,14,22,0.98))] px-5 py-5",
+  "shadow-[0_22px_54px_rgba(3,8,20,0.34)] ring-1 ring-[rgba(255,255,255,0.03)]",
 );
 
 const header = clsx("flex items-center justify-between gap-3");
@@ -22,7 +22,7 @@ const grid = clsx("mt-3 grid grid-cols-7 gap-2");
 const emptyCell = clsx("aspect-square rounded-[1rem] border border-transparent");
 
 const dayButtonBase = clsx(
-  "flex aspect-square cursor-pointer items-center justify-center rounded-[1.1rem] border px-2.5 py-2 text-center transition",
+  "flex aspect-square cursor-pointer items-center justify-center rounded-[1.1rem] border px-2.5 py-2 text-center transition shadow-[0_8px_20px_rgba(0,0,0,0.14)]",
   "sm:items-start sm:justify-between sm:text-left",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tone-info-fill)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-app)]",
 );
@@ -43,7 +43,7 @@ const dayButtonMissed = clsx(
 );
 
 const dayButtonUpcoming = clsx(
-  "border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.14)] text-[var(--text-muted)]",
+  "border-[rgba(255,255,255,0.08)] bg-[rgba(4,9,16,0.52)] text-[var(--text-muted)]",
   "hover:border-[var(--tone-neutral-border)] hover:bg-[rgba(255,255,255,0.04)]",
 );
 

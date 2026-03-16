@@ -16,10 +16,7 @@ const getDayButtonClassName = (state: string) => {
   }
 };
 
-export function ChallengeCalendar({
-  months,
-  onOpenDay,
-}: IChallengeCalendarProps) {
+export function ChallengeCalendar({ months, onOpenDay }: IChallengeCalendarProps) {
   return (
     <section className={challengeCalendarClasses.wrapper}>
       <div className={challengeCalendarClasses.header}>

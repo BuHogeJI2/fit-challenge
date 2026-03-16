@@ -1,12 +1,12 @@
 import clsx from "clsx";
 
 const wrapper = clsx(
-  "rounded-[2rem] border border-[var(--border-subtle)] bg-[linear-gradient(180deg,rgba(19,33,49,0.98),rgba(13,23,34,0.98))]",
-  "px-5 py-5 shadow-[0_25px_60px_rgba(3,8,20,0.4)]",
+  "rounded-[2rem] border border-[var(--border-subtle)] bg-[linear-gradient(180deg,rgba(19,33,49,0.98),rgba(8,14,22,0.98))]",
+  "px-5 py-5 shadow-[0_25px_60px_rgba(3,8,20,0.4)] ring-1 ring-[rgba(255,255,255,0.03)]",
 );
 
 const completedWrapper = clsx(
-  "rounded-[2rem] border border-[var(--tone-success-border)] bg-[linear-gradient(180deg,rgba(24,42,28,0.98),rgba(13,23,34,0.98))]",
+  "rounded-[2rem] border border-[var(--tone-success-border)] bg-[linear-gradient(180deg,rgba(24,42,28,0.98),rgba(8,14,22,0.98))]",
   "px-5 py-5 shadow-[0_28px_68px_rgba(155,247,95,0.12)] ring-1 ring-[rgba(155,247,95,0.16)]",
 );
 
@@ -34,7 +34,7 @@ const completedCallout = clsx(
 );
 
 const progressBanner = clsx(
-  "mt-4 rounded-[1.3rem] border border-[var(--tone-neutral-border)] bg-[var(--tone-neutral-soft)] px-4 py-3",
+  "mt-4 px-4 py-4",
 );
 
 const progressValue = clsx("text-lg font-semibold text-[var(--text-primary)]");
@@ -46,7 +46,7 @@ const progressHint = clsx("mt-2 text-sm font-medium text-[var(--tone-success-tex
 const stats = clsx("mt-5 grid grid-cols-2 gap-3");
 
 const statCard = clsx(
-  "rounded-[1.4rem] border border-[var(--tone-neutral-border)] bg-[var(--tone-neutral-soft)] px-4 py-3",
+  "px-4 py-3",
   "text-[var(--text-secondary)]",
 );
 
@@ -56,8 +56,27 @@ const statValue = clsx("mt-2 text-lg font-semibold text-[var(--text-primary)]");
 
 const list = clsx("mt-5 space-y-3");
 
-const item = clsx(
-  "flex items-start justify-between gap-3 rounded-[1.25rem] border border-[var(--tone-neutral-border)] bg-[rgba(0,0,0,0.18)] px-4 py-3",
+const itemBase = clsx(
+  "flex w-full items-start justify-between gap-3 rounded-[1.3rem] border px-4 py-4 text-left transition",
+);
+
+const itemPanel = clsx(
+  itemBase,
+  "border-[var(--border-strong)] px-4 py-4",
+);
+
+const itemButton = clsx(
+  itemBase,
+  "cursor-pointer border-[var(--tone-info-border)] bg-[rgba(109,199,255,0.08)] shadow-[0_14px_34px_rgba(109,199,255,0.08)]",
+  "hover:border-[var(--tone-info-fill)] hover:bg-[rgba(109,199,255,0.12)] active:scale-[0.992]",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tone-info-fill)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-app)]",
+);
+
+const itemButtonComplete = clsx(
+  itemBase,
+  "cursor-pointer border-[var(--tone-success-border)] bg-[rgba(155,247,95,0.08)] shadow-[0_14px_34px_rgba(155,247,95,0.08)]",
+  "hover:border-[var(--tone-success-fill)] hover:bg-[rgba(155,247,95,0.12)] active:scale-[0.992]",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tone-success-fill)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-app)]",
 );
 
 const itemMain = clsx("min-w-0 flex-1");
@@ -76,50 +95,48 @@ const itemName = clsx(
 
 const itemMeta = clsx("mt-2 text-sm text-[var(--text-muted)]");
 
-const itemTarget = clsx(
-  "inline-flex shrink-0 items-center rounded-full border border-[var(--tone-info-border)] bg-[var(--tone-info-soft)] px-3 py-1.5",
-  "text-sm font-semibold text-[var(--tone-info-text)]",
+const itemMetaRow = clsx("mt-2 flex flex-wrap items-center justify-between gap-2");
+
+const itemHint = clsx(
+  "text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--tone-info-text)]",
 );
 
-const itemTargetComplete = clsx(
-  "inline-flex shrink-0 items-center rounded-full border border-[var(--tone-success-border)] bg-[var(--tone-success-soft)] px-3 py-1.5",
-  "text-sm font-semibold text-[var(--tone-success-text)]",
+const itemHintPassive = clsx(
+  "text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]",
 );
+
+const itemAside = clsx("flex shrink-0 flex-col items-end gap-2");
+
+const itemTarget = clsx("text-sm");
+
+const itemSetMeta = clsx("text-xs font-medium text-[var(--text-secondary)]");
 
 const actions = clsx("mt-5 flex flex-col gap-3 sm:flex-row");
 
-const actionButton = clsx(
-  "inline-flex min-h-12 items-center justify-center rounded-full px-5 text-sm font-semibold transition",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-app)]",
-);
-
 const readyButton = clsx(
-  actionButton,
+  "w-full sm:w-auto border-[var(--tone-success-border)] bg-[linear-gradient(180deg,var(--tone-success-strong),var(--tone-success-fill))]",
   "cursor-pointer border border-[var(--tone-success-border)] bg-[linear-gradient(180deg,var(--tone-success-strong),var(--tone-success-fill))]",
-  "text-[var(--text-inverse)] shadow-[0_18px_36px_rgba(155,247,95,0.22)] hover:brightness-[1.04] active:scale-[0.985] focus-visible:ring-[var(--tone-success-fill)]",
+  "!text-[var(--text-inverse)] shadow-[0_18px_36px_rgba(155,247,95,0.22)] hover:brightness-[1.04] active:scale-[0.985] focus-visible:ring-[var(--tone-success-fill)]",
 );
 
 const primaryButton = clsx(
-  actionButton,
+  "w-full sm:w-auto border-[var(--tone-success-border)] bg-[var(--tone-success-soft)]",
   "cursor-pointer border border-[var(--tone-success-border)] bg-[var(--tone-success-soft)]",
   "text-[var(--text-primary)] shadow-[0_12px_28px_rgba(155,247,95,0.10)] hover:border-[var(--tone-success-fill)]/34 hover:bg-[rgba(155,247,95,0.2)] active:scale-[0.985] focus-visible:ring-[var(--tone-success-fill)]",
 );
 
 const completedButton = clsx(
-  actionButton,
+  "w-full sm:w-auto border-[var(--tone-success-border)] bg-[var(--tone-success-soft)]",
   "cursor-pointer border border-[var(--tone-success-border)] bg-[var(--tone-success-soft)] text-[var(--tone-success-text)]",
   "hover:bg-[rgba(155,247,95,0.2)] active:scale-[0.985] focus-visible:ring-[var(--tone-success-fill)]",
 );
 
 const secondaryButton = clsx(
-  actionButton,
-  "cursor-pointer border border-[var(--tone-neutral-border)] bg-[var(--tone-neutral-soft)]",
-  "text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.08)] active:scale-[0.985] focus-visible:ring-[var(--tone-info-fill)]",
+  "w-full sm:w-auto",
 );
 
 const disabledButton = clsx(
-  actionButton,
-  "cursor-not-allowed border border-[var(--tone-neutral-border)] bg-[var(--tone-neutral-soft)] text-[var(--text-primary)] opacity-60",
+  "w-full cursor-not-allowed sm:w-auto",
 );
 
 export const featuredDayCardClasses = {
@@ -141,14 +158,20 @@ export const featuredDayCardClasses = {
   statLabel,
   statValue,
   list,
-  item,
+  itemPanel,
+  itemButton,
+  itemButtonComplete,
   itemMain,
   itemHeading,
   itemAccent,
   itemName,
   itemMeta,
+  itemMetaRow,
+  itemHint,
+  itemHintPassive,
+  itemAside,
   itemTarget,
-  itemTargetComplete,
+  itemSetMeta,
   actions,
   readyButton,
   primaryButton,

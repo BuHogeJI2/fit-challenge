@@ -6,6 +6,7 @@ import {
   getDayStateLabel,
   type TChallengeDayView,
 } from "../../lib/challenge";
+import { Badge, Button, Panel } from "../ui";
 import { featuredDayCardClasses } from "./featured-day-card.styles";
 import type { IFeaturedDayCardProps } from "./featured-day-card.types";
 
@@ -39,10 +40,12 @@ export function FeaturedDayCard({
   day,
   runPhase,
   onOpenDay,
+  onOpenExerciseTracker,
   onToggleDayDone,
 }: IFeaturedDayCardProps) {
   const actionButtonRef = useRef<HTMLButtonElement | null>(null);
   const isDone = day.state === "done_local";
+  const canTrackExercises = day.isActionable;
   const actionButtonClassName = isDone
     ? featuredDayCardClasses.completedButton
     : day.allExerciseGoalsReached
@@ -83,72 +86,137 @@ export function FeaturedDayCard({
       </p>
 
       {day.hasLoggedProgress ? (
-        <div className={featuredDayCardClasses.progressBanner}>
+        <Panel className={featuredDayCardClasses.progressBanner} variant="surface">
           <div className={featuredDayCardClasses.progressValue}>
             {day.dayLoggedRepsTotal}/{day.dayTargetRepsTotal} reps logged
           </div>
           <div className={featuredDayCardClasses.progressMeta}>
-            Optional set tracking from day details.
+            Exercise tracking now lives on the main card. Tap an exercise below
+            to keep logging sets.
           </div>
           {day.allExerciseGoalsReached && !isDone ? (
             <div className={featuredDayCardClasses.progressHint}>
               Targets reached. Mark the day done when you are ready.
             </div>
           ) : null}
-        </div>
+        </Panel>
       ) : null}
 
       <div className={featuredDayCardClasses.stats}>
-        <div className={featuredDayCardClasses.statCard}>
+        <Panel className={featuredDayCardClasses.statCard} variant="stat">
           <div className={featuredDayCardClasses.statLabel}>Daily target</div>
           <div className={featuredDayCardClasses.statValue}>
             {day.exercises.length} exercises
           </div>
-        </div>
-        <div className={featuredDayCardClasses.statCard}>
+        </Panel>
+        <Panel className={featuredDayCardClasses.statCard} variant="stat">
           <div className={featuredDayCardClasses.statLabel}>Estimated time</div>
           <div className={featuredDayCardClasses.statValue}>
             {day.estimatedMinutes ? `${day.estimatedMinutes} min` : "Quick session"}
           </div>
-        </div>
+        </Panel>
       </div>
 
       <div className={featuredDayCardClasses.list}>
         {day.exercises.map((exercise) => (
-          <div key={exercise.id} className={featuredDayCardClasses.item}>
-            <div className={featuredDayCardClasses.itemMain}>
-              <div className={featuredDayCardClasses.itemHeading}>
-                <div className={featuredDayCardClasses.itemName}>
-                  {formatExerciseNameForDisplay(exercise.exerciseName)}
-                </div>
-                <span
-                  aria-hidden="true"
-                  className={featuredDayCardClasses.itemAccent}
-                />
-              </div>
-              <div className={featuredDayCardClasses.itemMeta}>
-                {getFeaturedExerciseStatusLabel(exercise)}
-              </div>
-            </div>
-            <div
+          canTrackExercises ? (
+            <button
+              key={exercise.id}
+              type="button"
               className={
                 exercise.isGoalReached && exercise.sets.length > 0
-                  ? featuredDayCardClasses.itemTargetComplete
-                  : featuredDayCardClasses.itemTarget
+                  ? featuredDayCardClasses.itemButtonComplete
+                  : featuredDayCardClasses.itemButton
               }
+              onClick={() => onOpenExerciseTracker(exercise.id)}
+              aria-label={`Track sets for ${formatExerciseNameForDisplay(exercise.exerciseName)}`}
             >
-              {formatFeaturedExerciseProgress(exercise)}
-            </div>
-          </div>
+              <div className={featuredDayCardClasses.itemMain}>
+                <div className={featuredDayCardClasses.itemHeading}>
+                  <div className={featuredDayCardClasses.itemName}>
+                    {formatExerciseNameForDisplay(exercise.exerciseName)}
+                  </div>
+                  <span
+                    aria-hidden="true"
+                    className={featuredDayCardClasses.itemAccent}
+                  />
+                </div>
+                <div className={featuredDayCardClasses.itemMetaRow}>
+                  <div className={featuredDayCardClasses.itemMeta}>
+                    {getFeaturedExerciseStatusLabel(exercise)}
+                  </div>
+                  <div className={featuredDayCardClasses.itemHint}>
+                    Tap to track sets
+                  </div>
+                </div>
+              </div>
+              <div className={featuredDayCardClasses.itemAside}>
+                <Badge
+                  className={featuredDayCardClasses.itemTarget}
+                  variant={
+                    exercise.isGoalReached && exercise.sets.length > 0
+                      ? "success"
+                      : "info"
+                  }
+                >
+                  {formatFeaturedExerciseProgress(exercise)}
+                </Badge>
+                <div className={featuredDayCardClasses.itemSetMeta}>
+                  {exercise.sets.length
+                    ? `${exercise.sets.length} set${exercise.sets.length === 1 ? "" : "s"}`
+                    : "No sets yet"}
+                </div>
+              </div>
+            </button>
+          ) : (
+            <Panel
+              key={exercise.id}
+              className={featuredDayCardClasses.itemPanel}
+              variant="surface"
+            >
+              <div className={featuredDayCardClasses.itemMain}>
+                <div className={featuredDayCardClasses.itemHeading}>
+                  <div className={featuredDayCardClasses.itemName}>
+                    {formatExerciseNameForDisplay(exercise.exerciseName)}
+                  </div>
+                  <span
+                    aria-hidden="true"
+                    className={featuredDayCardClasses.itemAccent}
+                  />
+                </div>
+                <div className={featuredDayCardClasses.itemMetaRow}>
+                  <div className={featuredDayCardClasses.itemMeta}>
+                    {getFeaturedExerciseStatusLabel(exercise)}
+                  </div>
+                  <div className={featuredDayCardClasses.itemHintPassive}>
+                    Tracking unlocks on the day
+                  </div>
+                </div>
+              </div>
+              <div className={featuredDayCardClasses.itemAside}>
+                <Badge
+                  className={featuredDayCardClasses.itemTarget}
+                  variant={
+                    exercise.isGoalReached && exercise.sets.length > 0
+                      ? "success"
+                      : "info"
+                  }
+                >
+                  {formatFeaturedExerciseProgress(exercise)}
+                </Badge>
+              </div>
+            </Panel>
+          )
         ))}
       </div>
 
       <div className={featuredDayCardClasses.actions}>
         {day.isActionable ? (
-          <button
+          <Button
             ref={actionButtonRef}
-            type="button"
             className={actionButtonClassName}
+            type="button"
+            variant="secondary"
             onClick={() =>
               onToggleDayDone(day.dayNumber, {
                 willMarkDone: !isDone,
@@ -157,23 +225,25 @@ export function FeaturedDayCard({
             }
           >
             {isDone ? "Undo completion" : "Mark done"}
-          </button>
+          </Button>
         ) : (
-          <button
-            type="button"
+          <Button
             className={featuredDayCardClasses.disabledButton}
             disabled
+            type="button"
+            variant="secondary"
           >
             Available on the day
-          </button>
+          </Button>
         )}
-        <button
-          type="button"
+        <Button
           className={featuredDayCardClasses.secondaryButton}
+          type="button"
+          variant="secondary"
           onClick={() => onOpenDay(day.id)}
         >
           Open day details
-        </button>
+        </Button>
       </div>
     </section>
   );

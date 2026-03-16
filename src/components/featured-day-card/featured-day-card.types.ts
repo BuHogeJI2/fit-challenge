@@ -8,5 +8,6 @@ export interface IFeaturedDayCardProps {
   day: TChallengeDayView;
   runPhase: TRunPhase;
   onOpenDay: (dayId: number) => void;
+  onOpenExerciseTracker: (exerciseId: number) => void;
   onToggleDayDone: (dayNumber: number, options: TToggleDayDoneOptions) => void;
 }
