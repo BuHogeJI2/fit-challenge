@@ -19,9 +19,9 @@ It has one theme and English only.
   device. The app never waits for the network to show data.
 - **Backup is a file.** Versioned JSON export, and import as a full restore
   that replaces all data. The app shows the date of the last export.
-- **One origin.** Browser data belongs to one origin (domain). Pick the final
-  subdomain before logging real data; moving to another one later needs an
-  export and import.
+- **Name and origin.** The app is called Fit and is served at
+  `https://fit.buhogeji.me/`. Browser data belongs to one origin (domain), so
+  moving to another one later needs an export and import.
 - **Supabase is removed** from the app. It can come back later as an optional
   sync layer (see Phase 3), but the local database stays the source of truth.
 - **Design:** the "Journal" composition — month-first weight view, dated

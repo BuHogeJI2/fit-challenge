@@ -6,6 +6,7 @@ import { ExercisesScreen } from "../exercises-screen";
 import { ModeNav } from "../mode-nav";
 import { SettingsScreen } from "../settings-screen";
 import { ToastProvider } from "../ui";
+import { UpdateBanner } from "../update-banner";
 import { WeightScreen } from "../weight-screen";
 import { appClasses } from "./app.styles";
 
@@ -23,6 +24,7 @@ export function App() {
               Settings
             </Link>
           </header>
+          <UpdateBanner />
           <main className={appClasses.main}>
             <Switch>
               <Route path="/weight">
