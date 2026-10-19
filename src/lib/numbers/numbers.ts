@@ -36,6 +36,12 @@ export const formatWeightValue = (value: number): string => {
   return Number(formatted) === 0 ? "0.0" : formatted;
 };
 
+export const formatSignedWeightValue = (value: number): string => {
+  const formatted = formatWeightValue(Math.abs(value));
+  if (formatted === "0.0") return formatted;
+  return `${value > 0 ? "+" : "\u2212"}${formatted}`;
+};
+
 export const formatKg = (value: number): string => `${formatWeightValue(value)} kg`;
 
 export const formatReps = (value: number): string => {

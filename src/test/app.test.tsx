@@ -2,21 +2,23 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { App } from "../components/app";
+import { resetDatabase } from "./db-test-utils";
 
 describe("App shell", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     window.location.hash = "";
+    await resetDatabase();
   });
 
   afterEach(() => {
     cleanup();
   });
 
-  it("redirects an empty route to weight", () => {
+  it("redirects an empty route to weight", async () => {
     render(<App />);
 
     expect(window.location.hash).toBe("#/weight");
-    expect(screen.getByRole("heading", { name: "Weight" })).toBeInTheDocument();
+    expect(await screen.findByText("No weigh-ins yet")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Weight" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -37,7 +39,7 @@ describe("App shell", () => {
     await user.click(screen.getByRole("link", { name: "Exercises" }));
 
     expect(window.location.hash).toBe("#/exercises");
-    expect(screen.getByRole("heading", { name: "Training" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Training" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Exercises" })).toHaveAttribute(
       "aria-current",
       "page",

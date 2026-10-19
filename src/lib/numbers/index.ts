@@ -2,6 +2,7 @@ export {
   formatDuration,
   formatKg,
   formatReps,
+  formatSignedWeightValue,
   formatWeightValue,
   parseDecimal,
   roundToHundredth,

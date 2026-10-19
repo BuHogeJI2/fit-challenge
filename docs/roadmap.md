@@ -47,6 +47,10 @@ These apply to every full-size chart in the app:
   flat series still gets a readable scale.
 - When there is not enough data for a chart or a trend, say so instead of
   drawing a misleading line.
+- The goal line never squeezes the data. The month view keeps the scale on
+  the month's own values and draws the goal only when it falls inside that
+  range; the all-time view widens the scale to include the goal. The goal
+  number is always shown next to the chart.
 
 Sparklines in lists are simplified: no axes and no tapping, but the same
 date spacing and the same metric as the full chart they lead to.
