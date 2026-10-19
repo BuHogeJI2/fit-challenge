@@ -3,7 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Link } from "wouter";
 import { formatDateInContext, formatDayHeading, useToday } from "../../lib/dates";
 import {
-  addSet,
+  addSetWithUndo,
   deleteSet,
   getExercise,
   isRepositoryError,
@@ -14,6 +14,7 @@ import {
   type TExercise,
   type TPendingUndo,
   type TSet,
+  undoAddSet,
 } from "../../lib/db";
 import { formatDuration, formatLoadValue, formatReps } from "../../lib/numbers";
 import {
@@ -125,7 +126,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
     if (!lastSet) return;
 
     try {
-      const logged = await addSet({
+      const undo = await addSetWithUndo({
         exerciseId: exercise.id,
         date: todayKey,
         reps: lastSet.reps,
@@ -133,12 +134,14 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
         seconds: lastSet.seconds,
       });
       toast.show({
-        message: `Logged ${formatSetValues(exercise.metric, logged)}`,
+        message: `Logged ${formatSetValues(exercise.metric, undo.record)}`,
         action: {
           label: "Undo",
           onAction: async () => {
             try {
-              await deleteSet(logged.id);
+              if (!(await undoAddSet(undo))) {
+                toast.show({ message: "Undo is no longer available." });
+              }
             } catch {
               toast.show({ message: "Could not undo. Nothing was changed." });
             }

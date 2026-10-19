@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../components/app";
@@ -64,10 +64,9 @@ describe("Weight mode", () => {
     await user.type(within(sheet).getByLabelText("Weight in kg"), "84");
     await user.click(within(sheet).getByRole("button", { name: "Save" }));
 
-    const latest = await screen.findByRole("button", { name: "Edit Oct 19, 83.4 kg" });
-    expect(latest).toHaveTextContent("−0.6");
-    expect(screen.getByRole("button", { name: "Edit Oct 17, 84.0 kg" })).toHaveTextContent("first");
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Edit Oct 17, 84.0 kg" })).toHaveTextContent("first");
+    expect(screen.getByRole("button", { name: "Edit Oct 19, 83.4 kg" })).toHaveTextContent("−0.6");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
   it("warns and replaces the entry when the date already has one", async () => {

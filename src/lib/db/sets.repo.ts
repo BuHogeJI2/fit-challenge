@@ -129,6 +129,41 @@ export const addSet = async (input: TSetInput) => {
   });
 };
 
+/**
+ * Adds a set and returns what `undoAddSet` needs to remove it again while
+ * nothing else changed it.
+ */
+export const addSetWithUndo = (input: TSetInput): Promise<TPendingUndo<TSet>> =>
+  db.transaction("rw", db.exercises, db.sets, db.meta, async () => ({
+    record: await addSet(input),
+    generation: await getDataGeneration(),
+  }));
+
+/**
+ * Removes a just-added set only if it is unchanged and no restore or wipe
+ * happened since. Returns whether it ran.
+ */
+export const undoAddSet = ({ record, generation }: TPendingUndo<TSet>) =>
+  db.transaction("rw", db.sets, db.meta, async () => {
+    const [currentGeneration, current] = await Promise.all([
+      getDataGeneration(),
+      db.sets.get(record.id),
+    ]);
+
+    const isUnchanged =
+      current !== undefined &&
+      (["exerciseId", "date", "reps", "weightKg", "seconds", "note"] as const).every(
+        (field) => current[field] === record[field],
+      );
+
+    if (currentGeneration !== generation || !isUnchanged) {
+      return false;
+    }
+
+    await db.sets.delete(record.id);
+    return true;
+  });
+
 export const updateSet = async (id: string, update: TSetUpdate) => {
   assertDateKey(update.date);
 

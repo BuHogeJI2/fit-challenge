@@ -11,6 +11,11 @@ export function ToastProvider({ children }: IToastProviderProps) {
 
   const dismiss = useCallback(() => setToast(null), []);
 
+  const dismissActions = useCallback(
+    () => setToast((current) => (current?.action ? null : current)),
+    [],
+  );
+
   const show = useCallback((next: TToast) => {
     nextId.current += 1;
     setToast({ ...next, id: nextId.current });
@@ -23,7 +28,10 @@ export function ToastProvider({ children }: IToastProviderProps) {
     return () => window.clearTimeout(timeoutId);
   }, [dismiss, toast]);
 
-  const api = useMemo<TToastApi>(() => ({ show, dismiss }), [dismiss, show]);
+  const api = useMemo<TToastApi>(
+    () => ({ show, dismiss, dismissActions }),
+    [dismiss, dismissActions, show],
+  );
 
   const handleAction = () => {
     const action = toast?.action;

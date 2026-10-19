@@ -1,6 +1,8 @@
-import { Component, useEffect, useState } from "react";
+import { Component, Fragment, useEffect, useRef, useState } from "react";
 import type { ErrorInfo } from "react";
-import { db } from "../../lib/db";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db, getDataGeneration } from "../../lib/db";
+import { useToast } from "../ui";
 import { databaseGateClasses } from "./database-gate.styles";
 import type {
   IDatabaseGateProps,
@@ -44,6 +46,27 @@ class StorageErrorBoundary extends Component<IDatabaseGateProps, IStorageErrorBo
   }
 }
 
+// A restore or wipe bumps the generation: remounting the screens closes their
+// sheets and edit state, and undo toasts that point at old data are dropped.
+function GenerationScope({ children }: IDatabaseGateProps) {
+  const generation = useLiveQuery(getDataGeneration, []);
+  const { dismissActions } = useToast();
+  const previous = useRef(generation);
+
+  useEffect(() => {
+    if (previous.current !== undefined && previous.current !== generation) {
+      dismissActions();
+    }
+    previous.current = generation;
+  }, [dismissActions, generation]);
+
+  if (generation === undefined) {
+    return null;
+  }
+
+  return <Fragment key={generation}>{children}</Fragment>;
+}
+
 export function DatabaseGate({ children }: IDatabaseGateProps) {
   const [status, setStatus] = useState<TDatabaseStatus>({ state: "opening" });
 
@@ -71,5 +94,9 @@ export function DatabaseGate({ children }: IDatabaseGateProps) {
     return <StorageError message={status.message} />;
   }
 
-  return <StorageErrorBoundary>{children}</StorageErrorBoundary>;
+  return (
+    <StorageErrorBoundary>
+      <GenerationScope>{children}</GenerationScope>
+    </StorageErrorBoundary>
+  );
 }

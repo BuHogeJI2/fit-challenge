@@ -1,5 +1,6 @@
+import { getDataGeneration } from "./data-generation";
 import { db } from "./db";
-import type { TExercise, TMetric } from "./db.types";
+import type { TExercise, TMetric, TPendingUndo } from "./db.types";
 import { createId, normalizeLoadKg, now } from "./record-fields";
 import { RepositoryError } from "./repository-error";
 
@@ -113,6 +114,36 @@ const setArchivedAt = (id: string, archivedAt: string | null) =>
   });
 
 export const archiveExercise = (id: string) => setArchivedAt(id, now());
+
+/**
+ * Archives an exercise and returns what `undoArchiveExercise` needs to take
+ * it back while nothing else changed it.
+ */
+export const archiveExerciseWithUndo = (id: string): Promise<TPendingUndo<TExercise>> =>
+  db.transaction("rw", db.exercises, db.meta, async () => ({
+    record: await archiveExercise(id),
+    generation: await getDataGeneration(),
+  }));
+
+/**
+ * Restores an archived exercise only if it is still archived from the same
+ * moment the undo saw and no restore or wipe happened since. Returns whether
+ * it ran.
+ */
+export const undoArchiveExercise = ({ record, generation }: TPendingUndo<TExercise>) =>
+  db.transaction("rw", db.exercises, db.meta, async () => {
+    const [currentGeneration, current] = await Promise.all([
+      getDataGeneration(),
+      db.exercises.get(record.id),
+    ]);
+
+    if (currentGeneration !== generation || !current || current.archivedAt !== record.archivedAt) {
+      return false;
+    }
+
+    await db.exercises.put({ ...current, archivedAt: null, updatedAt: now() });
+    return true;
+  });
 
 export const unarchiveExercise = (id: string) => setArchivedAt(id, null);
 

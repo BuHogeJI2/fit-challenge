@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   addSet,
+  addSetWithUndo,
   archiveExercise,
+  archiveExerciseWithUndo,
   bumpDataGeneration,
   createExercise,
   db,
@@ -10,6 +12,8 @@ import {
   listSetsForExercise,
   restoreSet,
   unarchiveExercise,
+  undoAddSet,
+  undoArchiveExercise,
   updateExercise,
   updateSet,
 } from "../lib/db";
@@ -226,5 +230,41 @@ describe("exercise and set repositories", () => {
 
     expect(withLoad.progressWeightKg).toBe(24);
     expect(withoutLoad.progressWeightKg).toBeNull();
+  });
+
+  it("undoes an archive only while nothing else changed", async () => {
+    const exercise = await createExercise({ name: "Push-ups", metric: "reps" });
+    const undo = await archiveExerciseWithUndo(exercise.id);
+
+    expect(undo.record.archivedAt).not.toBeNull();
+    expect(await undoArchiveExercise(undo)).toBe(true);
+    expect((await getExercise(exercise.id))?.archivedAt).toBeNull();
+
+    const second = await archiveExerciseWithUndo(exercise.id);
+    await db.exercises.update(exercise.id, { archivedAt: "2026-10-19T10:00:00.000Z" });
+    expect(await undoArchiveExercise(second)).toBe(false);
+    expect((await getExercise(exercise.id))?.archivedAt).toBe("2026-10-19T10:00:00.000Z");
+
+    await unarchiveExercise(exercise.id);
+    const third = await archiveExerciseWithUndo(exercise.id);
+    await db.transaction("rw", db.meta, bumpDataGeneration);
+    expect(await undoArchiveExercise(third)).toBe(false);
+  });
+
+  it("undoes an added set only while it is unchanged", async () => {
+    const exercise = await createExercise({ name: "Push-ups", metric: "reps" });
+
+    const undo = await addSetWithUndo(repsSet(exercise.id, 20));
+    expect(await undoAddSet(undo)).toBe(true);
+    expect(await db.sets.count()).toBe(0);
+
+    const edited = await addSetWithUndo(repsSet(exercise.id, 20));
+    await updateSet(edited.record.id, { date: "2026-10-19", reps: 21, weightKg: null, seconds: null });
+    expect(await undoAddSet(edited)).toBe(false);
+
+    const stale = await addSetWithUndo(repsSet(exercise.id, 22));
+    await db.transaction("rw", db.meta, bumpDataGeneration);
+    expect(await undoAddSet(stale)).toBe(false);
+    expect(await db.sets.count()).toBe(2);
   });
 });

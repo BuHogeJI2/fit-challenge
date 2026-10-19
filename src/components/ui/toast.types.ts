@@ -12,6 +12,7 @@ export type TToast = {
 export type TToastApi = {
   show: (toast: TToast) => void;
   dismiss: () => void;
+  dismissActions: () => void;
 };
 
 export interface IToastProviderProps {

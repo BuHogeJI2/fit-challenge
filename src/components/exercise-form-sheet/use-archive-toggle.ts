@@ -1,5 +1,10 @@
 import { useCallback } from "react";
-import { archiveExercise, unarchiveExercise, type TExercise } from "../../lib/db";
+import {
+  archiveExerciseWithUndo,
+  undoArchiveExercise,
+  unarchiveExercise,
+  type TExercise,
+} from "../../lib/db";
 import { useToast } from "../ui";
 
 export const useArchiveToggle = () => {
@@ -13,14 +18,16 @@ export const useArchiveToggle = () => {
         return;
       }
 
-      await archiveExercise(exercise.id);
+      const undo = await archiveExerciseWithUndo(exercise.id);
       toast.show({
         message: `Archived ${exercise.name}. Its history is kept.`,
         action: {
           label: "Undo",
           onAction: async () => {
             try {
-              await unarchiveExercise(exercise.id);
+              if (!(await undoArchiveExercise(undo))) {
+                toast.show({ message: "Undo is no longer available." });
+              }
             } catch {
               toast.show({ message: "Could not undo. Nothing was changed." });
             }
