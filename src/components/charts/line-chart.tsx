@@ -32,6 +32,7 @@ export function LineChart({
     y0: PLOT_BOTTOM,
     y1: PLOT_TOP,
     minSpan,
+    floor: 0,
     extra: goalValue === null || !fitGoal ? [] : [goalValue],
   });
   const ticks = niceTicks(valueScale.min, valueScale.max, TICK_COUNT);
@@ -80,7 +81,7 @@ export function LineChart({
               {formatValue(tick)}
             </text>
           ))}
-          <text x={WIDTH} y={PLOT_TOP - 6} textAnchor="end">
+          <text x={WIDTH} y={AXIS_LABEL_Y} textAnchor="end">
             {unit}
           </text>
           {xLabels.map((xLabel) => (

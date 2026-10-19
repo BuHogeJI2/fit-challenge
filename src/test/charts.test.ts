@@ -163,3 +163,15 @@ describe("line points", () => {
     expect(() => buildLinePoints([{ ...point, date: "2026-02-30" }], () => 0, () => 0)).toThrow(RangeError);
   });
 });
+
+describe("value scale floor", () => {
+  it("cuts the padded domain at the floor and keeps the scale linear", () => {
+    const { min, max, scale } = createValueScale({ values: [5], y0: 100, y1: 0, minSpan: 30, floor: 0 });
+
+    expect(min).toBe(0);
+    expect(max).toBeGreaterThan(5);
+    expect(scale(0)).toBe(100);
+    expect(scale(max)).toBe(0);
+    expect(niceTicks(min, max).every((tick) => tick >= 0)).toBe(true);
+  });
+});

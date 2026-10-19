@@ -1,5 +1,5 @@
 import { getMonthKey, getMonthRange, shiftMonth } from "../../lib/dates";
-import type { TAxisLabel } from "../charts";
+import type { TAxisLabel } from "./line-chart.types";
 
 const MONTH_LABEL_DAYS = [1, 8, 15, 22, 29];
 const MAX_RANGE_LABELS = 6;

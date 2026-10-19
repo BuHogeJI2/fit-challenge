@@ -169,6 +169,7 @@ describe("exercise stats", () => {
     expect(getProgressLoad(exercise({ progressWeightKg: 20 }), sets)).toBe(20);
     expect(getProgressLoad(exercise({ metric: "reps" }), sets)).toBeNull();
     expect(getProgressLoad(exercise({}), [])).toBeNull();
+    expect(getProgressLoad(exercise({ progressWeightKg: 30 }), sets)).toBe(24);
   });
 
   it("describes progress from the first to the latest day", () => {

@@ -46,3 +46,13 @@ export const formatRelativeDate = (dateKey: string, todayKey: string) => {
   if (daysAgo === 1) return "yesterday";
   return formatDateInContext(dateKey, todayKey);
 };
+
+export const formatDayHeading = (dateKey: string, todayKey: string) => {
+  const daysAgo = differenceInDays(todayKey, dateKey);
+
+  if (daysAgo === 0) return "Today";
+  if (daysAgo === 1) return "Yesterday";
+  return dateKey.slice(0, 4) === todayKey.slice(0, 4)
+    ? formatLongDate(dateKey)
+    : format(dateKey, { weekday: "long", month: "short", day: "numeric", year: "numeric" });
+};

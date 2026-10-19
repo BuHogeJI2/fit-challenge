@@ -36,6 +36,7 @@ export const createValueScale = ({
   y1,
   minSpan = 1,
   extra = [],
+  floor = -Infinity,
 }: TValueScaleOptions): TValueScaleResult => {
   assertFinite(y0, y1, y1 - y0, minSpan);
   if (minSpan <= 0) throw new RangeError("The minimum chart span must be positive.");
@@ -58,7 +59,9 @@ export const createValueScale = ({
   const span = Math.max(dataMax - dataMin, minSpan);
   const center = dataMin + (dataMax - dataMin) / 2;
   const padding = span * 0.1;
-  const min = center - span / 2 - padding;
+  // A count or a duration cannot go below its floor, so the padded domain is
+  // cut there instead of showing impossible negative ticks.
+  const min = Math.max(center - span / 2 - padding, floor);
   const max = center + span / 2 + padding;
   assertFinite(min, max, max - min);
   if (min >= max) throw new RangeError("The chart span is too small for these values.");

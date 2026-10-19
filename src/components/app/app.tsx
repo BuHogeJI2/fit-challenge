@@ -1,19 +1,12 @@
 import { Redirect, Route, Router, Switch } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
 import { DatabaseGate } from "../database-gate";
+import { ExerciseDetailScreen } from "../exercise-detail-screen";
+import { ExercisesScreen } from "../exercises-screen";
 import { ModeNav } from "../mode-nav";
 import { ToastProvider } from "../ui";
 import { WeightScreen } from "../weight-screen";
 import { appClasses } from "./app.styles";
-import type { IPlaceholderScreenProps } from "./app.types";
-
-function PlaceholderScreen({ title }: IPlaceholderScreenProps) {
-  return (
-    <section className={appClasses.screen}>
-      <h1 className={appClasses.title}>{title}</h1>
-    </section>
-  );
-}
 
 export function App() {
   return (
@@ -30,9 +23,16 @@ export function App() {
                   <WeightScreen />
                 </DatabaseGate>
               </Route>
+              <Route path="/exercises/:id">
+                {(params) => (
+                  <DatabaseGate>
+                    <ExerciseDetailScreen key={params.id} exerciseId={params.id} />
+                  </DatabaseGate>
+                )}
+              </Route>
               <Route path="/exercises">
                 <DatabaseGate>
-                  <PlaceholderScreen title="Training" />
+                  <ExercisesScreen />
                 </DatabaseGate>
               </Route>
               <Route>

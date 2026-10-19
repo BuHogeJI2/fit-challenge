@@ -31,7 +31,7 @@ import { WeightEntrySheet } from "../weight-entry-sheet";
 import { WeightJournal } from "../weight-journal";
 import { weightScreenClasses } from "./weight-screen.styles";
 import type { TWeightSheetState, TWeightView } from "./weight-screen.types";
-import { getMonthAxisLabels, getRangeAxisLabels } from "./weight-screen.utils";
+import { getMonthAxisLabels, getRangeAxisLabels } from "../charts/axis-labels";
 
 export function WeightScreen() {
   const todayKey = useToday();

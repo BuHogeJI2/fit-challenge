@@ -10,6 +10,7 @@ export type TValueScaleOptions = {
   y0: number;
   y1: number;
   minSpan?: number;
+  floor?: number;
   extra?: readonly number[];
 };
 

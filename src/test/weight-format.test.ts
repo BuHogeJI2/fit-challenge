@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getMonthAxisLabels, getRangeAxisLabels } from "../components/weight-screen/weight-screen.utils";
+import { getMonthAxisLabels, getRangeAxisLabels } from "../components/charts/axis-labels";
 import {
   formatDayOfMonth,
   formatLongDate,

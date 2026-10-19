@@ -6,6 +6,11 @@ const weightFormatter = new Intl.NumberFormat("en-US", {
 
 const repsFormatter = new Intl.NumberFormat("en-US");
 
+const loadFormatter = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 2,
+  useGrouping: false,
+});
+
 const requireCount = (value: number) => {
   if (!Number.isSafeInteger(value) || value < 0) {
     throw new RangeError("Expected a nonnegative whole number.");
@@ -21,6 +26,20 @@ export const parseDecimal = (value: string): number | null => {
   return parsed === 0 ? 0 : parsed;
 };
 
+export const parseDuration = (text: string): number | null => {
+  const trimmed = text.trim();
+  const duration = /^(\d+):([0-5]\d)$/.exec(trimmed);
+  if (duration) {
+    const minutes = Number(duration[1]);
+    const seconds = minutes * 60 + Number(duration[2]);
+    return Number.isSafeInteger(seconds) ? seconds : null;
+  }
+
+  if (!/^\d+$/.test(trimmed)) return null;
+  const seconds = Number(trimmed);
+  return Number.isSafeInteger(seconds) ? seconds : null;
+};
+
 const roundTo = (value: number, factor: number) => {
   const rounded = Math.round(value * factor) / factor;
   return rounded === 0 ? 0 : rounded;
@@ -34,6 +53,12 @@ export const formatWeightValue = (value: number): string => {
   if (!Number.isFinite(value)) throw new RangeError("Expected a finite weight.");
   const formatted = weightFormatter.format(value);
   return Number(formatted) === 0 ? "0.0" : formatted;
+};
+
+export const formatLoadValue = (value: number): string => {
+  if (!Number.isFinite(value)) throw new RangeError("Expected a finite load.");
+  const formatted = loadFormatter.format(value);
+  return Number(formatted) === 0 ? "0" : formatted;
 };
 
 export const formatSignedWeightValue = (value: number): string => {

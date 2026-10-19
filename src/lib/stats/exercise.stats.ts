@@ -79,7 +79,12 @@ export const getProgressLoad = (exercise: TExercise, sets: readonly TSet[]) => {
     return null;
   }
 
-  return exercise.progressWeightKg ?? getLatestSet(sets)?.weightKg ?? null;
+  const saved = exercise.progressWeightKg;
+  if (saved !== null && sets.some((set) => set.weightKg === saved)) {
+    return saved;
+  }
+
+  return getLatestSet(sets)?.weightKg ?? null;
 };
 
 export const getExerciseProgress = (
