@@ -1,9 +1,10 @@
-# Challenge Forge
+# Fit
 
-Challenge Forge is a mobile-first React app for a public monthly fitness
-challenge. The current build shows one featured challenge run, highlights the
-current or most relevant day, lets users inspect the full calendar, and stores
-completion locally on the current device.
+Fit is a mobile-first personal tracker for body weight and exercises. All
+data stays in the browser on the current device. There is no backend and no
+account.
+
+See `docs/roadmap.md` for the product scope and the planned phases.
 
 ## Stack
 
@@ -11,8 +12,7 @@ completion locally on the current device.
 - React 19
 - TypeScript
 - Tailwind CSS v4
-- Supabase
-- Radix Dialog
+- wouter
 - Vitest + React Testing Library
 
 ## Prerequisites
@@ -22,24 +22,12 @@ completion locally on the current device.
 
 ## Local Setup
 
-Install dependencies:
-
 ```bash
 pnpm install
-```
-
-Create `.env.local`:
-
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-Start the dev server:
-
-```bash
 pnpm dev
 ```
+
+No environment variables are needed.
 
 ## Common Commands
 
@@ -49,12 +37,3 @@ pnpm typecheck
 pnpm test
 pnpm build
 ```
-
-## Docs
-
-- `AGENTS.md`
-- `docs/project-structure.md`
-- `docs/architecture.md`
-- `docs/db-structure.md`
-- `docs/testing.md`
-- `docs/roadmap.md`
