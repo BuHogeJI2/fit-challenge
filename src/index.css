@@ -36,6 +36,8 @@
   html {
     min-height: 100%;
     background-color: var(--color-ground);
+    /* Keeps focused rows clear of the sticky app header (pt-3 + min-h-11). */
+    scroll-padding-top: 3.5rem;
   }
 
   body {

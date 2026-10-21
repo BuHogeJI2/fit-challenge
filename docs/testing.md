@@ -61,6 +61,9 @@ and safe-area spacing. Try comma decimal input, backdated entries and the
 Minutes/Seconds fields. Export and restore a real file, including Cancel and
 an invalid file. Check storage support and refusal states.
 
+Scroll a long history: the header stays on top and focused rows are not
+hidden under it.
+
 Check installation, offline reload after the first online visit and an
 update between two production builds: the banner appears, Later hides it, and
 Reload loads the new version with the data still there. These PWA and phone checks are
