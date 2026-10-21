@@ -7,6 +7,15 @@ mounts `App` in StrictMode. wouter uses hash routes: `#/weight`,
 `#/exercises`, `#/exercises/:id` and `#/settings`; other routes redirect to
 Weight. There is no backend, authentication or sync.
 
+`AppShell` renders inside the router. Its header stays fixed at the top, and
+a one-finger horizontal swipe on `<main>` switches between exactly
+`#/weight` and `#/exercises`; other routes ignore it. The
+[swipe hook](../src/lib/gestures/use-horizontal-swipe.ts) uses native touch
+events, so normal scrolling and `touch-action` stay untouched. It ignores
+vertical moves, multitouch, starts near the screen edge (iOS Back), form
+controls and open sheets, and it suppresses the tap that would follow a
+recognized swipe.
+
 `ToastProvider` sits above the routes. Each screen is inside
 [DatabaseGate](../src/components/database-gate/database-gate.tsx), which
 opens IndexedDB. `StorageErrorBoundary` catches failed live reads as well as

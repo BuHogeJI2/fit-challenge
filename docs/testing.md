@@ -37,7 +37,7 @@ All files below are in `src/test/`:
 
 | Files | Main coverage |
 | --- | --- |
-| `app.test.tsx` | Hash routing, fallback route and mode navigation |
+| `app.test.tsx` | Hash routing, fallback route, mode navigation and tab swipe rules |
 | `weight.test.tsx` | First entry, editing, date replacement, delete/undo, storage failures, months and chart selection |
 | `exercises.test.tsx` | Exercise lifecycle, metric forms, repeat today or into a past day/undo, history, load selection and short-series charts |
 | `settings.test.tsx` | Goal, export, restore preview/confirmation, wipe, generation reset, persistence UI and file-read races |
@@ -62,7 +62,10 @@ Minutes/Seconds fields. Export and restore a real file, including Cancel and
 an invalid file. Check storage support and refusal states.
 
 Scroll a long history: the header stays on top and focused rows are not
-hidden under it.
+hidden under it. Swipe between Weight and Exercises in both directions, from
+a chart and from an exercise row link: the tab switches and the row does not
+open. Outward swipes, vertical scrolling, pinch zoom, the exercise picker in
+the set sheet and the browser's edge Back gesture must keep working.
 
 Check installation, offline reload after the first online visit and an
 update between two production builds: the banner appears, Later hides it, and
