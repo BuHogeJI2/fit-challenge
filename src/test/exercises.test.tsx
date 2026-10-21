@@ -123,6 +123,79 @@ describe("Exercises mode", () => {
     expect(within(await history()).queryByRole("heading", { name: "Today" })).not.toBeInTheDocument();
   });
 
+  it("repeats the last set of a past day into that day and undoes it", async () => {
+    const pushUps = await createExercise({ name: "Push-ups", metric: "reps" });
+    await addSet({ exerciseId: pushUps.id, date: "2026-10-15", reps: 30, weightKg: null, seconds: null });
+    vi.setSystemTime(new Date(2026, 9, 19, 9, 1, 0));
+    await addSet({ exerciseId: pushUps.id, date: "2026-10-15", reps: 25, weightKg: null, seconds: null });
+    await addSet({ exerciseId: pushUps.id, date: "2026-10-17", reps: 20, weightKg: null, seconds: null });
+    const user = userEvent.setup();
+    renderAt(`#/exercises/${pushUps.id}`);
+
+    await user.click(await screen.findByRole("button", { name: "Repeat 25 reps for Thursday, Oct 15" }));
+
+    expect(await screen.findByText("Logged 25 reps · Oct 15")).toBeInTheDocument();
+    expect(within(await history()).queryByRole("heading", { name: "Today" })).not.toBeInTheDocument();
+    const sets = await listSetsForExercise(pushUps.id);
+    expect(sets.filter((set) => set.date === "2026-10-15").map((set) => set.reps).sort()).toEqual([25, 25, 30]);
+    expect(sets.filter((set) => set.date === "2026-10-17")).toHaveLength(1);
+
+    await user.click(screen.getByRole("button", { name: "Undo" }));
+    await vi.waitFor(async () => expect(await listSetsForExercise(pushUps.id)).toHaveLength(3));
+  });
+
+  it("repeats a weighted set with its own load, not the charted one", async () => {
+    const squat = await createExercise({ name: "Goblet squat", metric: "reps_weight" });
+    await addSet({ exerciseId: squat.id, date: "2026-10-15", reps: 12, weightKg: 24, seconds: null });
+    await addSet({ exerciseId: squat.id, date: "2026-10-17", reps: 15, weightKg: 20, seconds: null });
+    await updateExercise(squat.id, { progressWeightKg: 20 });
+    const user = userEvent.setup();
+    renderAt(`#/exercises/${squat.id}`);
+
+    await user.click(await screen.findByRole("button", { name: "Repeat 12 × 24 kg for Thursday, Oct 15" }));
+
+    expect(await screen.findByText("Logged 12 × 24 kg · Oct 15")).toBeInTheDocument();
+    const repeated = (await listSetsForExercise(squat.id)).filter((set) => set.date === "2026-10-15");
+    expect(repeated.map(({ reps, weightKg }) => ({ reps, weightKg }))).toEqual([
+      { reps: 12, weightKg: 24 },
+      { reps: 12, weightKg: 24 },
+    ]);
+  });
+
+  it("repeats a hold into its own day", async () => {
+    const plank = await createExercise({ name: "Plank", metric: "time" });
+    await addSet({ exerciseId: plank.id, date: "2026-10-18", reps: null, weightKg: null, seconds: 75 });
+    const user = userEvent.setup();
+    renderAt(`#/exercises/${plank.id}`);
+
+    await user.click(await screen.findByRole("button", { name: "Repeat 1:15 for Yesterday" }));
+
+    expect(await screen.findByText("Logged 1:15 · Oct 18")).toBeInTheDocument();
+    const sets = await listSetsForExercise(plank.id);
+    expect(sets.map(({ date, seconds }) => ({ date, seconds }))).toEqual([
+      { date: "2026-10-18", seconds: 75 },
+      { date: "2026-10-18", seconds: 75 },
+    ]);
+  });
+
+  it("shows the error and no undo when a day repeat fails", async () => {
+    const pushUps = await createExercise({ name: "Push-ups", metric: "reps" });
+    await addSet({ exerciseId: pushUps.id, date: "2026-10-15", reps: 25, weightKg: null, seconds: null });
+    const user = userEvent.setup();
+    renderAt(`#/exercises/${pushUps.id}`);
+    const repeat = await screen.findByRole("button", { name: "Repeat 25 reps for Thursday, Oct 15" });
+
+    vi.spyOn(db.sets, "add").mockImplementationOnce(
+      () => Promise.reject(new Error("disk")) as ReturnType<typeof db.sets.add>,
+    );
+    await user.click(repeat);
+
+    expect(await screen.findByText("Could not log the set. Nothing was changed.")).toBeInTheDocument();
+    expect(screen.queryByText(/^Logged /)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
+    expect(await listSetsForExercise(pushUps.id)).toHaveLength(1);
+  });
+
   it("edits a set, deletes it and brings it back", async () => {
     const pushUps = await createExercise({ name: "Push-ups", metric: "reps" });
     const set = await addSet({ exerciseId: pushUps.id, date: "2026-10-19", reps: 20, weightKg: null, seconds: null });
@@ -173,6 +246,7 @@ describe("Exercises mode", () => {
     expect(await screen.findByText(/Archived\. Its history is kept/)).toBeInTheDocument();
     expect(within(await history()).getByRole("button", { name: "Edit set: 20 reps" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Log set" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Repeat / })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("link", { name: "Training" }));
     expect(await screen.findByText("Archived (1)")).toBeInTheDocument();

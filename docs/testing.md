@@ -39,7 +39,7 @@ All files below are in `src/test/`:
 | --- | --- |
 | `app.test.tsx` | Hash routing, fallback route and mode navigation |
 | `weight.test.tsx` | First entry, editing, date replacement, delete/undo, storage failures, months and chart selection |
-| `exercises.test.tsx` | Exercise lifecycle, metric forms, repeat/undo, history, load selection and short-series charts |
+| `exercises.test.tsx` | Exercise lifecycle, metric forms, repeat today or into a past day/undo, history, load selection and short-series charts |
 | `settings.test.tsx` | Goal, export, restore preview/confirmation, wipe, generation reset, persistence UI and file-read races |
 | `weight-repo.test.ts`, `exercise-repo.test.ts`, `settings-repo.test.ts` | Write invariants, rounding, metric locks, archive rules, undo guards and transaction rollback |
 | `backup.test.ts` | Strict parsing, round-trip, snapshot export, full replacement, rollback, wipe and stale undo |

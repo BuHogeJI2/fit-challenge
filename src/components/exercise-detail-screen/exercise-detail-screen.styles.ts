@@ -55,6 +55,13 @@ const chip = clsx(chipBase, "border border-rule-strong hover:border-ink");
 
 const chipBest = clsx(chipBase, "border-[1.5px] border-ink font-semibold");
 
+const repeatChip = clsx(
+  chipBase,
+  "flex items-center justify-center border border-dashed border-rule-strong hover:border-ink",
+);
+
+const repeatIcon = clsx("size-4 fill-none stroke-ink [stroke-linecap:round] [stroke-width:1.4]");
+
 const actions = clsx(
   "sticky bottom-0 -mx-6 mt-6 grid grid-cols-2 gap-3 bg-ground px-6 pt-3",
   "pb-[max(1.75rem,env(safe-area-inset-bottom))]",
@@ -84,5 +91,7 @@ export const exerciseDetailScreenClasses = {
   chips,
   chip,
   chipBest,
+  repeatChip,
+  repeatIcon,
   actions,
 };

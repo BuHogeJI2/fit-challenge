@@ -122,19 +122,18 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
     }
   };
 
-  const handleRepeatLast = async () => {
-    if (!lastSet) return;
-
+  const handleRepeat = async (set: TSet, date: string) => {
     try {
       const undo = await addSetWithUndo({
         exerciseId: exercise.id,
-        date: todayKey,
-        reps: lastSet.reps,
-        weightKg: lastSet.weightKg,
-        seconds: lastSet.seconds,
+        date,
+        reps: set.reps,
+        weightKg: set.weightKg,
+        seconds: set.seconds,
       });
+      const dateContext = date === todayKey ? "" : ` · ${formatDateInContext(date, todayKey)}`;
       toast.show({
-        message: `Logged ${formatSetValues(exercise.metric, undo.record)}`,
+        message: `Logged ${formatSetValues(exercise.metric, undo.record)}${dateContext}`,
         action: {
           label: "Undo",
           onAction: async () => {
@@ -252,6 +251,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
         <ol className={classes.days} aria-label="History">
           {days.map((day) => {
             const bestValue = dailyBest.find((item) => item.date === day.date)?.value ?? null;
+            const dayLastSet = day.sets.at(-1);
             return (
               <li key={day.date} className={classes.day}>
                 <div className={classes.dayHead}>
@@ -277,6 +277,18 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
                       onEdit={(item) => setSetSheet({ mode: "edit", set: item })}
                     />
                   ))}
+                  {dayLastSet && !isArchived ? (
+                    <button
+                      type="button"
+                      className={classes.repeatChip}
+                      aria-label={`Repeat ${formatSetValues(exercise.metric, dayLastSet)} for ${formatDayHeading(day.date, todayKey)}`}
+                      onClick={() => void handleRepeat(dayLastSet, day.date)}
+                    >
+                      <svg viewBox="0 0 16 16" aria-hidden="true" className={classes.repeatIcon}>
+                        <path d="M8 3v10M3 8h10" />
+                      </svg>
+                    </button>
+                  ) : null}
                 </div>
               </li>
             );
@@ -287,7 +299,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
       {!isArchived ? (
         <div className={classes.actions}>
           {lastSet ? (
-            <Button variant="outline" onClick={() => void handleRepeatLast()}>
+            <Button variant="outline" onClick={() => void handleRepeat(lastSet, todayKey)}>
               Repeat {formatChip(exercise, lastSet)}
             </Button>
           ) : null}

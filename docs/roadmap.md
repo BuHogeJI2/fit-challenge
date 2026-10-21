@@ -82,7 +82,8 @@ date spacing and the same metric as the full chart they lead to.
   is fixed once the exercise has a logged set.
 - Log a set: date (default today, can backdate), the values its metric needs,
   and an optional note. The form is prefilled from the last set, with a
-  "Repeat last" action.
+  "Repeat last" action that logs it today. Each day in the history can also
+  repeat its own last set into that day, for filling in a past workout.
 - Edit and delete a set. Delete can be undone.
 - Exercises list: each exercise with a sparkline, a one-line progress
   sentence (for example "Best set 29 reps, up 11 since Aug 3") and the date
