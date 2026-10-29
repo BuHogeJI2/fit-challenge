@@ -31,12 +31,13 @@ success. Derived summaries and chart data stay outside the database.
 ## Database and writes
 
 [db.ts](../src/lib/db/db.ts) defines the `fit` Dexie database, schema version
-1. IndexedDB stores these tables:
+2. Version 2 gives existing exercises the `total` progress view. IndexedDB
+stores these tables:
 
 | Table | Primary key | Other indexes / purpose |
 | --- | --- | --- |
 | `weightEntries` | `id` | Unique `date` |
-| `exercises` | `id` | Exercise name, metric, permanent lock, selected load, archive date |
+| `exercises` | `id` | Exercise name, metric, permanent lock, selected load, progress view, archive date |
 | `sets` | `id` | `exerciseId`, `date`, `[exerciseId+date]` |
 | `settings` | `key` | `goalWeightKg` and `lastExportAt`; missing records use null defaults |
 | `meta` | `key` | Internal `dataGeneration`, defaulting to zero |
@@ -69,11 +70,13 @@ a minute and when the page becomes visible.
 
 [Stats](../src/lib/stats) calculate weight summaries, changes between entries,
 daily exercise bests, daily totals and distinct active days in a Monday-based
-week. Missing days are omitted. Weighted progress uses one exact selected
-load; if that load has no sets, it falls back to the latest set's load.
+week. Missing days are omitted. Each exercise stores a progress view, `total`
+(default) or `best`; the list sentence, sparkline and detail chart all chart
+that daily series. Weighted progress uses one exact selected load for both
+views; if that load has no sets, it falls back to the latest set's load.
 The list sentence, sparkline, detail chart and best-set highlights share it.
-Progress text compares the latest daily best with the first and names a
-higher historical record separately.
+Best-set highlights always mark the daily best. Progress text compares the
+latest day with the first and names a higher historical record separately.
 
 [Chart helpers](../src/lib/charts) map real calendar days to x coordinates,
 pad value domains and generate ticks and SVG points. Full charts use a
@@ -84,8 +87,9 @@ for sparse data and the Month/All goal-line behavior.
 ## Backup and storage
 
 [Backup](../src/lib/backup) exports the four data tables in one readonly
-transaction, excluding `meta`. Files use `app: "fit"`, `schemaVersion: 1`
-and the name `fit-YYYY-MM-DD.json`. Parsing has no writes: it validates exact
+transaction, excluding `meta`. Files use `app: "fit"`, `schemaVersion: 2`
+and the name `fit-YYYY-MM-DD.json`. Schema 1 files still import; their
+exercises get the `total` progress view. Parsing has no writes: it validates exact
 fields, values, ids, dates, references, metric locks and settings, and returns
 at most 20 errors. Timestamps must match `toISOString()` form so string-based
 ordering remains valid. Invalid values are rejected, never rounded on import.

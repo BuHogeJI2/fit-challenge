@@ -1,17 +1,23 @@
 import { describe, expect, it } from "vitest";
-import type { TMetric } from "../lib/db";
+import type { TMetric, TProgressView } from "../lib/db";
 import { formatDuration, formatLoadValue, formatWeightValue, parseDuration } from "../lib/numbers";
 import {
   describeExerciseProgress,
-  formatBestValue,
+  formatProgressValue,
   formatSetValues,
   getExerciseProgress,
 } from "../lib/stats";
-import type { TDailyBest } from "../lib/stats";
+import type { TDailyValue } from "../lib/stats";
 
-const describeProgress = (metric: TMetric, days: TDailyBest[], loadKg: number | null = null) =>
+const describeProgress = (
+  metric: TMetric,
+  days: TDailyValue[],
+  loadKg: number | null = null,
+  view: TProgressView = "best",
+) =>
   describeExerciseProgress({
     metric,
+    view,
     progress: getExerciseProgress(days),
     loadKg,
     todayKey: "2026-10-19",
@@ -69,10 +75,10 @@ describe("exercise values", () => {
     expect(formatSetValues("time", { reps: null, weightKg: null, seconds: 105 })).toBe("1:45");
   });
 
-  it("formats best values as reps or duration and rejects a missing required value", () => {
-    expect(formatBestValue("reps", 29)).toBe("29 reps");
-    expect(formatBestValue("reps_weight", 12)).toBe("12 reps");
-    expect(formatBestValue("time", 105)).toBe("1:45");
+  it("formats progress values as reps or duration and rejects a missing required value", () => {
+    expect(formatProgressValue("reps", 29)).toBe("29 reps");
+    expect(formatProgressValue("reps_weight", 12)).toBe("12 reps");
+    expect(formatProgressValue("time", 105)).toBe("1:45");
     expect(() => formatSetValues("time", { reps: null, weightKg: null, seconds: null })).toThrow(RangeError);
   });
 });
@@ -138,6 +144,23 @@ describe("exercise progress text", () => {
       { date: "2026-08-05", value: 105 },
       { date: "2026-10-19", value: 90 },
     ])).toBe("Latest hold 1:30, down 0:15 since Aug 5. Record 1:45 on Aug 5.");
+  });
+
+  it("describes day totals for each metric", () => {
+    expect(describeProgress("reps", [
+      { date: "2026-10-15", value: 10 },
+      { date: "2026-10-19", value: 30 },
+    ], null, "total")).toBe("Best day 30 reps, up 20 since Oct 15.");
+    expect(describeProgress("reps", [
+      { date: "2026-10-15", value: 30 },
+      { date: "2026-10-19", value: 20 },
+    ], null, "total")).toBe("Latest day 20 reps, down 10 since Oct 15. Record 30 on Oct 15.");
+    expect(describeProgress("reps_weight", [{ date: "2026-10-19", value: 36 }], 24, "total"))
+      .toBe("Best day 36 reps at 24 kg on Oct 19.");
+    expect(describeProgress("time", [
+      { date: "2026-10-15", value: 90 },
+      { date: "2026-10-19", value: 180 },
+    ], null, "total")).toBe("Best day 3:00, up 1:30 since Oct 15.");
   });
 
   it("includes the year when a comparison date is outside the current year", () => {

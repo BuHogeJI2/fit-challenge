@@ -1,5 +1,7 @@
 export type TMetric = "reps" | "reps_weight" | "time";
 
+export type TProgressView = "total" | "best";
+
 export type TWeightEntry = {
   id: string;
   date: string;
@@ -15,6 +17,7 @@ export type TExercise = {
   metric: TMetric;
   metricLockedAt: string | null;
   progressWeightKg: number | null;
+  progressView: TProgressView;
   archivedAt: string | null;
   createdAt: string;
   updatedAt: string;

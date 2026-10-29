@@ -1,15 +1,15 @@
 import { addDays, getWeekStart } from "../dates";
 import type { TExercise, TMetric, TSet } from "../db";
 
-export type TDailyBest = {
+export type TDailyValue = {
   date: string;
   value: number;
 };
 
 export type TExerciseProgress = {
-  first: TDailyBest;
-  latest: TDailyBest;
-  best: TDailyBest;
+  first: TDailyValue;
+  latest: TDailyValue;
+  best: TDailyValue;
   changeSinceFirst: number;
 };
 
@@ -28,17 +28,13 @@ export const sortSets = (sets: readonly TSet[]) => [...sets].sort(compareSets);
 const getSetValue = (metric: TMetric, set: TSet) =>
   metric === "time" ? set.seconds : set.reps;
 
-/**
- * The best value of each logged day, oldest first: most reps for `reps`,
- * most reps at `loadKg` for `reps_weight`, longest hold for `time`.
- * Days without a matching set are left out, never filled with zero.
- */
-export const getDailyBest = (
+const getDailyValues = (
   metric: TMetric,
   sets: readonly TSet[],
-  loadKg: number | null = null,
-): TDailyBest[] => {
-  const bestByDate = new Map<string, number>();
+  loadKg: number | null,
+  combine: (current: number, value: number) => number,
+): TDailyValue[] => {
+  const valueByDate = new Map<string, number>();
 
   for (const set of sets) {
     if (metric === "reps_weight") {
@@ -52,13 +48,45 @@ export const getDailyBest = (
       continue;
     }
 
-    bestByDate.set(set.date, Math.max(bestByDate.get(set.date) ?? 0, value));
+    const current = valueByDate.get(set.date);
+    valueByDate.set(set.date, current === undefined ? value : combine(current, value));
   }
 
-  return [...bestByDate.entries()]
+  return [...valueByDate.entries()]
     .map(([date, value]) => ({ date, value }))
     .sort((left, right) => left.date.localeCompare(right.date));
 };
+
+/**
+ * The best value of each logged day, oldest first: most reps for `reps`,
+ * most reps at `loadKg` for `reps_weight`, longest hold for `time`.
+ * Days without a matching set are left out, never filled with zero.
+ */
+export const getDailyBest = (
+  metric: TMetric,
+  sets: readonly TSet[],
+  loadKg: number | null = null,
+): TDailyValue[] => getDailyValues(metric, sets, loadKg, Math.max);
+
+/**
+ * The total of each logged day, oldest first: all reps for `reps`, reps at
+ * `loadKg` for `reps_weight`, seconds held for `time`. Days without a
+ * matching set are left out, never filled with zero.
+ */
+export const getDailyTotal = (
+  metric: TMetric,
+  sets: readonly TSet[],
+  loadKg: number | null = null,
+): TDailyValue[] => getDailyValues(metric, sets, loadKg, (current, value) => current + value);
+
+export const getDailyProgress = (
+  exercise: TExercise,
+  sets: readonly TSet[],
+  loadKg: number | null,
+): TDailyValue[] =>
+  exercise.progressView === "best"
+    ? getDailyBest(exercise.metric, sets, loadKg)
+    : getDailyTotal(exercise.metric, sets, loadKg);
 
 export const getLoads = (sets: readonly TSet[]) => {
   const loads = new Set<number>();
@@ -88,16 +116,16 @@ export const getProgressLoad = (exercise: TExercise, sets: readonly TSet[]) => {
 };
 
 export const getExerciseProgress = (
-  dailyBest: readonly TDailyBest[],
+  daily: readonly TDailyValue[],
 ): TExerciseProgress | null => {
-  const first = dailyBest[0];
-  const latest = dailyBest.at(-1);
+  const first = daily[0];
+  const latest = daily.at(-1);
 
   if (!first || !latest) {
     return null;
   }
 
-  const best = dailyBest.reduce(
+  const best = daily.reduce(
     (current, day) => (day.value > current.value ? day : current),
     first,
   );

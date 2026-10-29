@@ -23,14 +23,14 @@ const stamp = { createdAt: TIMESTAMP, updatedAt: TIMESTAMP };
 
 const validFile = (): TBackupFile => ({
   app: "fit",
-  schemaVersion: 1,
+  schemaVersion: 2,
   exportedAt: TIMESTAMP,
   data: {
     weightEntries: [{ id: "weight", date: "2026-10-19", weightKg: 83.4, note: null, ...stamp }],
     exercises: [
-      { id: "reps", name: "Push-ups", metric: "reps", metricLockedAt: TIMESTAMP, progressWeightKg: null, archivedAt: null, ...stamp },
-      { id: "load", name: "Squat", metric: "reps_weight", metricLockedAt: TIMESTAMP, progressWeightKg: 22.55, archivedAt: null, ...stamp },
-      { id: "time", name: "Plank", metric: "time", metricLockedAt: TIMESTAMP, progressWeightKg: null, archivedAt: TIMESTAMP, ...stamp },
+      { id: "reps", name: "Push-ups", metric: "reps", metricLockedAt: TIMESTAMP, progressWeightKg: null, progressView: "total", archivedAt: null, ...stamp },
+      { id: "load", name: "Squat", metric: "reps_weight", metricLockedAt: TIMESTAMP, progressWeightKg: 22.55, progressView: "best", archivedAt: null, ...stamp },
+      { id: "time", name: "Plank", metric: "time", metricLockedAt: TIMESTAMP, progressWeightKg: null, progressView: "total", archivedAt: TIMESTAMP, ...stamp },
     ],
     sets: [
       { id: "rep-set", exerciseId: "reps", date: "2026-10-19", reps: 29, weightKg: null, seconds: null, note: "Easy", ...stamp },
@@ -90,7 +90,7 @@ describe("backup parsing", () => {
   );
 
   it.each([
-    ["app", "other", "app"], ["schemaVersion", 2, "schemaVersion"],
+    ["app", "other", "app"], ["schemaVersion", 3, "schemaVersion"],
     ["schemaVersion", "1", "schemaVersion"], ["exportedAt", "2026-10-19", "exportedAt"],
   ])("rejects invalid %s", (field, value, message) => {
     expectRejected(invalidFile((file) => { Object.assign(file, { [field]: value }); }), String(message));
@@ -191,6 +191,23 @@ describe("backup parsing", () => {
 
   it("rejects progress loads for metrics that do not use them", () => {
     expectRejected(invalidFile((file) => { file.data.exercises[0].progressWeightKg = 20; }), "progressWeightKg must be null");
+  });
+
+  it.each(["volume", null, undefined])("rejects progress view %s", (progressView) => {
+    expectRejected(invalidFile((file) => { file.data.exercises[0].progressView = progressView; }), "exercises[0]");
+  });
+
+  it("reads schema 1 exercises with the day total view", () => {
+    const text = invalidFile((file) => {
+      file.schemaVersion = 1;
+      for (const exercise of file.data.exercises) delete exercise.progressView;
+    });
+    const result = parseBackup(text);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("Expected a parsed backup.");
+    expect(result.data.exercises.map((exercise) => exercise.progressView)).toEqual(["total", "total", "total"]);
+    expectRejected(invalidFile((file) => { delete file.data.exercises[0].progressView; }), "exercises[0]");
   });
 
   it("requires unique, known setting keys and valid values", () => {

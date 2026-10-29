@@ -13,15 +13,17 @@ import {
   updateExercise,
   type TExercise,
   type TPendingUndo,
+  type TProgressView,
   type TSet,
   undoAddSet,
 } from "../../lib/db";
 import { formatDuration, formatLoadValue, formatReps } from "../../lib/numbers";
 import {
   describeExerciseProgress,
-  formatBestValue,
+  formatProgressValue,
   formatSetValues,
   getDailyBest,
+  getDailyProgress,
   getExerciseProgress,
   getLatestSet,
   getLoads,
@@ -38,6 +40,11 @@ import { exerciseDetailScreenClasses as classes } from "./exercise-detail-screen
 import type { IExerciseDetailScreenProps, ISetChipProps } from "./exercise-detail-screen.types";
 
 const CHART_MIN_SPAN = { reps: 4, reps_weight: 4, time: 30 } as const;
+
+const PROGRESS_VIEW_OPTIONS: { view: TProgressView; label: string; chartLabel: string }[] = [
+  { view: "total", label: "Day total", chartLabel: "total of each day" },
+  { view: "best", label: "Best set", chartLabel: "best of each day" },
+];
 
 const formatChip = (exercise: TExercise, set: TSet) => {
   switch (exercise.metric) {
@@ -94,12 +101,14 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
   const loads = getLoads(sets);
   const loadKg = getProgressLoad(exercise, sets);
   const dailyBest = getDailyBest(exercise.metric, sets, loadKg);
-  const progress = getExerciseProgress(dailyBest);
+  const daily = getDailyProgress(exercise, sets, loadKg);
+  const progress = getExerciseProgress(daily);
   const days = groupSetsByDay(sets);
   const lastSet = getLatestSet(sets);
   const isArchived = Boolean(exercise.archivedAt);
   const selected =
-    dailyBest.find((day) => day.date === selectedDate) ?? dailyBest[dailyBest.length - 1] ?? null;
+    daily.find((day) => day.date === selectedDate) ?? daily[daily.length - 1] ?? null;
+  const chartLabel = PROGRESS_VIEW_OPTIONS.find((option) => option.view === exercise.progressView)?.chartLabel;
 
   const handleDeleteSet = async (set: TSet) => {
     const undo = await deleteSet(set.id);
@@ -171,6 +180,14 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
     }
   };
 
+  const handleSelectView = async (progressView: TProgressView) => {
+    try {
+      await updateExercise(exercise.id, { progressView });
+    } catch {
+      toast.show({ message: "Could not change the chart. Nothing was changed." });
+    }
+  };
+
   const valueUnit = exercise.metric === "time" ? "m:ss" : "reps";
   const formatAxisValue = (value: number) =>
     exercise.metric === "time" ? formatDuration(Math.round(value)) : String(Math.round(value));
@@ -191,7 +208,13 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
 
       <h1 className={classes.title}>{exercise.name}</h1>
       <p className={classes.sentence}>
-        {describeExerciseProgress({ metric: exercise.metric, progress, loadKg, todayKey })}
+        {describeExerciseProgress({
+          metric: exercise.metric,
+          view: exercise.progressView,
+          progress,
+          loadKg,
+          todayKey,
+        })}
       </p>
 
       {isArchived ? (
@@ -203,6 +226,22 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
         </div>
       ) : null}
 
+      {daily.length ? (
+        <div className={classes.views} role="group" aria-label="Chart value">
+          {PROGRESS_VIEW_OPTIONS.map(({ view, label }) => (
+            <button
+              key={view}
+              type="button"
+              aria-pressed={view === exercise.progressView}
+              className={view === exercise.progressView ? classes.optionActive : classes.option}
+              onClick={() => void handleSelectView(view)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       {exercise.metric === "reps_weight" && loads.length > 1 ? (
         <div className={classes.loads} role="group" aria-label="Chart weight">
           {loads.map((value) => (
@@ -210,7 +249,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
               key={value}
               type="button"
               aria-pressed={value === loadKg}
-              className={value === loadKg ? classes.loadActive : classes.load}
+              className={value === loadKg ? classes.optionActive : classes.option}
               onClick={() => void handleSelectLoad(value)}
             >
               {formatLoadValue(value)} kg
@@ -219,11 +258,11 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
         </div>
       ) : null}
 
-      {dailyBest.length ? (
+      {daily.length ? (
         <div className={classes.chart}>
           <p className={classes.readout} aria-live="polite">
             {selected
-              ? `${formatDateInContext(selected.date, todayKey)} · ${formatBestValue(exercise.metric, selected.value)}${
+              ? `${formatDateInContext(selected.date, todayKey)} · ${formatProgressValue(exercise.metric, selected.value)}${
                   exercise.metric === "reps_weight" && loadKg !== null
                     ? ` at ${formatLoadValue(loadKg)} kg`
                     : ""
@@ -231,16 +270,16 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
               : null}
           </p>
           <LineChart
-            points={dailyBest}
-            startKey={dailyBest[0].date}
-            endKey={dailyBest[dailyBest.length - 1].date}
-            xLabels={getRangeAxisLabels(dailyBest[0].date, dailyBest[dailyBest.length - 1].date)}
+            points={daily}
+            startKey={daily[0].date}
+            endKey={daily[daily.length - 1].date}
+            xLabels={getRangeAxisLabels(daily[0].date, daily[daily.length - 1].date)}
             selectedDate={selected?.date ?? null}
             onSelect={setSelectedDate}
             formatValue={formatAxisValue}
             unit={valueUnit}
             minSpan={CHART_MIN_SPAN[exercise.metric]}
-            label={`${exercise.name}, best of each day, ${dailyBest.length} day${dailyBest.length === 1 ? "" : "s"}`}
+            label={`${exercise.name}, ${chartLabel}, ${daily.length} day${daily.length === 1 ? "" : "s"}`}
           />
         </div>
       ) : (

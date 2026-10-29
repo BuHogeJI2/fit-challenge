@@ -3,6 +3,8 @@ import type { TExercise, TSet, TWeightEntry } from "../lib/db";
 import {
   countActiveDaysThisWeek,
   getDailyBest,
+  getDailyProgress,
+  getDailyTotal,
   getExerciseProgress,
   getLoads,
   getMonthWeightSummary,
@@ -43,6 +45,7 @@ const exercise = (overrides: Partial<TExercise>): TExercise => ({
   metric: "reps_weight",
   metricLockedAt: null,
   progressWeightKg: null,
+  progressView: "total",
   archivedAt: null,
   createdAt: "2026-08-01T07:00:00.000Z",
   updatedAt: "2026-08-01T07:00:00.000Z",
@@ -157,6 +160,42 @@ describe("exercise stats", () => {
     ];
 
     expect(getDailyBest("time", sets)).toEqual([{ date: "2026-10-17", value: 105 }]);
+  });
+
+  it("sums each day for the day total and counts only the selected load", () => {
+    const sets = [
+      set("2026-10-15", { reps: 10 }),
+      set("2026-10-19", { reps: 10 }),
+      set("2026-10-19", { reps: 10 }, "07:05"),
+      set("2026-10-19", { reps: 10 }, "07:10"),
+    ];
+
+    expect(getDailyTotal("reps", sets)).toEqual([
+      { date: "2026-10-15", value: 10 },
+      { date: "2026-10-19", value: 30 },
+    ]);
+    expect(getDailyBest("reps", sets)).toEqual([
+      { date: "2026-10-15", value: 10 },
+      { date: "2026-10-19", value: 10 },
+    ]);
+    expect(getDailyTotal("reps_weight", [
+      set("2026-10-18", { reps: 10, weightKg: 24 }),
+      set("2026-10-18", { reps: 12, weightKg: 24 }, "07:05"),
+      set("2026-10-18", { reps: 15, weightKg: 20 }, "07:10"),
+    ], 24)).toEqual([{ date: "2026-10-18", value: 22 }]);
+    expect(getDailyTotal("time", [
+      set("2026-10-17", { seconds: 90 }),
+      set("2026-10-17", { seconds: 105 }, "07:05"),
+    ])).toEqual([{ date: "2026-10-17", value: 195 }]);
+  });
+
+  it("picks the daily series from the exercise's progress view", () => {
+    const sets = [set("2026-10-19", { reps: 10 }), set("2026-10-19", { reps: 12 }, "07:05")];
+
+    expect(getDailyProgress(exercise({ metric: "reps" }), sets, null))
+      .toEqual([{ date: "2026-10-19", value: 22 }]);
+    expect(getDailyProgress(exercise({ metric: "reps", progressView: "best" }), sets, null))
+      .toEqual([{ date: "2026-10-19", value: 12 }]);
   });
 
   it("defaults the progress load to the latest set and prefers a saved one", () => {

@@ -1,10 +1,12 @@
 import { getDataGeneration } from "./data-generation";
-import { db } from "./db";
-import type { TExercise, TMetric, TPendingUndo } from "./db.types";
+import { db, DEFAULT_PROGRESS_VIEW } from "./db";
+import type { TExercise, TMetric, TPendingUndo, TProgressView } from "./db.types";
 import { createId, normalizeLoadKg, now } from "./record-fields";
 import { RepositoryError } from "./repository-error";
 
 export const METRICS: readonly TMetric[] = ["reps", "reps_weight", "time"];
+
+export const PROGRESS_VIEWS: readonly TProgressView[] = ["total", "best"];
 
 export const EXERCISE_NAME_MAX_LENGTH = 60;
 
@@ -15,6 +17,7 @@ export type TExerciseInput = {
 
 export type TExerciseUpdate = Partial<TExerciseInput> & {
   progressWeightKg?: number | null;
+  progressView?: TProgressView;
 };
 
 const normalizeName = (name: string) => {
@@ -40,6 +43,12 @@ const assertMetric = (metric: TMetric) => {
   }
 };
 
+const assertProgressView = (view: TProgressView) => {
+  if (!PROGRESS_VIEWS.includes(view)) {
+    throw new RepositoryError("invalid_input", `Unknown progress view: ${view}`);
+  }
+};
+
 const getExistingExercise = async (id: string) => {
   const exercise = await db.exercises.get(id);
   if (!exercise) {
@@ -58,6 +67,7 @@ export const createExercise = async (input: TExerciseInput) => {
     metric: input.metric,
     metricLockedAt: null,
     progressWeightKg: null,
+    progressView: DEFAULT_PROGRESS_VIEW,
     archivedAt: null,
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -71,8 +81,10 @@ export const updateExercise = (id: string, update: TExerciseUpdate) =>
   db.transaction("rw", db.exercises, async () => {
     const exercise = await getExistingExercise(id);
     const metric = update.metric ?? exercise.metric;
+    const progressView = update.progressView ?? exercise.progressView;
 
     assertMetric(metric);
+    assertProgressView(progressView);
 
     if (metric !== exercise.metric && exercise.metricLockedAt) {
       throw new RepositoryError(
@@ -97,6 +109,7 @@ export const updateExercise = (id: string, update: TExerciseUpdate) =>
       name: update.name === undefined ? exercise.name : normalizeName(update.name),
       metric,
       progressWeightKg,
+      progressView,
       updatedAt: now(),
     };
 

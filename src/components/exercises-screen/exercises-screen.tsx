@@ -6,7 +6,7 @@ import { listExercises, listSets, type TExercise, type TSet } from "../../lib/db
 import {
   countActiveDaysThisWeek,
   describeExerciseProgress,
-  getDailyBest,
+  getDailyProgress,
   getExerciseProgress,
   getLatestSet,
   getProgressLoad,
@@ -30,7 +30,7 @@ const byRecentActivity = (sets: TSet[]) => (left: TExercise, right: TExercise) =
 function ExerciseRow({ exercise, sets, todayKey }: IExerciseRowProps) {
   const exerciseSets = sets.filter((set) => set.exerciseId === exercise.id);
   const loadKg = getProgressLoad(exercise, exerciseSets);
-  const dailyBest = getDailyBest(exercise.metric, exerciseSets, loadKg);
+  const daily = getDailyProgress(exercise, exerciseSets, loadKg);
   const lastSet = getLatestSet(exerciseSets);
 
   return (
@@ -42,17 +42,18 @@ function ExerciseRow({ exercise, sets, todayKey }: IExerciseRowProps) {
             {lastSet ? formatRelativeDate(lastSet.date, todayKey) : "no sets"}
           </span>
         </span>
-        {dailyBest.length ? (
+        {daily.length ? (
           <Sparkline
-            points={dailyBest}
-            startKey={dailyBest[0].date}
-            endKey={dailyBest[dailyBest.length - 1].date}
+            points={daily}
+            startKey={daily[0].date}
+            endKey={daily[daily.length - 1].date}
           />
         ) : null}
         <span className={exercisesScreenClasses.sentence}>
           {describeExerciseProgress({
             metric: exercise.metric,
-            progress: getExerciseProgress(dailyBest),
+            view: exercise.progressView,
+            progress: getExerciseProgress(daily),
             loadKg,
             todayKey,
           })}

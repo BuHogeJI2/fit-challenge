@@ -67,9 +67,9 @@ width. Sheet, toast and fixed action spacing account for the bottom safe area.
 - **Journal rows:** a weight row is an edit button with date, note, value
   and change. An exercise row is a detail link with its name, latest date,
   sparkline and progress sentence.
-- **Chips:** load and exercise-picker chips select a value and expose
-  `aria-pressed`; quick-rep chips fill the input. History chips open set
-  editing. A stronger outline marks daily bests, at the selected load for
+- **Chips:** progress-view, load and exercise-picker chips select a value
+  and expose `aria-pressed`; quick-rep chips fill the input. History chips
+  open set editing. A stronger outline marks daily bests, at the selected load for
   weighted exercises. Stats and summaries remain plain text.
 
 ## Charts

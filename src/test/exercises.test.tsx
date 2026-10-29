@@ -261,14 +261,40 @@ describe("Exercises mode", () => {
     renderAt(`#/exercises/${squat.id}`);
 
     expect(await screen.findByRole("button", { name: "24 kg", pressed: true })).toBeInTheDocument();
-    expect(screen.getByText("12 reps at 24 kg on Oct 18.")).toBeInTheDocument();
+    expect(screen.getByText("Best day 12 reps at 24 kg on Oct 18.")).toBeInTheDocument();
     expect(screen.getByText("Oct 18 · 12 reps at 24 kg")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "20 kg" }));
 
     expect(await screen.findByText("Oct 11 · 14 reps at 20 kg")).toBeInTheDocument();
-    expect(screen.getByText("14 reps at 20 kg on Oct 11.")).toBeInTheDocument();
+    expect(screen.getByText("Best day 14 reps at 20 kg on Oct 11.")).toBeInTheDocument();
     expect((await db.exercises.get(squat.id))?.progressWeightKg).toBe(20);
+  });
+
+  it("charts the day total by default and switches to the best set", async () => {
+    const pushUps = await createExercise({ name: "Push-ups", metric: "reps" });
+    await addSet({ exerciseId: pushUps.id, date: "2026-10-15", reps: 10, weightKg: null, seconds: null });
+    for (let index = 0; index < 3; index += 1) {
+      await addSet({ exerciseId: pushUps.id, date: "2026-10-19", reps: 10, weightKg: null, seconds: null });
+    }
+    const user = userEvent.setup();
+    renderAt(`#/exercises/${pushUps.id}`);
+
+    expect(await screen.findByRole("button", { name: "Day total", pressed: true })).toBeInTheDocument();
+    expect(screen.getByText("Best day 30 reps, up 20 since Oct 15.")).toBeInTheDocument();
+    expect(screen.getByText("Oct 19 · 30 reps")).toBeInTheDocument();
+    expect(screen.getByRole("figure")).toHaveAccessibleName(/total of each day, 2 days/);
+
+    await user.click(screen.getByRole("button", { name: "Best set" }));
+
+    expect(await screen.findByText("Best set 10 reps, same as Oct 15.")).toBeInTheDocument();
+    expect(screen.getByText("Oct 19 · 10 reps")).toBeInTheDocument();
+    expect(screen.getByRole("figure")).toHaveAccessibleName(/best of each day, 2 days/);
+    expect((await db.exercises.get(pushUps.id))?.progressView).toBe("best");
+
+    await user.click(screen.getByRole("link", { name: "Training" }));
+    const list = await screen.findByRole("list", { name: "Exercises" });
+    expect(within(list).getByRole("link")).toHaveTextContent("Best set 10 reps, same as Oct 15.");
   });
 
   it("lists exercises with progress and logs from the list", async () => {
@@ -339,7 +365,7 @@ describe("Exercises mode", () => {
     await user.click(await screen.findByRole("button", { name: "Edit set: 12 × 24 kg" }));
     await user.click(within(screen.getByRole("dialog", { name: "Edit set" })).getByRole("button", { name: "Delete set" }));
 
-    expect(await screen.findByText("14 reps at 20 kg on Oct 11.")).toBeInTheDocument();
+    expect(await screen.findByText("Best day 14 reps at 20 kg on Oct 11.")).toBeInTheDocument();
     expect(screen.getByText("Oct 11 · 14 reps at 20 kg")).toBeInTheDocument();
     expect(await db.sets.get(heavy.id)).toBeUndefined();
   });
@@ -358,7 +384,7 @@ describe("Exercises mode", () => {
     await user.type(within(sheet).getByLabelText("Weight in kg"), "22");
     await user.click(within(sheet).getByRole("button", { name: "Save" }));
 
-    expect(await screen.findByText("12 reps at 22 kg on Oct 18.")).toBeInTheDocument();
+    expect(await screen.findByText("Best day 12 reps at 22 kg on Oct 18.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "22 kg", pressed: true })).toBeInTheDocument();
   });
 

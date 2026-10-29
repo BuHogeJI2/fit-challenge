@@ -1,9 +1,12 @@
 import { parseDateKey } from "../dates";
 import {
+  DEFAULT_PROGRESS_VIEW,
   EXERCISE_NAME_MAX_LENGTH,
   normalizeSetValues,
+  PROGRESS_VIEWS,
   type TExercise,
   type TMetric,
+  type TProgressView,
   type TSet,
   type TSettingRecord,
   type TWeightEntry,
@@ -12,10 +15,12 @@ import { roundToHundredth, roundToTenth } from "../numbers";
 import type { TBackupData, TParseBackupResult } from "./backup.types";
 
 const MAX_ERRORS = 20;
+const SCHEMA_VERSIONS = [1, 2];
 const TABLES = ["weightEntries", "exercises", "sets", "settings"] as const;
 const WEIGHT_FIELDS = ["id", "date", "weightKg", "note", "createdAt", "updatedAt"];
 const EXERCISE_FIELDS = [
-  "id", "name", "metric", "metricLockedAt", "progressWeightKg", "archivedAt", "createdAt", "updatedAt",
+  "id", "name", "metric", "metricLockedAt", "progressWeightKg", "progressView", "archivedAt", "createdAt",
+  "updatedAt",
 ];
 const SET_FIELDS = [
   "id", "exerciseId", "date", "reps", "weightKg", "seconds", "note", "createdAt", "updatedAt",
@@ -56,6 +61,15 @@ const isNullableCount = (value: unknown): value is number | null =>
 const isMetric = (value: unknown): value is TMetric =>
   value === "reps" || value === "reps_weight" || value === "time";
 
+const isProgressView = (value: unknown): value is TProgressView =>
+  PROGRESS_VIEWS.includes(value as TProgressView);
+
+// Schema 1 predates the per-exercise progress view.
+const upgradeExerciseFromV1 = (value: unknown) =>
+  isRecord(value) && !Object.hasOwn(value, "progressView")
+    ? { ...value, progressView: DEFAULT_PROGRESS_VIEW }
+    : value;
+
 const readWeight = (value: unknown, report: TReport): TWeightEntry | null => {
   if (!isRecord(value) || !hasFields(value, WEIGHT_FIELDS)) {
     report("expected exactly id, date, weightKg, note, createdAt and updatedAt.");
@@ -90,7 +104,9 @@ const readExercise = (value: unknown, report: TReport): TExercise | null => {
     report("expected exactly the exercise fields, including nullable fields.");
     return null;
   }
-  const { id, name, metric, metricLockedAt, progressWeightKg, archivedAt, createdAt, updatedAt } = value;
+  const {
+    id, name, metric, metricLockedAt, progressWeightKg, progressView, archivedAt, createdAt, updatedAt,
+  } = value;
   if (!isId(id)) {
     report("id must be a non-empty string.");
     return null;
@@ -116,7 +132,11 @@ const readExercise = (value: unknown, report: TReport): TExercise | null => {
     report("progressWeightKg must be null for this metric.");
     return null;
   }
-  return { id, name, metric, metricLockedAt, progressWeightKg, archivedAt, createdAt, updatedAt };
+  if (!isProgressView(progressView)) {
+    report("progressView must be total or best.");
+    return null;
+  }
+  return { id, name, metric, metricLockedAt, progressWeightKg, progressView, archivedAt, createdAt, updatedAt };
 };
 
 const readSet = (value: unknown, report: TReport): TSet | null => {
@@ -237,7 +257,7 @@ export const parseBackup = (text: string): TParseBackupResult => {
     return { ok: false, errors: ["Backup: expected exactly app, schemaVersion, exportedAt and data."] };
   }
   if (input.app !== "fit") report('Backup: app must be "fit".');
-  if (input.schemaVersion !== 1) report("Backup: schemaVersion must be 1.");
+  if (!SCHEMA_VERSIONS.includes(input.schemaVersion as number)) report("Backup: schemaVersion must be 1 or 2.");
   if (!isTimestamp(input.exportedAt)) report("Backup: exportedAt must be a UTC timestamp in YYYY-MM-DDTHH:mm:ss.sssZ form.");
   if (!isRecord(input.data) || !hasFields(input.data, TABLES)) {
     report("Backup data: expected exactly weightEntries, exercises, sets and settings.");
@@ -251,7 +271,10 @@ export const parseBackup = (text: string): TParseBackupResult => {
 
   const data: TBackupData = {
     weightEntries: readTable(weightEntries, "weightEntries", readWeight, report),
-    exercises: readTable(exercises, "exercises", readExercise, report),
+    exercises: readTable(
+      input.schemaVersion === 1 ? exercises.map(upgradeExerciseFromV1) : exercises,
+      "exercises", readExercise, report,
+    ),
     sets: readTable(sets, "sets", readSet, report),
     settings: readTable(settings, "settings", readSetting, report),
   };

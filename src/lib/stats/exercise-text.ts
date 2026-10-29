@@ -1,5 +1,5 @@
 import { formatDateInContext } from "../dates";
-import type { TMetric, TSet } from "../db";
+import type { TMetric, TProgressView, TSet } from "../db";
 import { formatDuration, formatLoadValue, formatReps } from "../numbers";
 import type { TExerciseProgress } from "./exercise.stats";
 
@@ -7,6 +7,7 @@ export type TSetDisplayValues = Pick<TSet, "reps" | "weightKg" | "seconds">;
 
 export type TDescribeExerciseProgressOptions = {
   metric: TMetric;
+  view: TProgressView;
   progress: TExerciseProgress | null;
   loadKg: number | null;
   todayKey: string;
@@ -27,11 +28,25 @@ export const formatSetValues = (metric: TMetric, values: TSetDisplayValues): str
   return formatReps(requireValue(values.reps));
 };
 
-export const formatBestValue = (metric: TMetric, value: number): string =>
+export const formatProgressValue = (metric: TMetric, value: number): string =>
   metric === "time" ? formatDuration(value) : formatReps(value);
+
+const describeLatestBest = (metric: TMetric, isRecord: boolean, value: string, loadKg: number | null) => {
+  if (metric === "time") return `${isRecord ? "Longest hold" : "Latest hold"} ${value}`;
+  if (metric === "reps_weight") {
+    return `${isRecord ? "" : "Latest "}${value} at ${formatLoadValue(requireValue(loadKg))} kg`;
+  }
+  return `${isRecord ? "Best set" : "Latest best set"} ${value}`;
+};
+
+const describeLatestTotal = (metric: TMetric, isRecord: boolean, value: string, loadKg: number | null) => {
+  const load = metric === "reps_weight" ? ` at ${formatLoadValue(requireValue(loadKg))} kg` : "";
+  return `${isRecord ? "Best day" : "Latest day"} ${value}${load}`;
+};
 
 export const describeExerciseProgress = ({
   metric,
+  view,
   progress,
   loadKg,
   todayKey,
@@ -40,17 +55,10 @@ export const describeExerciseProgress = ({
 
   const { first, latest, best } = progress;
   const isRecord = latest.value === best.value;
-  const latestValue = formatBestValue(metric, latest.value);
+  const latestValue = formatProgressValue(metric, latest.value);
   const formatDate = (dateKey: string) => formatDateInContext(dateKey, todayKey);
-
-  let lead: string;
-  if (metric === "time") {
-    lead = `${isRecord ? "Longest hold" : "Latest hold"} ${latestValue}`;
-  } else if (metric === "reps_weight") {
-    lead = `${isRecord ? "" : "Latest "}${latestValue} at ${formatLoadValue(requireValue(loadKg))} kg`;
-  } else {
-    lead = `${isRecord ? "Best set" : "Latest best set"} ${latestValue}`;
-  }
+  const describeLatest = view === "best" ? describeLatestBest : describeLatestTotal;
+  const lead = describeLatest(metric, isRecord, latestValue, loadKg);
 
   if (first.date === latest.date) return `${lead} on ${formatDate(latest.date)}.`;
 

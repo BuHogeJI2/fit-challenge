@@ -1,3 +1,4 @@
+import Dexie from "dexie";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   addSet,
@@ -6,6 +7,7 @@ import {
   archiveExerciseWithUndo,
   bumpDataGeneration,
   createExercise,
+  DATABASE_NAME,
   db,
   deleteSet,
   getExercise,
@@ -16,6 +18,7 @@ import {
   undoArchiveExercise,
   updateExercise,
   updateSet,
+  type TProgressView,
 } from "../lib/db";
 import { resetDatabase } from "./db-test-utils";
 
@@ -40,8 +43,41 @@ describe("exercise and set repositories", () => {
       name: "Push-ups",
       metric: "reps",
       metricLockedAt: null,
+      progressView: "total",
       archivedAt: null,
     });
+  });
+
+  it("switches the progress view and rejects unknown views", async () => {
+    const exercise = await createExercise({ name: "Push-ups", metric: "reps" });
+
+    await expect(updateExercise(exercise.id, { progressView: "best" }))
+      .resolves.toMatchObject({ progressView: "best" });
+    await expect(updateExercise(exercise.id, { name: "Push-ups wide" }))
+      .resolves.toMatchObject({ progressView: "best" });
+    await expect(
+      updateExercise(exercise.id, { progressView: "volume" as TProgressView }),
+    ).rejects.toMatchObject({ code: "invalid_input" });
+  });
+
+  it("gives exercises from database version 1 the day total view", async () => {
+    db.close();
+    await Dexie.delete(DATABASE_NAME);
+    const legacy = new Dexie(DATABASE_NAME);
+    legacy.version(1).stores({
+      weightEntries: "id, &date",
+      exercises: "id",
+      sets: "id, exerciseId, date, [exerciseId+date]",
+      settings: "key",
+      meta: "key",
+    });
+    await legacy.open();
+    await legacy.table("exercises").add({ id: "legacy", name: "Push-ups", metric: "reps" });
+    legacy.close();
+
+    await db.open();
+
+    expect(await db.exercises.get("legacy")).toMatchObject({ progressView: "total" });
   });
 
   it("rejects an empty name", async () => {

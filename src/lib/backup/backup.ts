@@ -13,7 +13,7 @@ export const exportData = (): Promise<TBackupFile> =>
 
     return {
       app: "fit",
-      schemaVersion: 1,
+      schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       data: { weightEntries, exercises, sets, settings },
     };

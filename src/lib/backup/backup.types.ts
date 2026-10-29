@@ -9,7 +9,7 @@ export type TBackupData = {
 
 export type TBackupFile = {
   app: "fit";
-  schemaVersion: 1;
+  schemaVersion: 2;
   exportedAt: string;
   data: TBackupData;
 };

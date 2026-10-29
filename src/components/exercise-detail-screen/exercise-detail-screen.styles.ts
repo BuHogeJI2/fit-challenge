@@ -23,13 +23,15 @@ const notice = clsx("mt-5 flex items-center justify-between gap-4 border-y borde
 
 const noticeText = clsx("m-0 text-sm text-ink-soft");
 
-const loads = clsx("mt-5 flex flex-wrap gap-2");
+const views = clsx("mt-5 flex flex-wrap gap-2");
 
-const loadBase = clsx("min-h-11 cursor-pointer rounded-full px-4 text-sm", focus);
+const loads = clsx("mt-3 flex flex-wrap gap-2");
 
-const load = clsx(loadBase, "border border-rule-strong hover:border-ink");
+const optionBase = clsx("min-h-11 cursor-pointer rounded-full px-4 text-sm", focus);
 
-const loadActive = clsx(loadBase, "border border-ink bg-ink text-ground");
+const option = clsx(optionBase, "border border-rule-strong hover:border-ink");
+
+const optionActive = clsx(optionBase, "border border-ink bg-ink text-ground");
 
 const chart = clsx("mt-6 flex flex-col gap-2");
 
@@ -77,9 +79,10 @@ export const exerciseDetailScreenClasses = {
   sentence,
   notice,
   noticeText,
+  views,
   loads,
-  load,
-  loadActive,
+  option,
+  optionActive,
   chart,
   readout,
   empty,

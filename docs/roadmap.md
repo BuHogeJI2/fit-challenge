@@ -86,13 +86,17 @@ date spacing and the same metric as the full chart they lead to.
   repeat its own last set into that day, for filling in a past workout.
 - Edit and delete a set. Delete can be undone.
 - Exercises list: each exercise with a sparkline, a one-line progress
-  sentence (for example "Best set 29 reps, up 11 since Aug 3") and the date
+  sentence (for example "Best day 30 reps, up 20 since Aug 3") and the date
   of the last set.
-- Exercise detail: chart of the daily best (most reps; most reps at a chosen
-  weight for `reps + weight`; longest hold for `time`) and the history grouped
-  by date, with each day's sets and total.
-- For `reps + weight`, the sparkline, the progress sentence and the detail
-  chart all use the same selected weight and name it ("reps at 24 kg").
+- Exercise detail: chart of each day's value and the history grouped by date,
+  with each day's sets and total. A per-exercise toggle picks the value:
+  **Day total** (the default: all reps; reps at the chosen weight for
+  `reps + weight`; total hold for `time`) or **Best set** (most reps; most
+  reps at the chosen weight; longest hold). Three sets of 10 count as 30 in
+  the day total and 10 as the best set.
+- The sparkline, the progress sentence and the detail chart all use the
+  exercise's selected view and, for `reps + weight`, the same selected weight,
+  named in the text ("reps at 24 kg").
 - "This week" summary: number of active days.
 
 ### Data and App
