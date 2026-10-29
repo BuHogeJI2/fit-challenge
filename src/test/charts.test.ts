@@ -1,10 +1,33 @@
 import { describe, expect, it } from "vitest";
 import {
   buildLinePoints,
+  createBandScale,
   createDateScale,
   createValueScale,
   niceTicks,
 } from "../lib/charts";
+
+describe("band scale", () => {
+  it("gives every day or week one slot and centers dates in it", () => {
+    const days = createBandScale({ startKey: "2026-10-01", endKey: "2026-10-10", stepDays: 1, x0: 0, x1: 100 });
+    expect(days.bandwidth).toBe(10);
+    expect(days.center("2026-10-01")).toBe(5);
+    expect(days.center("2026-10-10")).toBe(95);
+
+    const weeks = createBandScale({ startKey: "2026-10-05", endKey: "2026-10-26", stepDays: 7, x0: 0, x1: 100 });
+    expect(weeks.bandwidth).toBe(25);
+    expect(weeks.center("2026-10-12")).toBe(37.5);
+    expect(weeks.center("2026-10-15")).toBeCloseTo(48.21, 2);
+  });
+
+  it("uses one full-width slot for a single date and rejects bad input", () => {
+    expect(createBandScale({ startKey: "2026-10-19", endKey: "2026-10-19", stepDays: 1, x0: 0, x1: 100 }))
+      .toMatchObject({ bandwidth: 100 });
+    expect(() => createBandScale({ startKey: "2026-10-20", endKey: "2026-10-19", stepDays: 1, x0: 0, x1: 100 })).toThrow(RangeError);
+    expect(() => createBandScale({ startKey: "2026-10-19", endKey: "2026-10-19", stepDays: 0, x0: 0, x1: 100 })).toThrow(RangeError);
+    expect(() => createBandScale({ startKey: "2026-10-19", endKey: "2026-10-19", stepDays: 1, x0: 0, x1: NaN })).toThrow(RangeError);
+  });
+});
 
 describe("date scale", () => {
   it("uses actual day spacing rather than point positions", () => {

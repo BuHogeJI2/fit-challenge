@@ -39,14 +39,14 @@ All files below are in `src/test/`:
 | --- | --- |
 | `app.test.tsx` | Hash routing, fallback route, mode navigation and tab swipe rules |
 | `weight.test.tsx` | First entry, editing, date replacement, delete/undo, storage failures, months and chart selection |
-| `exercises.test.tsx` | Exercise lifecycle, metric forms, repeat today or into a past day/undo, history, load and progress-view selection and short-series charts |
+| `exercises.test.tsx` | Exercise lifecycle, metric forms, repeat today or into a past day/undo, history, load and progress-view selection, day/week total bars and short-series charts |
 | `settings.test.tsx` | Goal, export, restore preview/confirmation, wipe, generation reset, persistence UI and file-read races |
 | `weight-repo.test.ts`, `exercise-repo.test.ts`, `settings-repo.test.ts` | Write invariants, rounding, metric locks, archive rules, undo guards and transaction rollback |
 | `backup.test.ts` | Strict parsing, schema 1 import, round-trip, snapshot export, full replacement, rollback, wipe and stale undo |
 | `dates.test.ts`, `use-today.test.tsx` | Real dates, leap years, calendar arithmetic, week/month boundaries and day refresh |
 | `numbers.test.ts`, `exercise-text.test.ts`, `weight-format.test.ts` | Decimal/duration input, precision, progress wording, date context and axis labels |
 | `stats.test.ts` | Weight summaries, daily bests, selected loads, grouped totals and active days |
-| `charts.test.ts`, `sparkline.test.tsx` | Date spacing, padded domains, nonnegative floors, ticks and sparse SVG output |
+| `charts.test.ts`, `sparkline.test.tsx`, `bar-chart.test.tsx` | Date spacing, day/week slots, padded domains, nonnegative floors, ticks, bars and sparse SVG output |
 | `update-banner.test.tsx` | The new-version banner reloads only on Reload and hides on Later (the service worker itself is mocked) |
 
 ## Limits and manual checks

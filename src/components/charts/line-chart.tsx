@@ -1,16 +1,18 @@
 import type { KeyboardEvent } from "react";
 import { buildLinePoints, createDateScale, createValueScale, niceTicks } from "../../lib/charts";
+import { ChartAxes } from "./chart-axes";
+import {
+  CHART_HEIGHT,
+  CHART_WIDTH,
+  getKeyboardSelection,
+  PLOT_BOTTOM,
+  PLOT_LEFT,
+  PLOT_RIGHT,
+  PLOT_TOP,
+  TICK_COUNT,
+} from "./chart-frame";
 import { lineChartClasses } from "./line-chart.styles";
 import type { ILineChartProps } from "./line-chart.types";
-
-const WIDTH = 342;
-const HEIGHT = 224;
-const PLOT_LEFT = 10;
-const PLOT_RIGHT = 302;
-const PLOT_TOP = 16;
-const PLOT_BOTTOM = 196;
-const AXIS_LABEL_Y = 216;
-const TICK_COUNT = 5;
 
 export function LineChart({
   points,
@@ -39,16 +41,15 @@ export function LineChart({
   const line = buildLinePoints(points, xScale, valueScale.scale);
   const selected = line.points.find((point) => point.date === selectedDate) ?? null;
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    const step = event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" ? 1 : 0;
-    if (!step || !line.points.length) return;
+    const next = getKeyboardSelection(
+      event.key,
+      line.points.map((point) => point.date),
+      selected?.date ?? null,
+    );
+    if (next === null) return;
 
     event.preventDefault();
-    const index = line.points.findIndex((point) => point.date === selected?.date);
-    const nextIndex =
-      index === -1
-        ? line.points.length - 1
-        : Math.min(Math.max(index + step, 0), line.points.length - 1);
-    onSelect(line.points[nextIndex].date);
+    onSelect(next);
   };
 
   const goalY =
@@ -63,33 +64,15 @@ export function LineChart({
       aria-label={`${label}. Use the left and right arrow keys to move between points.`}
       onKeyDown={handleKeyDown}
     >
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className={lineChartClasses.svg} aria-hidden="true">
-        <g className={lineChartClasses.grid}>
-          {ticks.map((tick) => (
-            <line
-              key={tick}
-              x1={0}
-              x2={PLOT_RIGHT + 6}
-              y1={valueScale.scale(tick)}
-              y2={valueScale.scale(tick)}
-            />
-          ))}
-        </g>
-        <g className={lineChartClasses.axisText}>
-          {ticks.map((tick) => (
-            <text key={tick} x={WIDTH} y={valueScale.scale(tick) + 3.5} textAnchor="end">
-              {formatValue(tick)}
-            </text>
-          ))}
-          <text x={WIDTH} y={AXIS_LABEL_Y} textAnchor="end">
-            {unit}
-          </text>
-          {xLabels.map((xLabel) => (
-            <text key={xLabel.date} x={xScale(xLabel.date)} y={AXIS_LABEL_Y} textAnchor="middle">
-              {xLabel.label}
-            </text>
-          ))}
-        </g>
+      <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className={lineChartClasses.svg} aria-hidden="true">
+        <ChartAxes
+          ticks={ticks}
+          valueScale={valueScale.scale}
+          xLabels={xLabels}
+          xPosition={xScale}
+          formatValue={formatValue}
+          unit={unit}
+        />
         {goalY !== null && goalValue !== null ? (
           <g>
             <line

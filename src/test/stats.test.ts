@@ -9,6 +9,7 @@ import {
   getLoads,
   getMonthWeightSummary,
   getProgressLoad,
+  getTotalBars,
   getWeightSummary,
   groupSetsByDay,
   withChangeFromPrevious,
@@ -196,6 +197,35 @@ describe("exercise stats", () => {
       .toEqual([{ date: "2026-10-19", value: 22 }]);
     expect(getDailyProgress(exercise({ metric: "reps", progressView: "best" }), sets, null))
       .toEqual([{ date: "2026-10-19", value: 12 }]);
+  });
+
+  it("runs total bars from the first day to today and keeps empty days out", () => {
+    expect(getTotalBars([], "2026-10-19")).toBeNull();
+    expect(getTotalBars([
+      { date: "2026-10-12", value: 10 },
+      { date: "2026-10-16", value: 30 },
+    ], "2026-10-19")).toEqual({
+      stepDays: 1,
+      startKey: "2026-10-12",
+      endKey: "2026-10-19",
+      bars: [{ date: "2026-10-12", value: 10 }, { date: "2026-10-16", value: 30 }],
+    });
+  });
+
+  it("groups total bars by Monday-based week once the span is over 60 days", () => {
+    const daily = [
+      { date: "2026-08-19", value: 10 },
+      { date: "2026-10-12", value: 20 },
+      { date: "2026-10-18", value: 15 },
+    ];
+
+    expect(getTotalBars(daily, "2026-10-18")).toMatchObject({ stepDays: 1, startKey: "2026-08-19" });
+    expect(getTotalBars(daily, "2026-10-19")).toEqual({
+      stepDays: 7,
+      startKey: "2026-08-17",
+      endKey: "2026-10-19",
+      bars: [{ date: "2026-08-17", value: 10 }, { date: "2026-10-12", value: 35 }],
+    });
   });
 
   it("defaults the progress load to the latest set and prefers a saved one", () => {

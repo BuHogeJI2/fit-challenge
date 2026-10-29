@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Link } from "wouter";
-import { formatDateInContext, formatDayHeading, useToday } from "../../lib/dates";
+import { formatDateInContext, formatDayHeading, getWeekStart, useToday } from "../../lib/dates";
 import {
   addSetWithUndo,
   deleteSet,
@@ -28,9 +28,10 @@ import {
   getLatestSet,
   getLoads,
   getProgressLoad,
+  getTotalBars,
   groupSetsByDay,
 } from "../../lib/stats";
-import { LineChart } from "../charts";
+import { BarChart, LineChart } from "../charts";
 import { getRangeAxisLabels } from "../charts/axis-labels";
 import { ExerciseFormSheet } from "../exercise-form-sheet";
 import { useArchiveToggle } from "../exercise-form-sheet/use-archive-toggle";
@@ -41,10 +42,12 @@ import type { IExerciseDetailScreenProps, ISetChipProps } from "./exercise-detai
 
 const CHART_MIN_SPAN = { reps: 4, reps_weight: 4, time: 30 } as const;
 
-const PROGRESS_VIEW_OPTIONS: { view: TProgressView; label: string; chartLabel: string }[] = [
-  { view: "total", label: "Day total", chartLabel: "total of each day" },
-  { view: "best", label: "Best set", chartLabel: "best of each day" },
+const PROGRESS_VIEW_OPTIONS: { view: TProgressView; label: string }[] = [
+  { view: "total", label: "Day total" },
+  { view: "best", label: "Best set" },
 ];
+
+const countOf = (count: number, unit: string) => `${count} ${unit}${count === 1 ? "" : "s"}`;
 
 const formatChip = (exercise: TExercise, set: TSet) => {
   switch (exercise.metric) {
@@ -106,9 +109,14 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
   const days = groupSetsByDay(sets);
   const lastSet = getLatestSet(sets);
   const isArchived = Boolean(exercise.archivedAt);
+  const totalBars = exercise.progressView === "total" ? getTotalBars(daily, todayKey) : null;
+  const chartPoints = totalBars?.bars ?? daily;
+  const isWeekly = totalBars?.stepDays === 7;
+  const selectedKey = selectedDate !== null && isWeekly ? getWeekStart(selectedDate) : selectedDate;
   const selected =
-    daily.find((day) => day.date === selectedDate) ?? daily[daily.length - 1] ?? null;
-  const chartLabel = PROGRESS_VIEW_OPTIONS.find((option) => option.view === exercise.progressView)?.chartLabel;
+    chartPoints.find((point) => point.date === selectedKey) ?? chartPoints.at(-1) ?? null;
+  const chartPeriod = isWeekly ? "week" : "day";
+  const chartLabel = `${exercise.name}, ${totalBars ? "total" : "best"} of each ${chartPeriod}, ${countOf(chartPoints.length, chartPeriod)}`;
 
   const handleDeleteSet = async (set: TSet) => {
     const undo = await deleteSet(set.id);
@@ -262,25 +270,41 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
         <div className={classes.chart}>
           <p className={classes.readout} aria-live="polite">
             {selected
-              ? `${formatDateInContext(selected.date, todayKey)} · ${formatProgressValue(exercise.metric, selected.value)}${
+              ? `${isWeekly ? "Week of " : ""}${formatDateInContext(selected.date, todayKey)} · ${formatProgressValue(exercise.metric, selected.value)}${
                   exercise.metric === "reps_weight" && loadKg !== null
                     ? ` at ${formatLoadValue(loadKg)} kg`
                     : ""
                 }`
               : null}
           </p>
-          <LineChart
-            points={daily}
-            startKey={daily[0].date}
-            endKey={daily[daily.length - 1].date}
-            xLabels={getRangeAxisLabels(daily[0].date, daily[daily.length - 1].date)}
-            selectedDate={selected?.date ?? null}
-            onSelect={setSelectedDate}
-            formatValue={formatAxisValue}
-            unit={valueUnit}
-            minSpan={CHART_MIN_SPAN[exercise.metric]}
-            label={`${exercise.name}, ${chartLabel}, ${daily.length} day${daily.length === 1 ? "" : "s"}`}
-          />
+          {totalBars ? (
+            <BarChart
+              bars={totalBars.bars}
+              startKey={totalBars.startKey}
+              endKey={totalBars.endKey}
+              stepDays={totalBars.stepDays}
+              xLabels={getRangeAxisLabels(totalBars.startKey, totalBars.endKey)}
+              selectedDate={selected?.date ?? null}
+              onSelect={setSelectedDate}
+              formatValue={formatAxisValue}
+              unit={valueUnit}
+              minSpan={CHART_MIN_SPAN[exercise.metric]}
+              label={chartLabel}
+            />
+          ) : (
+            <LineChart
+              points={daily}
+              startKey={daily[0].date}
+              endKey={daily[daily.length - 1].date}
+              xLabels={getRangeAxisLabels(daily[0].date, daily[daily.length - 1].date)}
+              selectedDate={selected?.date ?? null}
+              onSelect={setSelectedDate}
+              formatValue={formatAxisValue}
+              unit={valueUnit}
+              minSpan={CHART_MIN_SPAN[exercise.metric]}
+              label={chartLabel}
+            />
+          )}
         </div>
       ) : (
         <p className={classes.empty}>No sets yet. Log the first one below.</p>

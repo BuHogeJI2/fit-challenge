@@ -51,6 +51,11 @@ These apply to every full-size chart in the app:
   the month's own values and draws the goal only when it falls inside that
   range; the all-time view widens the scale to include the goal. The goal
   number is always shown next to the chart.
+- Exercise day totals are bars, not a line. A day without sets is a real
+  zero, so it stays an empty slot instead of being bridged by a line. The
+  bars start at zero and run from the first logged day to today. A span
+  over 60 days shows one bar per Monday-based week, because daily bars would
+  be too thin to read or tap.
 
 Sparklines in lists are simplified: no axes and no tapping, but the same
 date spacing and the same metric as the full chart they lead to.
@@ -88,8 +93,8 @@ date spacing and the same metric as the full chart they lead to.
 - Exercises list: each exercise with a sparkline, a one-line progress
   sentence (for example "Best day 30 reps, up 20 since Aug 3") and the date
   of the last set.
-- Exercise detail: chart of each day's value and the history grouped by date,
-  with each day's sets and total. A per-exercise toggle picks the value:
+- Exercise detail: chart of each day's value (bars for Day total, a line for
+  Best set) and the history grouped by date, with each day's sets and total. A per-exercise toggle picks the value:
   **Day total** (the default: all reps; reps at the chosen weight for
   `reps + weight`; total hold for `time`) or **Best set** (most reps; most
   reps at the chosen weight; longest hold). Three sets of 10 count as 30 in

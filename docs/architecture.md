@@ -78,10 +78,13 @@ The list sentence, sparkline, detail chart and best-set highlights share it.
 Best-set highlights always mark the daily best. Progress text compares the
 latest day with the first and names a higher historical record separately.
 
-[Chart helpers](../src/lib/charts) map real calendar days to x coordinates,
-pad value domains and generate ticks and SVG points. Full charts use a
-nonnegative domain, visible raw points and a text readout with keyboard
-selection. Sparklines are passive. See the [chart rules](roadmap.md#chart-rules)
+[Chart helpers](../src/lib/charts) map real calendar days to x coordinates
+or to day/week slots, pad value domains and generate ticks and SVG points.
+Full charts use a nonnegative domain, visible raw points or bars and a text
+readout with keyboard selection. The exercise `total` view draws a bar chart
+and bar sparkline from `getTotalBars`, which ends at today and switches to
+weekly bars over 60 days; the `best` view and weight use line charts.
+Sparklines are passive. See the [chart rules](roadmap.md#chart-rules)
 for sparse data and the Month/All goal-line behavior.
 
 ## Backup and storage

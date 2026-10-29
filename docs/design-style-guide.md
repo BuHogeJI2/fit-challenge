@@ -76,7 +76,8 @@ width. Sheet, toast and fixed action spacing account for the bottom safe area.
 
 Follow the [chart rules](roadmap.md#chart-rules): real calendar spacing, raw
 points, labelled axes and units, no zero-filled missing days, and readable
-empty, single-point and flat states. Month weight charts keep the domain on
+empty, single-point and flat states. Exercise day totals use muted bars from
+a zero baseline with the selected bar in ink; rest days are empty slots. Month weight charts keep the domain on
 the month's data; All includes the goal in its domain.
 
 Full charts use a 342×224 viewBox. A point tap or Left/Right arrow selection

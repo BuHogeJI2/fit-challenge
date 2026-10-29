@@ -1,4 +1,4 @@
-import { addDays, getWeekStart } from "../dates";
+import { addDays, differenceInDays, getWeekStart } from "../dates";
 import type { TExercise, TMetric, TSet } from "../db";
 
 export type TDailyValue = {
@@ -11,6 +11,13 @@ export type TExerciseProgress = {
   latest: TDailyValue;
   best: TDailyValue;
   changeSinceFirst: number;
+};
+
+export type TTotalBars = {
+  stepDays: 1 | 7;
+  startKey: string;
+  endKey: string;
+  bars: TDailyValue[];
 };
 
 export type TSetDay = {
@@ -87,6 +94,38 @@ export const getDailyProgress = (
   exercise.progressView === "best"
     ? getDailyBest(exercise.metric, sets, loadKg)
     : getDailyTotal(exercise.metric, sets, loadKg);
+
+// Longer spans group by week: a day bar would be too thin to read or tap.
+export const MAX_DAILY_BAR_SPAN = 60;
+
+/**
+ * Day totals as bars from the first logged day to today, so days without
+ * sets stay visible as empty slots. A span over `MAX_DAILY_BAR_SPAN` days
+ * groups the totals into Monday-based weeks, dated by their Monday.
+ */
+export const getTotalBars = (daily: readonly TDailyValue[], todayKey: string): TTotalBars | null => {
+  const first = daily[0];
+  const last = daily.at(-1);
+  if (!first || !last) return null;
+
+  const endKey = last.date > todayKey ? last.date : todayKey;
+  if (differenceInDays(endKey, first.date) <= MAX_DAILY_BAR_SPAN) {
+    return { stepDays: 1, startKey: first.date, endKey, bars: [...daily] };
+  }
+
+  const totalByWeek = new Map<string, number>();
+  for (const day of daily) {
+    const week = getWeekStart(day.date);
+    totalByWeek.set(week, (totalByWeek.get(week) ?? 0) + day.value);
+  }
+
+  return {
+    stepDays: 7,
+    startKey: getWeekStart(first.date),
+    endKey: getWeekStart(endKey),
+    bars: [...totalByWeek.entries()].map(([date, value]) => ({ date, value })),
+  };
+};
 
 export const getLoads = (sets: readonly TSet[]) => {
   const loads = new Set<number>();

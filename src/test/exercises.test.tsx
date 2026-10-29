@@ -284,17 +284,40 @@ describe("Exercises mode", () => {
     expect(screen.getByText("Best day 30 reps, up 20 since Oct 15.")).toBeInTheDocument();
     expect(screen.getByText("Oct 19 · 30 reps")).toBeInTheDocument();
     expect(screen.getByRole("figure")).toHaveAccessibleName(/total of each day, 2 days/);
+    expect(screen.queryByTestId("chart-bar-2026-10-17")).toBeNull();
+    fireEvent.click(screen.getByTestId("chart-bar-2026-10-15"));
+    expect(screen.getByText("Oct 15 · 10 reps")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Best set" }));
 
     expect(await screen.findByText("Best set 10 reps, same as Oct 15.")).toBeInTheDocument();
-    expect(screen.getByText("Oct 19 · 10 reps")).toBeInTheDocument();
+    expect(screen.getByText("Oct 15 · 10 reps")).toBeInTheDocument();
     expect(screen.getByRole("figure")).toHaveAccessibleName(/best of each day, 2 days/);
+    expect(screen.getByRole("figure").querySelector("polyline")).not.toBeNull();
     expect((await db.exercises.get(pushUps.id))?.progressView).toBe("best");
 
     await user.click(screen.getByRole("link", { name: "Training" }));
     const list = await screen.findByRole("list", { name: "Exercises" });
     expect(within(list).getByRole("link")).toHaveTextContent("Best set 10 reps, same as Oct 15.");
+  });
+
+  it("runs day total bars to today and groups a long history by week", async () => {
+    const pushUps = await createExercise({ name: "Push-ups", metric: "reps" });
+    await addSet({ exerciseId: pushUps.id, date: "2026-10-12", reps: 10, weightKg: null, seconds: null });
+    const { unmount } = renderAt(`#/exercises/${pushUps.id}`);
+
+    expect(await screen.findByRole("figure")).toHaveAccessibleName(/total of each day, 1 day/);
+    expect(screen.getByText("Oct 12 · 10 reps")).toBeInTheDocument();
+    unmount();
+
+    await addSet({ exerciseId: pushUps.id, date: "2026-07-01", reps: 5, weightKg: null, seconds: null });
+    await addSet({ exerciseId: pushUps.id, date: "2026-10-14", reps: 20, weightKg: null, seconds: null });
+    renderAt(`#/exercises/${pushUps.id}`);
+
+    expect(await screen.findByRole("figure")).toHaveAccessibleName(/total of each week, 2 weeks/);
+    expect(screen.getByText("Week of Oct 12 · 30 reps")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("chart-bar-2026-06-29"));
+    expect(screen.getByText("Week of Jun 29 · 5 reps")).toBeInTheDocument();
   });
 
   it("lists exercises with progress and logs from the list", async () => {

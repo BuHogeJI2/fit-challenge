@@ -10,8 +10,9 @@ import {
   getExerciseProgress,
   getLatestSet,
   getProgressLoad,
+  getTotalBars,
 } from "../../lib/stats";
-import { Sparkline } from "../charts";
+import { BarSparkline, Sparkline } from "../charts";
 import { ExerciseFormSheet } from "../exercise-form-sheet";
 import { SetEntrySheet, type TSetSheetState } from "../set-entry-sheet";
 import { Button, useToast } from "../ui";
@@ -31,6 +32,7 @@ function ExerciseRow({ exercise, sets, todayKey }: IExerciseRowProps) {
   const exerciseSets = sets.filter((set) => set.exerciseId === exercise.id);
   const loadKg = getProgressLoad(exercise, exerciseSets);
   const daily = getDailyProgress(exercise, exerciseSets, loadKg);
+  const totalBars = exercise.progressView === "total" ? getTotalBars(daily, todayKey) : null;
   const lastSet = getLatestSet(exerciseSets);
 
   return (
@@ -42,7 +44,14 @@ function ExerciseRow({ exercise, sets, todayKey }: IExerciseRowProps) {
             {lastSet ? formatRelativeDate(lastSet.date, todayKey) : "no sets"}
           </span>
         </span>
-        {daily.length ? (
+        {totalBars ? (
+          <BarSparkline
+            bars={totalBars.bars}
+            startKey={totalBars.startKey}
+            endKey={totalBars.endKey}
+            stepDays={totalBars.stepDays}
+          />
+        ) : daily.length ? (
           <Sparkline
             points={daily}
             startKey={daily[0].date}

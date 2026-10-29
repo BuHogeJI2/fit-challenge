@@ -14,6 +14,15 @@ export type TValueScaleOptions = {
   extra?: readonly number[];
 };
 
+export type TBandScaleOptions = TDateScaleOptions & {
+  stepDays: number;
+};
+
+export type TBandScale = {
+  bandwidth: number;
+  center: (dateKey: string) => number;
+};
+
 export type TDateScale = (dateKey: string) => number;
 export type TValueScale = (value: number) => number;
 

@@ -7,10 +7,6 @@ const figure = clsx(
 
 const svg = clsx("block h-auto w-full overflow-visible");
 
-const grid = clsx("stroke-rule [stroke-width:1]");
-
-const axisText = clsx("fill-muted font-mono text-[10px]");
-
 const goalLine = clsx("stroke-ink [stroke-dasharray:4_4] [stroke-width:1]");
 
 const goalText = clsx("fill-ink text-[11px]");
@@ -26,8 +22,6 @@ const hitArea = clsx("cursor-pointer fill-transparent");
 export const lineChartClasses = {
   figure,
   svg,
-  grid,
-  axisText,
   goalLine,
   goalText,
   line,
