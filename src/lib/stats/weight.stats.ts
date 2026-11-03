@@ -35,6 +35,13 @@ export type TWeightEntryWithChange = {
   changeKg: number | null;
 };
 
+// Stored weights are whole tenths, so summing tenths as integers keeps an
+// average such as 83.95 exact; a float sum can land on 83.9499… and round down.
+const averageInTenths = (values: readonly number[]) => {
+  const tenths = values.reduce((sum, value) => sum + Math.round(value * 10), 0);
+  return Math.round(tenths / values.length) / 10;
+};
+
 export const sortByDate = (entries: readonly TWeightEntry[]) =>
   [...entries].sort((left, right) => left.date.localeCompare(right.date));
 
@@ -80,11 +87,9 @@ export const getMonthWeightSummary = (
     return { count: 0, averageKg: null, minKg: null, maxKg: null };
   }
 
-  const total = values.reduce((sum, value) => sum + value, 0);
-
   return {
     count: values.length,
-    averageKg: roundToTenth(total / values.length),
+    averageKg: averageInTenths(values),
     minKg: Math.min(...values),
     maxKg: Math.max(...values),
   };
@@ -112,7 +117,7 @@ export const getWeeklyWeights = (entries: readonly TWeightEntry[]): TWeekWeight[
 
   let previousKg: number | null = null;
   return [...valuesByWeek.entries()].map(([weekStart, values]) => {
-    const averageKg = roundToTenth(values.reduce((sum, value) => sum + value, 0) / values.length);
+    const averageKg = averageInTenths(values);
     // Rounded averages are compared so the change matches the shown values.
     const changeKg = previousKg === null ? null : roundToTenth(averageKg - previousKg);
     previousKg = averageKg;

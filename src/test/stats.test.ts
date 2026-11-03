@@ -158,6 +158,13 @@ describe("weekly weight", () => {
     ]);
   });
 
+  it("rounds a week or month average that ends in five hundredths up", () => {
+    const entries = [weight("2026-10-05", 84.1), weight("2026-10-06", 83.8)];
+
+    expect(getWeeklyWeights(entries)[0].averageKg).toBe(84);
+    expect(getMonthWeightSummary(entries, "2026-10").averageKg).toBe(84);
+  });
+
   it("spans twelve weeks ending on the Sunday of the last week", () => {
     expect(getWeekWindow("2026-10-19")).toEqual({ start: "2026-08-03", end: "2026-10-25" });
   });
