@@ -17,6 +17,8 @@ const point = clsx("fill-ground stroke-ink [stroke-width:1.5]");
 
 const pointSelected = clsx("fill-ink stroke-ink [stroke-width:1.5]");
 
+const backgroundPoint = clsx("fill-muted/50");
+
 const hitArea = clsx("cursor-pointer fill-transparent");
 
 export const lineChartClasses = {
@@ -27,5 +29,6 @@ export const lineChartClasses = {
   line,
   point,
   pointSelected,
+  backgroundPoint,
   hitArea,
 };

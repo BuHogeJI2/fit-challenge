@@ -159,6 +159,38 @@ describe("Weight mode", () => {
     expect(screen.getByText("2 weigh-ins since Sep 20")).toBeInTheDocument();
   });
 
+  it("shows weekly averages in twelve-week windows", async () => {
+    await saveWeightEntry({ date: "2026-05-20", weightKg: 84.5 });
+    await saveWeightEntry({ date: "2026-10-14", weightKg: 83.1 });
+    await saveWeightEntry({ date: "2026-10-16", weightKg: 83.5 });
+    await saveWeightEntry({ date: "2026-10-19", weightKg: 83 });
+    const user = userEvent.setup();
+    renderWeight();
+
+    await user.click(await screen.findByRole("button", { name: "Weeks" }));
+
+    expect(screen.getByRole("heading", { name: "Weeks" })).toBeInTheDocument();
+    expect(screen.getByText("Aug 3 – Oct 25 · 3 weigh-ins")).toBeInTheDocument();
+    expect(screen.getByText("Oct 19 – 25 · avg 83.0 kg")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Edit / })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next 12 weeks" })).toBeDisabled();
+
+    const weeks = within(screen.getByRole("list", { name: "Weeks" })).getAllByRole("listitem");
+    expect(weeks.map((week) => week.textContent)).toEqual([
+      "Oct 19 – 251 weigh-in so far83.0−0.3",
+      "Oct 12 – 182 weigh-ins83.3−1.2",
+    ]);
+
+    fireEvent.click(screen.getByTestId("chart-point-2026-10-15"));
+    expect(screen.getByText("Oct 12 – 18 · avg 83.3 kg")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Previous 12 weeks" }));
+
+    expect(screen.getByText("May 11 – Aug 2 · 1 weigh-in")).toBeInTheDocument();
+    expect(screen.getByRole("listitem")).toHaveTextContent("May 18 – 241 weigh-in84.5first");
+    expect(screen.getByRole("button", { name: "Previous 12 weeks" })).toBeDisabled();
+  });
+
   it("shows the selected point as text", async () => {
     await saveWeightEntry({ date: "2026-10-14", weightKg: 83.1 });
     await saveWeightEntry({ date: "2026-10-19", weightKg: 83.4 });

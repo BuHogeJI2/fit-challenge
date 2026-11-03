@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { getMonthAxisLabels, getRangeAxisLabels } from "../components/charts/axis-labels";
 import {
+  getMonthAxisLabels,
+  getRangeAxisLabels,
+  getWeekAxisLabels,
+} from "../components/charts/axis-labels";
+import {
+  formatDateRange,
   formatDayOfMonth,
   formatLongDate,
   formatMonthLabel,
@@ -21,6 +26,13 @@ describe("date display formats", () => {
   it("adds the year to a month label only outside the current year", () => {
     expect(formatMonthLabel("2026-10", "2026-12-01")).toBe("October");
     expect(formatMonthLabel("2025-12", "2026-01-02")).toBe("December 2025");
+  });
+
+  it("shortens a range inside one month and adds the year outside the current one", () => {
+    expect(formatDateRange("2026-10-12", "2026-10-18", "2026-10-19")).toBe("Oct 12 – 18");
+    expect(formatDateRange("2026-09-28", "2026-10-04", "2026-10-19")).toBe("Sep 28 – Oct 4");
+    expect(formatDateRange("2025-10-06", "2025-10-12", "2026-10-19")).toBe("Oct 6 – 12, 2025");
+    expect(formatDateRange("2025-12-29", "2026-01-04", "2026-10-19")).toBe("Dec 29, 2025 – Jan 4");
   });
 
   it("names today and yesterday", () => {
@@ -63,6 +75,15 @@ describe("weight chart axis labels", () => {
       "Dec 2025",
       "Jan 2026",
       "Feb",
+    ]);
+  });
+
+  it("labels every third week under the middle of the week by its Monday", () => {
+    const weekStarts = ["2026-08-03", "2026-08-10", "2026-08-17", "2026-08-24", "2026-08-31"];
+
+    expect(getWeekAxisLabels(weekStarts)).toEqual([
+      { date: "2026-08-06", label: "Aug 3" },
+      { date: "2026-08-27", label: "Aug 24" },
     ]);
   });
 });

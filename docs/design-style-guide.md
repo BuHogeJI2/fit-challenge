@@ -65,7 +65,8 @@ width. Sheet, toast and fixed action spacing account for the bottom safe area.
   edge of the content column. It opens weight or set entry and has an
   accessible action name.
 - **Journal rows:** a weight row is an edit button with date, note, value
-  and change. An exercise row is a detail link with its name, latest date,
+  and change. A week row in the Weeks view is plain text with the date
+  range, the number of weigh-ins, the average and the change. An exercise row is a detail link with its name, latest date,
   sparkline and progress sentence.
 - **Chips:** progress-view, load and exercise-picker chips select a value
   and expose `aria-pressed`; quick-rep chips fill the input. History chips
@@ -77,8 +78,9 @@ width. Sheet, toast and fixed action spacing account for the bottom safe area.
 Follow the [chart rules](roadmap.md#chart-rules): real calendar spacing, raw
 points, labelled axes and units, no zero-filled missing days, and readable
 empty, single-point and flat states. Exercise day totals use muted bars from
-a zero baseline with the selected bar in ink; rest days are empty slots. Month weight charts keep the domain on
-the month's data; All includes the goal in its domain.
+a zero baseline with the selected bar in ink; rest days are empty slots. Month and Weeks weight charts keep the
+domain on their own data; All includes the goal in its domain. The Weeks
+chart draws the daily weigh-ins as small muted dots behind the weekly line.
 
 Full charts use a 342×224 viewBox. A point tap or Left/Right arrow selection
 updates a visible live text readout; the list also exposes the records.

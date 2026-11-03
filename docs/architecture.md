@@ -69,7 +69,8 @@ a minute and when the page becomes visible.
 ## Derived data and charts
 
 [Stats](../src/lib/stats) calculate weight summaries, changes between entries,
-daily exercise bests, daily totals and distinct active days in a Monday-based
+weekly weight averages in Monday-based weeks with the 12-week windows of the
+Weeks view, daily exercise bests, daily totals and distinct active days in a Monday-based
 week. Missing days are omitted. Each exercise stores a progress view, `total`
 (default) or `best`; the list sentence, sparkline and detail chart all chart
 that daily series. Weighted progress uses one exact selected load for both
@@ -85,7 +86,7 @@ readout with keyboard selection. The exercise `total` view draws a bar chart
 and bar sparkline from `getTotalBars`, which ends at today and switches to
 weekly bars over 60 days; the `best` view and weight use line charts.
 Sparklines are passive. See the [chart rules](roadmap.md#chart-rules)
-for sparse data and the Month/All goal-line behavior.
+for sparse data and the Month/Weeks/All goal-line behavior.
 
 ## Backup and storage
 

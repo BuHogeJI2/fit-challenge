@@ -1,8 +1,9 @@
-import { getMonthKey, getMonthRange, shiftMonth } from "../../lib/dates";
+import { addDays, formatShortDate, getMonthKey, getMonthRange, shiftMonth } from "../../lib/dates";
 import type { TAxisLabel } from "./line-chart.types";
 
 const MONTH_LABEL_DAYS = [1, 8, 15, 22, 29];
 const MAX_RANGE_LABELS = 6;
+const WEEK_LABEL_STEP = 3;
 
 const shortMonth = (monthKey: string) =>
   new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" }).format(
@@ -43,3 +44,11 @@ export const getRangeAxisLabels = (startKey: string, endKey: string): TAxisLabel
           : shortMonth(monthKey),
     }));
 };
+
+// A week's value sits in the middle of its seven days, between the daily dots.
+export const getWeekMiddle = (weekStart: string) => addDays(weekStart, 3);
+
+export const getWeekAxisLabels = (weekStarts: readonly string[]): TAxisLabel[] =>
+  weekStarts
+    .filter((_, index) => index % WEEK_LABEL_STEP === 0)
+    .map((weekStart) => ({ date: getWeekMiddle(weekStart), label: formatShortDate(weekStart) }));

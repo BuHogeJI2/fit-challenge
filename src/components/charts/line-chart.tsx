@@ -16,6 +16,7 @@ import type { ILineChartProps } from "./line-chart.types";
 
 export function LineChart({
   points,
+  backgroundPoints = [],
   startKey,
   endKey,
   xLabels,
@@ -30,7 +31,7 @@ export function LineChart({
 }: ILineChartProps) {
   const xScale = createDateScale({ startKey, endKey, x0: PLOT_LEFT, x1: PLOT_RIGHT });
   const valueScale = createValueScale({
-    values: points.map((point) => point.value),
+    values: [...points, ...backgroundPoints].map((point) => point.value),
     y0: PLOT_BOTTOM,
     y1: PLOT_TOP,
     minSpan,
@@ -39,6 +40,7 @@ export function LineChart({
   });
   const ticks = niceTicks(valueScale.min, valueScale.max, TICK_COUNT);
   const line = buildLinePoints(points, xScale, valueScale.scale);
+  const background = buildLinePoints(backgroundPoints, xScale, valueScale.scale);
   const selected = line.points.find((point) => point.date === selectedDate) ?? null;
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     const next = getKeyboardSelection(
@@ -87,6 +89,15 @@ export function LineChart({
             </text>
           </g>
         ) : null}
+        {background.points.map((point) => (
+          <circle
+            key={point.date}
+            className={lineChartClasses.backgroundPoint}
+            cx={point.x}
+            cy={point.y}
+            r={2}
+          />
+        ))}
         {line.points.length > 1 ? (
           <polyline className={lineChartClasses.line} points={line.svgPoints} />
         ) : null}

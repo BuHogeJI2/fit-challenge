@@ -24,6 +24,15 @@ export const formatDateInContext = (dateKey: string, todayKey: string) =>
     ? formatShortDate(dateKey)
     : format(dateKey, { month: "short", day: "numeric", year: "numeric" });
 
+export const formatDateRange = (startKey: string, endKey: string, todayKey: string) => {
+  if (startKey.slice(0, 7) !== endKey.slice(0, 7)) {
+    return `${formatDateInContext(startKey, todayKey)} – ${formatDateInContext(endKey, todayKey)}`;
+  }
+
+  const days = `${formatShortDate(startKey)} – ${formatDayOfMonth(endKey)}`;
+  return startKey.slice(0, 4) === todayKey.slice(0, 4) ? days : `${days}, ${startKey.slice(0, 4)}`;
+};
+
 export const formatLongDate = (dateKey: string) =>
   format(dateKey, { weekday: "long", month: "short", day: "numeric" });
 

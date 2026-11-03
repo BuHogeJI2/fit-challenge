@@ -7,6 +7,7 @@ export type TAxisLabel = {
 
 export interface ILineChartProps {
   points: TChartPoint[];
+  backgroundPoints?: TChartPoint[];
   startKey: string;
   endKey: string;
   xLabels: TAxisLabel[];

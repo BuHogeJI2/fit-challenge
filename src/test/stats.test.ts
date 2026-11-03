@@ -10,7 +10,10 @@ import {
   getMonthWeightSummary,
   getProgressLoad,
   getTotalBars,
+  getWeeklyWeights,
+  getWeekWindow,
   getWeightSummary,
+  getWindowLastWeek,
   groupSetsByDay,
   withChangeFromPrevious,
 } from "../lib/stats";
@@ -121,6 +124,50 @@ describe("weight stats", () => {
       ["2026-10-17", 0.4],
       ["2026-10-14", null],
     ]);
+  });
+});
+
+describe("weekly weight", () => {
+  it("averages Monday-based weeks and compares each with the previous week that has data", () => {
+    const weeks = getWeeklyWeights([
+      weight("2026-10-02", 84.1),
+      weight("2026-10-04", 83.9),
+      weight("2026-10-05", 83.6),
+      weight("2026-10-11", 83.3),
+      weight("2026-10-08", 83.5),
+      weight("2026-10-21", 83.0),
+    ]);
+
+    expect(weeks).toEqual([
+      { weekStart: "2026-09-28", count: 2, averageKg: 84, changeKg: null },
+      { weekStart: "2026-10-05", count: 3, averageKg: 83.5, changeKg: -0.5 },
+      { weekStart: "2026-10-19", count: 1, averageKg: 83, changeKg: -0.5 },
+    ]);
+  });
+
+  it("takes the change from the rounded averages so it matches the shown values", () => {
+    const weeks = getWeeklyWeights([
+      weight("2026-10-05", 83.1),
+      weight("2026-10-06", 83.2),
+      weight("2026-10-12", 83.3),
+    ]);
+
+    expect(weeks.map(({ averageKg, changeKg }) => [averageKg, changeKg])).toEqual([
+      [83.2, null],
+      [83.3, 0.1],
+    ]);
+  });
+
+  it("spans twelve weeks ending on the Sunday of the last week", () => {
+    expect(getWeekWindow("2026-10-19")).toEqual({ start: "2026-08-03", end: "2026-10-25" });
+  });
+
+  it("finds the window of a date by counting whole windows back from this week", () => {
+    expect(getWindowLastWeek("2026-10-21", "2026-10-21")).toBe("2026-10-19");
+    expect(getWindowLastWeek("2026-08-03", "2026-10-21")).toBe("2026-10-19");
+    expect(getWindowLastWeek("2026-08-02", "2026-10-21")).toBe("2026-07-27");
+    expect(getWindowLastWeek("2026-05-11", "2026-10-21")).toBe("2026-07-27");
+    expect(getWindowLastWeek("2026-05-10", "2026-10-21")).toBe("2026-05-04");
   });
 });
 

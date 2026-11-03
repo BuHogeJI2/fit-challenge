@@ -12,6 +12,7 @@ export type { TDateParts, TMonthRange } from "./dates.types";
 export { useToday } from "./use-today";
 export {
   formatDateInContext,
+  formatDateRange,
   formatDayHeading,
   formatDayOfMonth,
   formatLongDate,

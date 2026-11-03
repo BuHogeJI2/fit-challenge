@@ -47,10 +47,14 @@ These apply to every full-size chart in the app:
   flat series still gets a readable scale.
 - When there is not enough data for a chart or a trend, say so instead of
   drawing a misleading line.
-- The goal line never squeezes the data. The month view keeps the scale on
-  the month's own values and draws the goal only when it falls inside that
+- The goal line never squeezes the data. The month and weeks views keep the
+  scale on their own values and draw the goal only when it falls inside that
   range; the all-time view widens the scale to include the goal. The goal
   number is always shown next to the chart.
+- Weekly weight is the average of the weigh-ins in a Monday-based calendar
+  week, drawn in the middle of the week. The daily weigh-ins of the window
+  stay as faint dots behind the weekly line. A week without weigh-ins has no
+  point.
 - Exercise day totals are bars, not a line. A day without sets is a real
   zero, so it stays an empty slot instead of being bridged by a line. The
   bars start at zero and run from the first logged day to today. A span
@@ -72,6 +76,10 @@ date spacing and the same metric as the full chart they lead to.
 - Edit and delete an entry. Delete can be undone.
 - Month view: month chart with dated points, previous / next month, and a
   month summary (count, average, range).
+- Weeks view: weekly averages in 12-week windows, counted back from the
+  current week, with previous / next window. A list of weeks shows each
+  week's average, its change from the previous week with weigh-ins, and its
+  number of weigh-ins ("so far" for the current week).
 - All-time view: the whole history on one chart.
 - Journal list under the chart: entries newest first, each with its change
   from the previous entry and its note.
