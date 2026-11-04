@@ -12,23 +12,27 @@ import {
   restoreSet,
   updateExercise,
   type TExercise,
+  type TMetric,
   type TPendingUndo,
   type TProgressView,
   type TSet,
+  type TSetValues,
   undoAddSet,
 } from "../../lib/db";
 import { formatDuration, formatLoadValue, formatReps } from "../../lib/numbers";
 import {
   describeExerciseProgress,
+  describeSessionProgress,
   formatProgressValue,
   formatSetValues,
   getDailyBest,
   getDailyProgress,
+  getEntryNoun,
   getExerciseProgress,
   getLatestSet,
   getLoads,
+  getProgressBars,
   getProgressLoad,
-  getTotalBars,
   groupSetsByDay,
 } from "../../lib/stats";
 import { BarChart, LineChart } from "../charts";
@@ -40,7 +44,16 @@ import { Button, useToast } from "../ui";
 import { exerciseDetailScreenClasses as classes } from "./exercise-detail-screen.styles";
 import type { IExerciseDetailScreenProps, ISetChipProps } from "./exercise-detail-screen.types";
 
-const CHART_MIN_SPAN = { reps: 4, reps_weight: 4, time: 30 } as const;
+const CHART_MIN_SPAN = { reps: 4, reps_weight: 4, time: 30, session: 4 } as const;
+
+const VALUE_UNITS: Record<TMetric, string> = {
+  reps: "reps",
+  reps_weight: "reps",
+  time: "m:ss",
+  session: "sessions",
+};
+
+const SESSION_VALUES: TSetValues = { reps: null, weightKg: null, seconds: null };
 
 const PROGRESS_VIEW_OPTIONS: { view: TProgressView; label: string }[] = [
   { view: "total", label: "Day total" },
@@ -57,15 +70,20 @@ const formatChip = (exercise: TExercise, set: TSet) => {
       return `${set.reps} × ${formatLoadValue(set.weightKg ?? 0)}`;
     case "time":
       return formatDuration(set.seconds ?? 0);
+    case "session":
+      return "Session";
   }
 };
+
+const describeEntry = (exercise: TExercise, set: TSet) =>
+  exercise.metric === "session" ? "session" : `set: ${formatSetValues(exercise.metric, set)}`;
 
 function SetChip({ exercise, set, isBest, onEdit }: ISetChipProps) {
   return (
     <button
       type="button"
       className={isBest ? classes.chipBest : classes.chip}
-      aria-label={`Edit set: ${formatSetValues(exercise.metric, set)}`}
+      aria-label={`Edit ${describeEntry(exercise, set)}`}
       onClick={() => onEdit(set)}
     >
       {formatChip(exercise, set)}
@@ -109,14 +127,17 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
   const days = groupSetsByDay(sets);
   const lastSet = getLatestSet(sets);
   const isArchived = Boolean(exercise.archivedAt);
-  const totalBars = exercise.progressView === "total" ? getTotalBars(daily, todayKey) : null;
+  const isSession = exercise.metric === "session";
+  const noun = getEntryNoun(exercise.metric);
+  const totalBars = getProgressBars(exercise, daily, todayKey);
   const chartPoints = totalBars?.bars ?? daily;
   const isWeekly = totalBars?.stepDays === 7;
   const selectedKey = selectedDate !== null && isWeekly ? getWeekStart(selectedDate) : selectedDate;
   const selected =
     chartPoints.find((point) => point.date === selectedKey) ?? chartPoints.at(-1) ?? null;
   const chartPeriod = isWeekly ? "week" : "day";
-  const chartLabel = `${exercise.name}, ${totalBars ? "total" : "best"} of each ${chartPeriod}, ${countOf(chartPoints.length, chartPeriod)}`;
+  const chartValue = isSession ? "sessions" : totalBars ? "total" : "best";
+  const chartLabel = `${exercise.name}, ${chartValue} of each ${chartPeriod}, ${countOf(chartPoints.length, chartPeriod)}`;
 
   const handleDeleteSet = async (set: TSet) => {
     const undo = await deleteSet(set.id);
@@ -124,7 +145,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
     if (!undo) return;
 
     toast.show({
-      message: `Deleted set: ${formatSetValues(exercise.metric, set)}`,
+      message: `Deleted ${describeEntry(exercise, set)}`,
       action: { label: "Undo", onAction: () => handleUndoDelete(undo) },
     });
   };
@@ -139,14 +160,14 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
     }
   };
 
-  const handleRepeat = async (set: TSet, date: string) => {
+  const handleRepeat = async (values: TSetValues, date: string) => {
     try {
       const undo = await addSetWithUndo({
         exerciseId: exercise.id,
         date,
-        reps: set.reps,
-        weightKg: set.weightKg,
-        seconds: set.seconds,
+        reps: values.reps,
+        weightKg: values.weightKg,
+        seconds: values.seconds,
       });
       const dateContext = date === todayKey ? "" : ` · ${formatDateInContext(date, todayKey)}`;
       toast.show({
@@ -166,7 +187,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
       });
     } catch (error) {
       toast.show({
-        message: isRepositoryError(error) ? error.message : "Could not log the set. Nothing was changed.",
+        message: isRepositoryError(error) ? error.message : `Could not log the ${noun}. Nothing was changed.`,
       });
     }
   };
@@ -196,7 +217,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
     }
   };
 
-  const valueUnit = exercise.metric === "time" ? "m:ss" : "reps";
+  const valueUnit = VALUE_UNITS[exercise.metric];
   const formatAxisValue = (value: number) =>
     exercise.metric === "time" ? formatDuration(Math.round(value)) : String(Math.round(value));
 
@@ -216,25 +237,27 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
 
       <h1 className={classes.title}>{exercise.name}</h1>
       <p className={classes.sentence}>
-        {describeExerciseProgress({
-          metric: exercise.metric,
-          view: exercise.progressView,
-          progress,
-          loadKg,
-          todayKey,
-        })}
+        {isSession
+          ? describeSessionProgress(daily, todayKey)
+          : describeExerciseProgress({
+              metric: exercise.metric,
+              view: exercise.progressView,
+              progress,
+              loadKg,
+              todayKey,
+            })}
       </p>
 
       {isArchived ? (
         <div className={classes.notice}>
-          <p className={classes.noticeText}>Archived. Its history is kept; restore it to log new sets.</p>
+          <p className={classes.noticeText}>Archived. Its history is kept; restore it to log new {noun}s.</p>
           <Button variant="outline" size="sm" onClick={() => void handleRestore()}>
             Restore
           </Button>
         </div>
       ) : null}
 
-      {daily.length ? (
+      {daily.length && !isSession ? (
         <div className={classes.views} role="group" aria-label="Chart value">
           {PROGRESS_VIEW_OPTIONS.map(({ view, label }) => (
             <button
@@ -307,7 +330,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
           )}
         </div>
       ) : (
-        <p className={classes.empty}>No sets yet. Log the first one below.</p>
+        <p className={classes.empty}>No {noun}s yet. Log the first one below.</p>
       )}
 
       {days.length ? (
@@ -320,10 +343,13 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
                 <div className={classes.dayHead}>
                   <h2 className={classes.dayTitle}>{formatDayHeading(day.date, todayKey)}</h2>
                   <span className={classes.daySummary}>
-                    {day.sets.length} set{day.sets.length === 1 ? "" : "s"} /{" "}
-                    {exercise.metric === "time"
-                      ? formatDuration(day.totalSeconds ?? 0)
-                      : formatReps(day.totalReps ?? 0)}
+                    {isSession
+                      ? countOf(day.sets.length, "session")
+                      : `${countOf(day.sets.length, "set")} / ${
+                          exercise.metric === "time"
+                            ? formatDuration(day.totalSeconds ?? 0)
+                            : formatReps(day.totalReps ?? 0)
+                        }`}
                   </span>
                 </div>
                 <div className={classes.chips}>
@@ -333,6 +359,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
                       exercise={exercise}
                       set={set}
                       isBest={
+                        !isSession &&
                         bestValue !== null &&
                         (exercise.metric !== "reps_weight" || set.weightKg === loadKg) &&
                         (exercise.metric === "time" ? set.seconds : set.reps) === bestValue
@@ -361,13 +388,17 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
 
       {!isArchived ? (
         <div className={classes.actions}>
-          {lastSet ? (
+          {isSession ? (
+            <Button variant="outline" onClick={() => void handleRepeat(SESSION_VALUES, todayKey)}>
+              Log today
+            </Button>
+          ) : lastSet ? (
             <Button variant="outline" onClick={() => void handleRepeat(lastSet, todayKey)}>
               Repeat {formatChip(exercise, lastSet)}
             </Button>
           ) : null}
           <Button onClick={() => setSetSheet({ mode: "new", exerciseId: exercise.id })}>
-            Log set
+            Log {noun}
           </Button>
         </div>
       ) : null}

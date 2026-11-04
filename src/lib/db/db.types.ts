@@ -1,4 +1,4 @@
-export type TMetric = "reps" | "reps_weight" | "time";
+export type TMetric = "reps" | "reps_weight" | "time" | "session";
 
 export type TProgressView = "total" | "best";
 

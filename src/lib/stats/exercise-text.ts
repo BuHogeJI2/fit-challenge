@@ -1,7 +1,7 @@
-import { formatDateInContext } from "../dates";
+import { addDays, formatDateInContext } from "../dates";
 import type { TMetric, TProgressView, TSet } from "../db";
 import { formatDuration, formatLoadValue, formatReps } from "../numbers";
-import type { TExerciseProgress } from "./exercise.stats";
+import type { TDailyValue, TExerciseProgress } from "./exercise.stats";
 
 export type TSetDisplayValues = Pick<TSet, "reps" | "weightKg" | "seconds">;
 
@@ -20,7 +20,16 @@ const requireValue = (value: number | null) => {
   return value;
 };
 
+const RECENT_SESSION_DAYS = 28;
+
+const formatSessions = (count: number) =>
+  `${countFormatter.format(count)} ${count === 1 ? "session" : "sessions"}`;
+
+/** The word for one logged entry of a metric: "session" or "set". */
+export const getEntryNoun = (metric: TMetric) => (metric === "session" ? "session" : "set");
+
 export const formatSetValues = (metric: TMetric, values: TSetDisplayValues): string => {
+  if (metric === "session") return "session";
   if (metric === "time") return formatDuration(requireValue(values.seconds));
   if (metric === "reps_weight") {
     return `${countFormatter.format(requireValue(values.reps))} × ${formatLoadValue(requireValue(values.weightKg))} kg`;
@@ -28,8 +37,10 @@ export const formatSetValues = (metric: TMetric, values: TSetDisplayValues): str
   return formatReps(requireValue(values.reps));
 };
 
-export const formatProgressValue = (metric: TMetric, value: number): string =>
-  metric === "time" ? formatDuration(value) : formatReps(value);
+export const formatProgressValue = (metric: TMetric, value: number): string => {
+  if (metric === "session") return formatSessions(value);
+  return metric === "time" ? formatDuration(value) : formatReps(value);
+};
 
 const describeLatestBest = (metric: TMetric, isRecord: boolean, value: string, loadKg: number | null) => {
   if (metric === "time") return `${isRecord ? "Longest hold" : "Latest hold"} ${value}`;
@@ -74,4 +85,22 @@ export const describeExerciseProgress = ({
     : ` Record ${metric === "time" ? formatDuration(best.value) : countFormatter.format(best.value)} on ${formatDate(best.date)}.`;
 
   return `${lead}, ${comparison}.${record}`;
+};
+
+/**
+ * How often sessions happened: the count in the last 28 days up to
+ * `todayKey`, and the count over all time when older sessions exist.
+ * `daily` holds the number of sessions of each logged day.
+ */
+export const describeSessionProgress = (daily: readonly TDailyValue[], todayKey: string): string => {
+  if (!daily.length) return "No sessions yet.";
+
+  const windowStart = addDays(todayKey, 1 - RECENT_SESSION_DAYS);
+  const sum = (days: readonly TDailyValue[]) => days.reduce((total, day) => total + day.value, 0);
+  const total = sum(daily);
+  const recent = sum(daily.filter((day) => day.date >= windowStart && day.date <= todayKey));
+
+  if (recent === total) return `${formatSessions(recent)} in the last 4 weeks.`;
+  const lead = recent === 0 ? "No sessions" : formatSessions(recent);
+  return `${lead} in the last 4 weeks, ${countFormatter.format(total)} in total.`;
 };

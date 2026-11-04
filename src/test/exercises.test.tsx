@@ -351,6 +351,42 @@ describe("Exercises mode", () => {
     expect((await listSetsForExercise(plank.id)).map((set) => set.seconds ?? 0).sort((a, b) => a - b)).toEqual([90, 120]);
   });
 
+  it("tracks sessions by how often, without values", async () => {
+    const user = userEvent.setup();
+    renderAt("#/exercises");
+
+    await user.click(await screen.findByRole("button", { name: "New exercise" }));
+    const form = screen.getByRole("dialog", { name: "New exercise" });
+    await user.type(within(form).getByLabelText("Name"), "Boxing");
+    await user.click(within(form).getByRole("radio", { name: /Sessions/ }));
+    await user.click(within(form).getByRole("button", { name: "Add exercise" }));
+
+    expect(await screen.findByText("No sessions yet. Log the first one below.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Log session" }));
+    const sheet = screen.getByRole("dialog", { name: "Log session" });
+    expect(within(sheet).queryByRole("textbox", { name: /Reps|Minutes/ })).toBeNull();
+    fireEvent.change(within(sheet).getByLabelText("Date"), { target: { value: "2026-10-13" } });
+    await user.type(within(sheet).getByLabelText("Note, optional"), "Sparring");
+    await user.click(within(sheet).getByRole("button", { name: "Log session" }));
+
+    await user.click(await screen.findByRole("button", { name: "Log today" }));
+    expect(await screen.findByText("Logged session")).toBeInTheDocument();
+    expect(await screen.findByText("2 sessions in the last 4 weeks.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Day total" })).toBeNull();
+    expect(screen.getByRole("figure")).toHaveAccessibleName(/sessions of each week, 2 weeks/);
+    expect(screen.getByText("Week of Oct 12 · 1 session")).toBeInTheDocument();
+    const days = await history();
+    expect(within(days).getAllByText("1 session")).toHaveLength(2);
+    expect(within(days).getAllByRole("button", { name: "Edit session" })).toHaveLength(2);
+
+    await user.click(screen.getByRole("link", { name: "Training" }));
+    const list = await screen.findByRole("list", { name: "Exercises" });
+    expect(within(list).getByRole("link")).toHaveTextContent("2 sessions in the last 4 weeks.");
+    await user.click(screen.getByRole("button", { name: "Log set" }));
+    await user.click(within(screen.getByRole("dialog", { name: "Log session" })).getByRole("button", { name: "Log session" }));
+    expect(await screen.findByText("Session logged.")).toBeInTheDocument();
+  });
+
   it("shows a not-found state for an unknown exercise", async () => {
     renderAt("#/exercises/missing-id");
 

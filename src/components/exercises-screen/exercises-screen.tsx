@@ -6,11 +6,13 @@ import { listExercises, listSets, type TExercise, type TSet } from "../../lib/db
 import {
   countActiveDaysThisWeek,
   describeExerciseProgress,
+  describeSessionProgress,
   getDailyProgress,
+  getEntryNoun,
   getExerciseProgress,
   getLatestSet,
+  getProgressBars,
   getProgressLoad,
-  getTotalBars,
 } from "../../lib/stats";
 import { BarSparkline, Sparkline } from "../charts";
 import { ExerciseFormSheet } from "../exercise-form-sheet";
@@ -32,7 +34,7 @@ function ExerciseRow({ exercise, sets, todayKey }: IExerciseRowProps) {
   const exerciseSets = sets.filter((set) => set.exerciseId === exercise.id);
   const loadKg = getProgressLoad(exercise, exerciseSets);
   const daily = getDailyProgress(exercise, exerciseSets, loadKg);
-  const totalBars = exercise.progressView === "total" ? getTotalBars(daily, todayKey) : null;
+  const totalBars = getProgressBars(exercise, daily, todayKey);
   const lastSet = getLatestSet(exerciseSets);
 
   return (
@@ -41,7 +43,7 @@ function ExerciseRow({ exercise, sets, todayKey }: IExerciseRowProps) {
         <span className={exercisesScreenClasses.rowHead}>
           <span className={exercisesScreenClasses.name}>{exercise.name}</span>
           <span className={exercisesScreenClasses.when}>
-            {lastSet ? formatRelativeDate(lastSet.date, todayKey) : "no sets"}
+            {lastSet ? formatRelativeDate(lastSet.date, todayKey) : `no ${getEntryNoun(exercise.metric)}s`}
           </span>
         </span>
         {totalBars ? (
@@ -59,13 +61,15 @@ function ExerciseRow({ exercise, sets, todayKey }: IExerciseRowProps) {
           />
         ) : null}
         <span className={exercisesScreenClasses.sentence}>
-          {describeExerciseProgress({
-            metric: exercise.metric,
-            view: exercise.progressView,
-            progress: getExerciseProgress(daily),
-            loadKg,
-            todayKey,
-          })}
+          {exercise.metric === "session"
+            ? describeSessionProgress(daily, todayKey)
+            : describeExerciseProgress({
+                metric: exercise.metric,
+                view: exercise.progressView,
+                progress: getExerciseProgress(daily),
+                loadKg,
+                todayKey,
+              })}
         </span>
       </Link>
     </li>
@@ -162,9 +166,10 @@ export function ExercisesScreen() {
         sets={sets}
         todayKey={todayKey}
         onClose={() => setSetSheet(null)}
-        onSaved={() => {
+        onSaved={(saved) => {
           setSetSheet(null);
-          toast.show({ message: "Set logged." });
+          const metric = exercises.find((exercise) => exercise.id === saved.exerciseId)?.metric;
+          toast.show({ message: metric === "session" ? "Session logged." : "Set logged." });
         }}
       />
     </section>

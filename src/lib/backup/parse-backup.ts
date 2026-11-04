@@ -15,7 +15,7 @@ import { roundToHundredth, roundToTenth } from "../numbers";
 import type { TBackupData, TParseBackupResult } from "./backup.types";
 
 const MAX_ERRORS = 20;
-const SCHEMA_VERSIONS = [1, 2];
+const SCHEMA_VERSIONS = [1, 2, 3];
 const TABLES = ["weightEntries", "exercises", "sets", "settings"] as const;
 const WEIGHT_FIELDS = ["id", "date", "weightKg", "note", "createdAt", "updatedAt"];
 const EXERCISE_FIELDS = [
@@ -59,7 +59,7 @@ const isNullableCount = (value: unknown): value is number | null =>
   value === null || (typeof value === "number" && Number.isSafeInteger(value) && value > 0);
 
 const isMetric = (value: unknown): value is TMetric =>
-  value === "reps" || value === "reps_weight" || value === "time";
+  value === "reps" || value === "reps_weight" || value === "time" || value === "session";
 
 const isProgressView = (value: unknown): value is TProgressView =>
   PROGRESS_VIEWS.includes(value as TProgressView);
@@ -116,7 +116,7 @@ const readExercise = (value: unknown, report: TReport): TExercise | null => {
     return null;
   }
   if (!isMetric(metric)) {
-    report("metric must be reps, reps_weight or time.");
+    report("metric must be reps, reps_weight, time or session.");
     return null;
   }
   if (!isNullableTimestamp(metricLockedAt) || !isNullableTimestamp(archivedAt) ||
@@ -134,6 +134,10 @@ const readExercise = (value: unknown, report: TReport): TExercise | null => {
   }
   if (!isProgressView(progressView)) {
     report("progressView must be total or best.");
+    return null;
+  }
+  if (metric === "session" && progressView !== "total") {
+    report("progressView must be total for session.");
     return null;
   }
   return { id, name, metric, metricLockedAt, progressWeightKg, progressView, archivedAt, createdAt, updatedAt };
@@ -257,7 +261,7 @@ export const parseBackup = (text: string): TParseBackupResult => {
     return { ok: false, errors: ["Backup: expected exactly app, schemaVersion, exportedAt and data."] };
   }
   if (input.app !== "fit") report('Backup: app must be "fit".');
-  if (!SCHEMA_VERSIONS.includes(input.schemaVersion as number)) report("Backup: schemaVersion must be 1 or 2.");
+  if (!SCHEMA_VERSIONS.includes(input.schemaVersion as number)) report("Backup: schemaVersion must be 1, 2 or 3.");
   if (!isTimestamp(input.exportedAt)) report("Backup: exportedAt must be a UTC timestamp in YYYY-MM-DDTHH:mm:ss.sssZ form.");
   if (!isRecord(input.data) || !hasFields(input.data, TABLES)) {
     report("Backup data: expected exactly weightEntries, exercises, sets and settings.");

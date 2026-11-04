@@ -4,7 +4,7 @@ import type { TExercise, TMetric, TPendingUndo, TProgressView } from "./db.types
 import { createId, normalizeLoadKg, now } from "./record-fields";
 import { RepositoryError } from "./repository-error";
 
-export const METRICS: readonly TMetric[] = ["reps", "reps_weight", "time"];
+export const METRICS: readonly TMetric[] = ["reps", "reps_weight", "time", "session"];
 
 export const PROGRESS_VIEWS: readonly TProgressView[] = ["total", "best"];
 
@@ -81,7 +81,9 @@ export const updateExercise = (id: string, update: TExerciseUpdate) =>
   db.transaction("rw", db.exercises, async () => {
     const exercise = await getExistingExercise(id);
     const metric = update.metric ?? exercise.metric;
-    const progressView = update.progressView ?? exercise.progressView;
+    // A session has no best set: the only value of a day is its number of sessions.
+    const progressView =
+      metric === "session" ? "total" : (update.progressView ?? exercise.progressView);
 
     assertMetric(metric);
     assertProgressView(progressView);

@@ -119,6 +119,27 @@ describe("exercise and set repositories", () => {
     ).resolves.toMatchObject({ seconds: 105 });
   });
 
+  it("logs a session without values and rejects any value", async () => {
+    const boxing = await createExercise({ name: "Boxing", metric: "session" });
+    const none = { exerciseId: boxing.id, date: "2026-10-19", reps: null, weightKg: null, seconds: null };
+
+    await expect(addSet({ ...none, reps: 1 })).rejects.toMatchObject({ code: "invalid_input" });
+    await expect(addSet({ ...none, weightKg: 20 })).rejects.toMatchObject({ code: "invalid_input" });
+    await expect(addSet({ ...none, seconds: 60 })).rejects.toMatchObject({ code: "invalid_input" });
+    await expect(addSet({ ...none, note: "Sparring" }))
+      .resolves.toMatchObject({ reps: null, weightKg: null, seconds: null, note: "Sparring" });
+  });
+
+  it("keeps sessions on the day total view", async () => {
+    const exercise = await createExercise({ name: "Swimming", metric: "reps" });
+    await updateExercise(exercise.id, { progressView: "best" });
+
+    await expect(updateExercise(exercise.id, { metric: "session" }))
+      .resolves.toMatchObject({ metric: "session", progressView: "total" });
+    await expect(updateExercise(exercise.id, { progressView: "best" }))
+      .resolves.toMatchObject({ progressView: "total" });
+  });
+
   it("does not lock the metric when the first set is rejected", async () => {
     const exercise = await createExercise({ name: "Push-ups", metric: "reps" });
 

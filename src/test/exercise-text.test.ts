@@ -3,8 +3,10 @@ import type { TMetric, TProgressView } from "../lib/db";
 import { formatDuration, formatLoadValue, formatWeightValue, parseDuration } from "../lib/numbers";
 import {
   describeExerciseProgress,
+  describeSessionProgress,
   formatProgressValue,
   formatSetValues,
+  getEntryNoun,
   getExerciseProgress,
 } from "../lib/stats";
 import type { TDailyValue } from "../lib/stats";
@@ -73,13 +75,44 @@ describe("exercise values", () => {
     expect(formatSetValues("reps_weight", { reps: 12, weightKg: 22.5, seconds: null })).toBe("12 × 22.5 kg");
     expect(formatSetValues("reps_weight", { reps: 12, weightKg: 22.55, seconds: null })).toBe("12 × 22.55 kg");
     expect(formatSetValues("time", { reps: null, weightKg: null, seconds: 105 })).toBe("1:45");
+    expect(formatSetValues("session", { reps: null, weightKg: null, seconds: null })).toBe("session");
+    expect(getEntryNoun("session")).toBe("session");
+    expect(getEntryNoun("time")).toBe("set");
   });
 
   it("formats progress values as reps or duration and rejects a missing required value", () => {
     expect(formatProgressValue("reps", 29)).toBe("29 reps");
     expect(formatProgressValue("reps_weight", 12)).toBe("12 reps");
     expect(formatProgressValue("time", 105)).toBe("1:45");
+    expect(formatProgressValue("session", 1)).toBe("1 session");
+    expect(formatProgressValue("session", 3)).toBe("3 sessions");
     expect(() => formatSetValues("time", { reps: null, weightKg: null, seconds: null })).toThrow(RangeError);
+  });
+});
+
+describe("session progress text", () => {
+  const today = "2026-10-19";
+
+  it("says when there are no sessions", () => {
+    expect(describeSessionProgress([], today)).toBe("No sessions yet.");
+  });
+
+  it("counts the last 28 days up to today", () => {
+    expect(describeSessionProgress([
+      { date: "2026-09-22", value: 1 },
+      { date: "2026-10-19", value: 2 },
+    ], today)).toBe("3 sessions in the last 4 weeks.");
+    expect(describeSessionProgress([{ date: "2026-10-01", value: 1 }], today))
+      .toBe("1 session in the last 4 weeks.");
+  });
+
+  it("adds the all-time count when older sessions exist", () => {
+    expect(describeSessionProgress([
+      { date: "2026-09-21", value: 1 },
+      { date: "2026-10-12", value: 1 },
+    ], today)).toBe("1 session in the last 4 weeks, 2 in total.");
+    expect(describeSessionProgress([{ date: "2026-08-03", value: 4 }], today))
+      .toBe("No sessions in the last 4 weeks, 4 in total.");
   });
 });
 

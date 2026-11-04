@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { formatDateInContext } from "../../lib/dates";
 import { addSet, isRepositoryError, updateSet, type TExercise, type TSet } from "../../lib/db";
 import { formatLoadValue, parseDecimal } from "../../lib/numbers";
-import { formatSetValues, getLatestSet } from "../../lib/stats";
+import { formatSetValues, getEntryNoun, getLatestSet } from "../../lib/stats";
 import { Button, Field, Sheet } from "../ui";
 import { setEntrySheetClasses } from "./set-entry-sheet.styles";
 import type {
@@ -38,6 +38,8 @@ function SetEntryForm({ exercise, set, sets, todayKey, onSaved, onDelete }: ISet
   const timeId = useId();
   const secondsId = useId();
   const lastSet = set ?? getLatestSet(sets.filter((item) => item.exerciseId === exercise.id));
+  const isSession = exercise.metric === "session";
+  const noun = getEntryNoun(exercise.metric);
 
   const [date, setDate] = useState(set?.date ?? todayKey);
   const [repsText, setRepsText] = useState(lastSet?.reps?.toString() ?? "");
@@ -55,6 +57,10 @@ function SetEntryForm({ exercise, set, sets, todayKey, onSaved, onDelete }: ISet
   const [isSaving, setIsSaving] = useState(false);
 
   const readValues = (): TReadResult => {
+    if (isSession) {
+      return { ok: true, values: { reps: null, weightKg: null, seconds: null } };
+    }
+
     if (exercise.metric === "time") {
       const minutes = minutesText.trim() ? parseCount(minutesText) : 0;
       const seconds = secondsText.trim() ? parseCount(secondsText) : 0;
@@ -128,8 +134,12 @@ function SetEntryForm({ exercise, set, sets, todayKey, onSaved, onDelete }: ISet
   return (
     <form className={setEntrySheetClasses.form} onSubmit={handleSubmit} noValidate>
       <div className={setEntrySheetClasses.sentence}>
-        <span aria-hidden="true">{exercise.name}: </span>
-        {exercise.metric === "time" ? (
+        {isSession ? (
+          <span>{exercise.name}</span>
+        ) : (
+          <span aria-hidden="true">{exercise.name}: </span>
+        )}
+        {isSession ? null : exercise.metric === "time" ? (
           <>
             <label htmlFor={timeId} className={setEntrySheetClasses.srOnly}>
               Minutes
@@ -195,7 +205,7 @@ function SetEntryForm({ exercise, set, sets, todayKey, onSaved, onDelete }: ISet
         )}
       </div>
 
-      {exercise.metric !== "time" ? (
+      {exercise.metric === "reps" || exercise.metric === "reps_weight" ? (
         <div className={setEntrySheetClasses.picks} role="group" aria-label="Quick reps">
           {getQuickPicks(lastSet?.reps ?? null).map((value) => (
             <button
@@ -217,8 +227,14 @@ function SetEntryForm({ exercise, set, sets, todayKey, onSaved, onDelete }: ISet
 
       {lastSet && !set ? (
         <p className={setEntrySheetClasses.hint}>
-          Last set: {formatDateInContext(lastSet.date, todayKey)} ·{" "}
-          {formatSetValues(exercise.metric, lastSet)}
+          {isSession ? (
+            <>Last session: {formatDateInContext(lastSet.date, todayKey)}</>
+          ) : (
+            <>
+              Last set: {formatDateInContext(lastSet.date, todayKey)} ·{" "}
+              {formatSetValues(exercise.metric, lastSet)}
+            </>
+          )}
         </p>
       ) : null}
 
@@ -247,11 +263,11 @@ function SetEntryForm({ exercise, set, sets, todayKey, onSaved, onDelete }: ISet
 
       <div className={setEntrySheetClasses.actions}>
         <Button type="submit" disabled={isSaving}>
-          {set ? "Save" : "Log set"}
+          {set ? "Save" : `Log ${noun}`}
         </Button>
         {set && onDelete ? (
           <Button variant="quiet" onClick={handleDelete} disabled={isSaving}>
-            Delete set
+            Delete {noun}
           </Button>
         ) : null}
       </div>
@@ -290,7 +306,11 @@ export function SetEntrySheet({
   };
 
   return (
-    <Sheet open={state !== null} title={editedSet ? "Edit set" : "Log set"} onClose={handleClose}>
+    <Sheet
+      open={state !== null}
+      title={`${editedSet ? "Edit" : "Log"} ${exercise ? getEntryNoun(exercise.metric) : "set"}`}
+      onClose={handleClose}
+    >
       {!fixedId && recentFirst.length > 1 ? (
         <div className={setEntrySheetClasses.exercisePicker} role="group" aria-label="Exercise">
           {recentFirst.map((item) => (

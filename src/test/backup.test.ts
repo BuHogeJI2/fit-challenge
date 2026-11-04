@@ -23,7 +23,7 @@ const stamp = { createdAt: TIMESTAMP, updatedAt: TIMESTAMP };
 
 const validFile = (): TBackupFile => ({
   app: "fit",
-  schemaVersion: 2,
+  schemaVersion: 3,
   exportedAt: TIMESTAMP,
   data: {
     weightEntries: [{ id: "weight", date: "2026-10-19", weightKg: 83.4, note: null, ...stamp }],
@@ -31,11 +31,13 @@ const validFile = (): TBackupFile => ({
       { id: "reps", name: "Push-ups", metric: "reps", metricLockedAt: TIMESTAMP, progressWeightKg: null, progressView: "total", archivedAt: null, ...stamp },
       { id: "load", name: "Squat", metric: "reps_weight", metricLockedAt: TIMESTAMP, progressWeightKg: 22.55, progressView: "best", archivedAt: null, ...stamp },
       { id: "time", name: "Plank", metric: "time", metricLockedAt: TIMESTAMP, progressWeightKg: null, progressView: "total", archivedAt: TIMESTAMP, ...stamp },
+      { id: "session", name: "Boxing", metric: "session", metricLockedAt: TIMESTAMP, progressWeightKg: null, progressView: "total", archivedAt: null, ...stamp },
     ],
     sets: [
       { id: "rep-set", exerciseId: "reps", date: "2026-10-19", reps: 29, weightKg: null, seconds: null, note: "Easy", ...stamp },
       { id: "load-set", exerciseId: "load", date: "2026-10-18", reps: 12, weightKg: 22.55, seconds: null, note: null, ...stamp },
       { id: "time-set", exerciseId: "time", date: "2026-10-17", reps: null, weightKg: null, seconds: 105, note: null, ...stamp },
+      { id: "session-set", exerciseId: "session", date: "2026-10-16", reps: null, weightKg: null, seconds: null, note: "Sparring", ...stamp },
     ],
     settings: [{ key: "goalWeightKg", value: 80.1 }, { key: "lastExportAt", value: TIMESTAMP }],
   },
@@ -70,7 +72,7 @@ describe("backup parsing", () => {
     expect(text).toContain('\n  "app": "fit",');
     expect(result).toEqual({
       ok: true, data: source.data, exportedAt: TIMESTAMP,
-      counts: { weightEntries: 1, exercises: 3, sets: 3, settings: 2 },
+      counts: { weightEntries: 1, exercises: 4, sets: 4, settings: 2 },
     });
     expect(serializeBackup(source)).toBe(text);
   });
@@ -90,7 +92,7 @@ describe("backup parsing", () => {
   );
 
   it.each([
-    ["app", "other", "app"], ["schemaVersion", 3, "schemaVersion"],
+    ["app", "other", "app"], ["schemaVersion", 4, "schemaVersion"],
     ["schemaVersion", "1", "schemaVersion"], ["exportedAt", "2026-10-19", "exportedAt"],
   ])("rejects invalid %s", (field, value, message) => {
     expectRejected(invalidFile((file) => { Object.assign(file, { [field]: value }); }), String(message));
@@ -185,12 +187,17 @@ describe("backup parsing", () => {
     [0, { reps: null }], [0, { seconds: 1 }], [0, { weightKg: 20 }],
     [1, { weightKg: null }], [1, { seconds: 1 }], [1, { reps: null }],
     [2, { seconds: null }], [2, { reps: 1 }], [2, { weightKg: 20 }],
+    [3, { reps: 1 }], [3, { weightKg: 20 }], [3, { seconds: 1 }],
   ] as const)("rejects set values outside the stored metric form %#", (index, change) => {
     expectRejected(invalidFile((file) => { Object.assign(file.data.sets[index], change); }), `sets[${index}]`);
   });
 
   it("rejects progress loads for metrics that do not use them", () => {
     expectRejected(invalidFile((file) => { file.data.exercises[0].progressWeightKg = 20; }), "progressWeightKg must be null");
+  });
+
+  it("rejects the best set view for sessions", () => {
+    expectRejected(invalidFile((file) => { file.data.exercises[3].progressView = "best"; }), "progressView must be total for session");
   });
 
   it.each(["volume", null, undefined])("rejects progress view %s", (progressView) => {
@@ -206,8 +213,12 @@ describe("backup parsing", () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("Expected a parsed backup.");
-    expect(result.data.exercises.map((exercise) => exercise.progressView)).toEqual(["total", "total", "total"]);
+    expect(result.data.exercises.map((exercise) => exercise.progressView)).toEqual(["total", "total", "total", "total"]);
     expectRejected(invalidFile((file) => { delete file.data.exercises[0].progressView; }), "exercises[0]");
+  });
+
+  it("reads schema 2 files", () => {
+    expect(parseBackup(invalidFile((file) => { file.schemaVersion = 2; }))).toMatchObject({ ok: true });
   });
 
   it("requires unique, known setting keys and valid values", () => {
@@ -257,7 +268,7 @@ describe("backup persistence", () => {
     const parsed = parseBackup(serializeBackup(exported));
     if (!parsed.ok) throw new Error(parsed.errors.join(" "));
     expect(Object.keys(exported.data).sort()).toEqual(["exercises", "sets", "settings", "weightEntries"]);
-    expect(parsed.counts).toEqual({ weightEntries: 1, exercises: 3, sets: 3, settings: 2 });
+    expect(parsed.counts).toEqual({ weightEntries: 1, exercises: 4, sets: 4, settings: 2 });
     expect(Number.isFinite(Date.parse(parsed.exportedAt))).toBe(true);
     await wipeAllData();
     await restoreBackup(parsed.data);

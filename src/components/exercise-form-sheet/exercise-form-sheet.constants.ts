@@ -4,10 +4,12 @@ export const METRIC_LABELS: Record<TMetric, string> = {
   reps: "Reps",
   reps_weight: "Reps + weight",
   time: "Time",
+  session: "Sessions",
 };
 
 export const METRIC_HINTS: Record<TMetric, string> = {
   reps: "Push-ups, pull-ups",
   reps_weight: "Squats, rows with a load",
   time: "Plank, hangs",
+  session: "Boxing, swimming, classes",
 };

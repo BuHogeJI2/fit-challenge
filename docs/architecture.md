@@ -54,7 +54,8 @@ a minute and when the page becomes visible.
   same transaction and keeps the moved entry's id.
 - Body and goal weights use tenths of a kg; set loads and selected loads use
   hundredths. Rounded values must still be finite and positive. Reps and
-  seconds are positive safe integers; unused metric fields are null.
+  seconds are positive safe integers; unused metric fields are null, so a
+  `session` set stores no values.
 - The first set and `metricLockedAt` are written together. The lock remains
   after every set is deleted. Archived exercises keep their history, but
   adding or editing their sets is refused.
@@ -73,7 +74,8 @@ weekly weight averages in Monday-based weeks with the 12-week windows of the
 Weeks view, daily exercise bests, daily totals and distinct active days in a Monday-based
 week. Missing days are omitted. Each exercise stores a progress view, `total`
 (default) or `best`; the list sentence, sparkline and detail chart all chart
-that daily series. Weighted progress uses one exact selected load for both
+that daily series. A `session` exercise is always `total`, and its day total
+is the number of sessions that day. Weighted progress uses one exact selected load for both
 views; if that load has no sets, it falls back to the latest set's load.
 The list sentence, sparkline, detail chart and best-set highlights share it.
 Best-set highlights always mark the daily best. Progress text compares the
@@ -83,17 +85,18 @@ latest day with the first and names a higher historical record separately.
 or to day/week slots, pad value domains and generate ticks and SVG points.
 Full charts use a nonnegative domain, visible raw points or bars and a text
 readout with keyboard selection. The exercise `total` view draws a bar chart
-and bar sparkline from `getTotalBars`, which ends at today and switches to
-weekly bars over 60 days; the `best` view and weight use line charts.
+and bar sparkline from `getProgressBars`, which ends at today and switches to
+weekly bars over 60 days, or always for sessions; the `best` view and weight use line charts.
 Sparklines are passive. See the [chart rules](roadmap.md#chart-rules)
 for sparse data and the Month/Weeks/All goal-line behavior.
 
 ## Backup and storage
 
 [Backup](../src/lib/backup) exports the four data tables in one readonly
-transaction, excluding `meta`. Files use `app: "fit"`, `schemaVersion: 2`
-and the name `fit-YYYY-MM-DD.json`. Schema 1 files still import; their
-exercises get the `total` progress view. Parsing has no writes: it validates exact
+transaction, excluding `meta`. Files use `app: "fit"`, `schemaVersion: 3`
+and the name `fit-YYYY-MM-DD.json`. Schema 3 adds the `session` metric.
+Schema 1 and 2 files still import; schema 1 exercises get the `total`
+progress view. Parsing has no writes: it validates exact
 fields, values, ids, dates, references, metric locks and settings, and returns
 at most 20 errors. Timestamps must match `toISOString()` form so string-based
 ordering remains valid. Invalid values are rejected, never rounded on import.

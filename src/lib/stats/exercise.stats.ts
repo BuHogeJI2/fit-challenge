@@ -32,8 +32,10 @@ const compareSets = (left: TSet, right: TSet) =>
 
 export const sortSets = (sets: readonly TSet[]) => [...sets].sort(compareSets);
 
-const getSetValue = (metric: TMetric, set: TSet) =>
-  metric === "time" ? set.seconds : set.reps;
+const getSetValue = (metric: TMetric, set: TSet) => {
+  if (metric === "session") return 1;
+  return metric === "time" ? set.seconds : set.reps;
+};
 
 const getDailyValues = (
   metric: TMetric,
@@ -66,7 +68,8 @@ const getDailyValues = (
 
 /**
  * The best value of each logged day, oldest first: most reps for `reps`,
- * most reps at `loadKg` for `reps_weight`, longest hold for `time`.
+ * most reps at `loadKg` for `reps_weight`, longest hold for `time`, 1 for
+ * `session`.
  * Days without a matching set are left out, never filled with zero.
  */
 export const getDailyBest = (
@@ -77,8 +80,9 @@ export const getDailyBest = (
 
 /**
  * The total of each logged day, oldest first: all reps for `reps`, reps at
- * `loadKg` for `reps_weight`, seconds held for `time`. Days without a
- * matching set are left out, never filled with zero.
+ * `loadKg` for `reps_weight`, seconds held for `time`, number of sessions
+ * for `session`. Days without a matching set are left out, never filled
+ * with zero.
  */
 export const getDailyTotal = (
   metric: TMetric,
@@ -100,16 +104,21 @@ export const MAX_DAILY_BAR_SPAN = 60;
 
 /**
  * Day totals as bars from the first logged day to today, so days without
- * sets stay visible as empty slots. A span over `MAX_DAILY_BAR_SPAN` days
- * groups the totals into Monday-based weeks, dated by their Monday.
+ * sets stay visible as empty slots. A span over `MAX_DAILY_BAR_SPAN` days,
+ * or any span with `grouping: "week"`, groups the totals into Monday-based
+ * weeks, dated by their Monday.
  */
-export const getTotalBars = (daily: readonly TDailyValue[], todayKey: string): TTotalBars | null => {
+export const getTotalBars = (
+  daily: readonly TDailyValue[],
+  todayKey: string,
+  grouping: "auto" | "week" = "auto",
+): TTotalBars | null => {
   const first = daily[0];
   const last = daily.at(-1);
   if (!first || !last) return null;
 
   const endKey = last.date > todayKey ? last.date : todayKey;
-  if (differenceInDays(endKey, first.date) <= MAX_DAILY_BAR_SPAN) {
+  if (grouping === "auto" && differenceInDays(endKey, first.date) <= MAX_DAILY_BAR_SPAN) {
     return { stepDays: 1, startKey: first.date, endKey, bars: [...daily] };
   }
 
@@ -125,6 +134,19 @@ export const getTotalBars = (daily: readonly TDailyValue[], todayKey: string): T
     endKey: getWeekStart(endKey),
     bars: [...totalByWeek.entries()].map(([date, value]) => ({ date, value })),
   };
+};
+
+/**
+ * The bars of an exercise in its total view, or null in the best view.
+ * Sessions always count per week, because how often matters, not which day.
+ */
+export const getProgressBars = (
+  exercise: TExercise,
+  daily: readonly TDailyValue[],
+  todayKey: string,
+): TTotalBars | null => {
+  if (exercise.progressView !== "total") return null;
+  return getTotalBars(daily, todayKey, exercise.metric === "session" ? "week" : "auto");
 };
 
 export const getLoads = (sets: readonly TSet[]) => {

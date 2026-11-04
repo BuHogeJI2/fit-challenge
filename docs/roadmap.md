@@ -8,7 +8,8 @@ switch between them:
 - **Weight**: log body weight, look back by date, compare values, and see how
   it changes on a chart.
 - **Exercises**: keep your own list of exercises, log sets (reps, weight,
-  time), and see whether the numbers grow.
+  time) or sessions (classes such as boxing or swimming), and see whether
+  the numbers grow.
 
 The app is mobile first, works offline, and is installable on the home screen.
 It has one theme and English only.
@@ -60,6 +61,8 @@ These apply to every full-size chart in the app:
   bars start at zero and run from the first logged day to today. A span
   over 60 days shows one bar per Monday-based week, because daily bars would
   be too thin to read or tap.
+- Sessions are always weekly bars: the number of sessions in each
+  Monday-based week, because how often matters more than which day.
 
 Sparklines in lists are simplified: no axes and no tapping, but the same
 date spacing and the same metric as the full chart they lead to.
@@ -91,8 +94,12 @@ date spacing and the same metric as the full chart they lead to.
 
 - Create, rename and archive exercises. Archived exercises keep their
   history and can be restored.
-- Each exercise has one metric: `reps`, `reps + weight` or `time`. The metric
-  is fixed once the exercise has a logged set.
+- Each exercise has one metric: `reps`, `reps + weight`, `time` or
+  `session`. The metric is fixed once the exercise has a logged set.
+- A `session` is one class or training (boxing, swimming) with a date and
+  an optional note, and no values. It has no Best set view: its sentence
+  counts sessions in the last 4 weeks (and in total when older ones exist),
+  and its chart counts sessions per week. "Log today" logs one at once.
 - Log a set: date (default today, can backdate), the values its metric needs,
   and an optional note. The form is prefilled from the last set, with a
   "Repeat last" action that logs it today. Each day in the history can also

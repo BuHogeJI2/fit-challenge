@@ -8,6 +8,7 @@ import {
   getExerciseProgress,
   getLoads,
   getMonthWeightSummary,
+  getProgressBars,
   getProgressLoad,
   getTotalBars,
   getWeeklyWeights,
@@ -280,6 +281,24 @@ describe("exercise stats", () => {
       endKey: "2026-10-19",
       bars: [{ date: "2026-08-17", value: 10 }, { date: "2026-10-12", value: 35 }],
     });
+  });
+
+  it("counts sessions per day and always bars them by week", () => {
+    const sessions = [set("2026-10-13", {}), set("2026-10-15", {}), set("2026-10-15", {}, "18:00")];
+    const boxing = exercise({ metric: "session" });
+    const daily = getDailyProgress(boxing, sessions, null);
+
+    expect(daily).toEqual([{ date: "2026-10-13", value: 1 }, { date: "2026-10-15", value: 2 }]);
+    expect(getProgressBars(boxing, daily, "2026-10-19")).toEqual({
+      stepDays: 7,
+      startKey: "2026-10-12",
+      endKey: "2026-10-19",
+      bars: [{ date: "2026-10-12", value: 3 }],
+    });
+    expect(getProgressBars(exercise({ metric: "reps" }), daily, "2026-10-19"))
+      .toMatchObject({ stepDays: 1 });
+    expect(getProgressBars(exercise({ metric: "reps", progressView: "best" }), daily, "2026-10-19"))
+      .toBeNull();
   });
 
   it("defaults the progress load to the latest set and prefers a saved one", () => {

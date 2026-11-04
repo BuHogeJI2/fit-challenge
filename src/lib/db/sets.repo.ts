@@ -46,7 +46,7 @@ const requireInteger = (value: number | null, label: string): number => {
  * Returns the stored form of set values for a metric, or throws a
  * `RepositoryError` when they do not fit it: `reps` needs reps only,
  * `reps_weight` needs reps and weight (kept to 0.01 kg), `time` needs
- * seconds only.
+ * seconds only, `session` needs no values.
  */
 export const normalizeSetValues = (metric: TMetric, values: TSetValues): TSetValues => {
   switch (metric) {
@@ -68,6 +68,11 @@ export const normalizeSetValues = (metric: TMetric, values: TSetValues): TSetVal
       assertNull(values.reps, "Reps", metric);
       assertNull(values.weightKg, "Weight", metric);
       return { reps: null, weightKg: null, seconds: requireInteger(values.seconds, "Time") };
+    case "session":
+      assertNull(values.reps, "Reps", metric);
+      assertNull(values.weightKg, "Weight", metric);
+      assertNull(values.seconds, "Time", metric);
+      return { reps: null, weightKg: null, seconds: null };
   }
 };
 
