@@ -140,11 +140,34 @@ describe("weekly weight", () => {
       weight("2026-10-21", 83.0),
     ]);
 
-    expect(weeks).toEqual([
+    expect(weeks.map(({ weekStart, count, averageKg, changeKg }) => ({ weekStart, count, averageKg, changeKg }))).toEqual([
       { weekStart: "2026-09-28", count: 2, averageKg: 84, changeKg: null },
       { weekStart: "2026-10-05", count: 3, averageKg: 83.5, changeKg: -0.5 },
       { weekStart: "2026-10-19", count: 1, averageKg: 83, changeKg: -0.5 },
     ]);
+  });
+
+  it("keeps real weekly endpoints separate from extrema and average comparisons", () => {
+    const first = weight("2025-12-30", 85);
+    const last = weight("2026-01-04", 84);
+    const weeks = getWeeklyWeights([
+      last, weight("2026-01-01", 80), weight("2025-12-23", 88), first, weight("2025-12-22", 90),
+    ]);
+
+    expect(weeks[1]).toEqual({
+      weekStart: "2025-12-29", count: 3, first, last, changeWithinWeekKg: -1,
+      averageKg: 83, changeKg: -6,
+    });
+    expect(weeks[0].changeWithinWeekKg).toBe(-2);
+  });
+
+  it("does not invent a weekly change from a single measurement", () => {
+    const only = weight("2026-10-21", 83);
+    expect(getWeeklyWeights([only])).toEqual([{
+      weekStart: "2026-10-19", count: 1, first: only, last: only, changeWithinWeekKg: null,
+      averageKg: 83, changeKg: null,
+    }]);
+    expect(getWeeklyWeights([])).toEqual([]);
   });
 
   it("takes the change from the rounded averages so it matches the shown values", () => {

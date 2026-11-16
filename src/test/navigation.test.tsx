@@ -68,7 +68,7 @@ describe("period navigation", () => {
     expect(screen.queryByRole("heading", { name: "Storage is not available" })).toBeNull();
   });
 
-  it("remembers section tabs, periods, and library search when using the top tabs", async () => {
+  it("remembers section tabs, periods, and the simple library when using the top tabs", async () => {
     await saveWeightEntry({ date: "2026-09-01", weightKg: 85 });
     await saveWeightEntry({ date: "2026-10-19", weightKg: 83 });
     await createExercise({ name: "Push-ups", metric: "reps" });
@@ -78,14 +78,14 @@ describe("period navigation", () => {
     const weightHash = window.location.hash;
     await user.click(screen.getByRole("link", { name: "Exercises" }));
     await user.click(await screen.findByRole("button", { name: "Library" }));
-    await user.type(screen.getByLabelText("Search exercises"), "push");
-    await user.click(screen.getByRole("button", { name: "Recent" }));
     await user.click(screen.getByRole("link", { name: "Weight" }));
     expect(window.location.hash).toBe(weightHash);
     await user.click(screen.getByRole("link", { name: "Exercises" }));
     expect(await screen.findByRole("button", { name: "Library", pressed: true })).toBeInTheDocument();
-    expect(screen.getByLabelText("Search exercises")).toHaveValue("push");
-    expect(screen.getByRole("button", { name: "Recent", pressed: true })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Push-ups/ })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Search exercises")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Recent" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "A–Z" })).toBeNull();
   });
 
   it("returns from exercise progress through its training to the original historical week", async () => {

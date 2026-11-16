@@ -14,7 +14,7 @@ export function WeightWeekDetail({ weekStart, entries, todayKey, goalWeightKg, s
   const summary = getWeightSummary(visible, null);
   const formatDate = (date: string) => formatDateInContext(date, todayKey);
   return <section className={classes.screen}>
-    <Link className={classes.back} href={backHref} replace>Back to weeks</Link>
+    <Link className={classes.back} href={backHref} aria-label="Back to weeks" replace><span className={classes.backIcon} aria-hidden="true">‹</span>Weeks</Link>
     <PeriodPager periodKey={weekStart} canPrevious={canPrevious} canNext={canNext} onPrevious={onPrevious} onNext={onNext} renderPage={(offset, controls) => (
       <WeightPeriodPanel view="week" period={addDays(weekStart, offset * 7)} entries={entries} todayKey={todayKey} goalWeightKg={goalWeightKg} selectedDate={selectedDate} selectedWeek={null} onSelectDate={onSelect} onSelectWeek={() => {}} onEdit={onEdit} canPrevious={canPrevious} canNext={canNext} onPrevious={controls.onPrevious} onNext={controls.onNext} />
     )} />

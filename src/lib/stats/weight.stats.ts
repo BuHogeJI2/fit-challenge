@@ -19,6 +19,9 @@ export type TMonthWeightSummary = {
 export type TWeekWeight = {
   weekStart: string;
   count: number;
+  first: TWeightEntry;
+  last: TWeightEntry;
+  changeWithinWeekKg: number | null;
   averageKg: number;
   changeKg: number | null;
 };
@@ -108,20 +111,33 @@ export const withChangeFromPrevious = (
     })
     .reverse();
 
+/** Groups dated entries into weeks with actual endpoints and separate average comparisons. */
 export const getWeeklyWeights = (entries: readonly TWeightEntry[]): TWeekWeight[] => {
-  const valuesByWeek = new Map<string, number[]>();
+  const entriesByWeek = new Map<string, TWeightEntry[]>();
   for (const entry of sortByDate(entries)) {
     const weekStart = getWeekStart(entry.date);
-    valuesByWeek.set(weekStart, [...(valuesByWeek.get(weekStart) ?? []), entry.weightKg]);
+    const week = entriesByWeek.get(weekStart) ?? [];
+    week.push(entry);
+    entriesByWeek.set(weekStart, week);
   }
 
   let previousKg: number | null = null;
-  return [...valuesByWeek.entries()].map(([weekStart, values]) => {
-    const averageKg = averageInTenths(values);
+  return [...entriesByWeek.entries()].map(([weekStart, week]) => {
+    const first = week[0];
+    const last = week[week.length - 1];
+    const averageKg = averageInTenths(week.map((entry) => entry.weightKg));
     // Rounded averages are compared so the change matches the shown values.
     const changeKg = previousKg === null ? null : roundToTenth(averageKg - previousKg);
     previousKg = averageKg;
-    return { weekStart, count: values.length, averageKg, changeKg };
+    return {
+      weekStart,
+      count: week.length,
+      first,
+      last,
+      changeWithinWeekKg: week.length > 1 ? roundToTenth(last.weightKg - first.weightKg) : null,
+      averageKg,
+      changeKg,
+    };
   });
 };
 

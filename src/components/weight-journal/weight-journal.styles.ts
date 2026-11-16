@@ -1,8 +1,8 @@
 import clsx from "clsx";
 
-const list = clsx("m-0 flex list-none flex-col border-t border-ink p-0");
+const list = clsx("m-0 flex list-none flex-col p-0");
 
-const item = clsx("border-b border-rule");
+const item = clsx("border-b border-rule last:border-b-0");
 const revealedItem = clsx(item, "motion-reveal");
 
 const row = clsx(
@@ -25,7 +25,7 @@ const value = clsx("text-[1.0625rem] font-medium");
 
 const change = clsx("font-mono text-xs text-muted");
 const heading = clsx("m-0 mt-5 mb-2 text-sm font-medium text-muted");
-const disclosure = clsx("min-h-11 self-start text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ink");
+const disclosure = clsx("mt-3 self-start");
 
 export const weightJournalClasses = {
   list,

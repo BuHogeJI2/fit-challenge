@@ -189,7 +189,7 @@ describe("Weight mode", () => {
     expect(screen.getByText("2 weigh-ins since Sep 20")).toBeInTheDocument();
   });
 
-  it("shows weekly averages in twelve-week windows", async () => {
+  it("labels the average chart separately from actual weekly endpoints and changes", async () => {
     await saveWeightEntry({ date: "2026-05-20", weightKg: 84.5 });
     await saveWeightEntry({ date: "2026-10-14", weightKg: 83.1 });
     await saveWeightEntry({ date: "2026-10-16", weightKg: 83.5 });
@@ -199,26 +199,51 @@ describe("Weight mode", () => {
 
     await user.click(await screen.findByRole("button", { name: "Weeks" }));
 
-    expect(screen.getByRole("heading", { name: "Weeks" })).toBeInTheDocument();
-    expect(screen.getByText("Aug 3 – Oct 25 · 3 weigh-ins")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Aug 3 – Oct 25" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Weeks" })).not.toBeInTheDocument();
+    const chart = screen.getByRole("figure", { name: /Weekly average weight chart/ });
+    expect(chart.parentElement).toHaveTextContent("Weekly averageWeigh-ins");
     expect(screen.getByText("Oct 19 – 25 · avg 83.0 kg")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Edit / })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Next 12 weeks" })).toBeDisabled();
 
     const weeks = within(screen.getByRole("list", { name: "Weeks" })).getAllByRole("listitem");
-    expect(weeks.map((week) => week.textContent)).toEqual([
-      "Oct 19 – 251 weigh-in so far83.0−0.3›",
-      "Oct 12 – 182 weigh-ins83.3−1.2›",
-    ]);
+    expect(weeks[0]).toHaveTextContent("83.0 kg");
+    expect(weeks[0]).toHaveTextContent("One weigh-in so far · Mon");
+    expect(within(weeks[0]).queryByText(/^Change within the week/)).toBeNull();
+    expect(weeks[1]).toHaveTextContent("83.1 → 83.5 kg");
+    expect(weeks[1]).toHaveTextContent("2 weigh-ins · Wed – Fri");
+    expect(within(weeks[1]).getByText("Change within the week: up 0.4 kg")).toBeInTheDocument();
+    expect(weeks[1]).toHaveTextContent("↑ 0.4 kg");
+    expect(weeks[1]).not.toHaveTextContent("−1.2");
 
     fireEvent.click(screen.getByTestId("chart-point-2026-10-15"));
     expect(screen.getByText("Oct 12 – 18 · avg 83.3 kg")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Previous 12 weeks" }));
 
-    expect(screen.getByText("May 11 – Aug 2 · 1 weigh-in")).toBeInTheDocument();
-    expect(screen.getByRole("listitem")).toHaveTextContent("May 18 – 241 weigh-in84.5first");
+    expect(screen.getByRole("heading", { name: "May 11 – Aug 2" })).toBeInTheDocument();
+    expect(screen.getByRole("listitem")).toHaveTextContent("May 18 – 2484.5 kgOne weigh-in · Wed");
     expect(screen.getByRole("button", { name: "Previous 12 weeks" })).toBeDisabled();
+  });
+
+  it("shows a week's endpoints rather than its min/max, including a real zero change", async () => {
+    for (const [date, weightKg] of [
+      ["2026-10-05", 85], ["2026-10-07", 80], ["2026-10-11", 84],
+      ["2026-10-12", 83], ["2026-10-18", 83],
+    ] as const) await saveWeightEntry({ date, weightKg });
+    const user = userEvent.setup();
+    renderWeight();
+    await user.click(await screen.findByRole("button", { name: "Weeks" }));
+    const rows = within(screen.getByRole("list", { name: "Weeks" })).getAllByRole("listitem");
+
+    expect(rows[0]).toHaveTextContent("83.0 → 83.0 kg");
+    expect(within(rows[0]).getByText("Change within the week: unchanged 0.0 kg")).toBeInTheDocument();
+    expect(rows[0]).not.toHaveTextContent("Mon – Sun");
+    expect(rows[1]).toHaveTextContent("85.0 → 84.0 kg");
+    expect(rows[1]).not.toHaveTextContent("80.0");
+    expect(within(rows[1]).getByText("Change within the week: down 1.0 kg")).toBeInTheDocument();
+    expect(rows[1]).toHaveTextContent("↓ 1.0 kg");
   });
 
   it("shows the selected point as text", async () => {

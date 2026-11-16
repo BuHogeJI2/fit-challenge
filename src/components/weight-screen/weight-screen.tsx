@@ -30,7 +30,7 @@ import {
   WEEKS_PER_WINDOW,
   withChangeFromPrevious,
 } from "../../lib/stats";
-import { useToast } from "../ui";
+import { SegmentedControl, useToast } from "../ui";
 import { WeightEntryForm } from "../weight-entry-form";
 import { WeightEntrySheet } from "../weight-entry-sheet";
 import { WeightJournal } from "../weight-journal";
@@ -41,7 +41,7 @@ import { weightScreenClasses } from "./weight-screen.styles";
 import type { TWeightSheetState, TWeightView } from "./weight-screen.types";
 import { PeriodPager, type IPeriodPagerControls, type TPeriodOffset } from "../period-pager";
 import { WeightPeriodPanel } from "../weight-period-panel";
-import { useSavedEntry, useSelectionIndicator } from "../../lib/motion";
+import { useSavedEntry } from "../../lib/motion";
 
 const VIEWS: { view: TWeightView; label: string }[] = [
   { view: "month", label: "Month" },
@@ -86,7 +86,6 @@ export function WeightScreen() {
   const [selectedWeek, setSelectedWeek] = useState<string | null>(null);
   const [sheet, setSheet] = useState<TWeightSheetState>(null);
   const [savedEntry, markSaved] = useSavedEntry();
-  const rangeRef = useSelectionIndicator<HTMLDivElement>(view, Boolean(entries?.length && settings));
   useRestoreView(getAppPath(), Boolean(entries && settings), view === "week" ? "weight-week" : "weight-overview");
 
   if (!entries || !settings) {
@@ -225,19 +224,7 @@ export function WeightScreen() {
         ) : null}
       </dl>
       </div>
-      <div ref={rangeRef} className={weightScreenClasses.viewSwitch} role="group" aria-label="Chart range">
-        {VIEWS.map((option) => (
-          <button
-            key={option.view}
-            type="button"
-            aria-pressed={view === option.view}
-            className={view === option.view ? weightScreenClasses.viewActive : weightScreenClasses.view}
-            onClick={() => setView(option.view)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl label="Chart range" options={VIEWS.map(({ view: value, label }) => ({ value, label }))} value={view} onChange={setView} className={weightScreenClasses.viewSwitch} />
 
       {view === "all" ? renderPanel(0, { onPrevious: previous, onNext: next }) : (
         <PeriodPager key={view} periodKey={`${view}-${view === "month" ? monthKey : lastWeek}`} canPrevious={canPrevious} canNext={canNext} onPrevious={previous} onNext={next} renderPage={renderPanel} />

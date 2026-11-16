@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { formatDateInContext, formatDayOfMonth, formatWeekdayShort } from "../../lib/dates";
 import { formatSignedWeightValue, formatWeightValue } from "../../lib/numbers";
 import { weightJournalClasses } from "./weight-journal.styles";
+import { Button } from "../ui";
 import type { IWeightJournalProps } from "./weight-journal.types";
 
 export function WeightJournal({ rows, showMonth, todayKey, onEdit, previewCount = 3, expanded: controlledExpanded, onExpandedChange, savedEntry }: IWeightJournalProps) {
@@ -45,9 +46,9 @@ export function WeightJournal({ rows, showMonth, todayKey, onEdit, previewCount 
         </li>
       ))}
     </ol>
-    {rows.length > previewCount ? <button type="button" aria-controls={listId} aria-expanded={expanded} className={weightJournalClasses.disclosure} onClick={() => { setExpanded(!expanded); onExpandedChange?.(!expanded); }}>
+    {rows.length > previewCount ? <Button variant="soft" size="sm" aria-controls={listId} aria-expanded={expanded} className={weightJournalClasses.disclosure} onClick={() => { setExpanded(!expanded); onExpandedChange?.(!expanded); }}>
       {expanded ? "Show fewer" : `Show all ${rows.length} weigh-ins`}
-    </button> : null}
+    </Button> : null}
     </>
   );
 }
