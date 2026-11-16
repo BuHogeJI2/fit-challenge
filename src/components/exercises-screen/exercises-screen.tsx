@@ -17,6 +17,7 @@ import {
   getTrainingTitle,
 } from "../../lib/stats";
 import { BarSparkline, Sparkline } from "../charts";
+import { PeriodPager } from "../period-pager";
 import { ExerciseFormSheet } from "../exercise-form-sheet";
 import { SetEntrySheet, type TSetSheetState } from "../set-entry-sheet";
 import { Button, Field, useToast } from "../ui";
@@ -116,9 +117,6 @@ export function ExercisesScreen() {
   const weekEnd = addDays(weekStart, 6);
   const weekTrainings = trainings.filter((training) => training.date >= weekStart && training.date <= weekEnd)
     .sort((left, right) => right.date.localeCompare(left.date) || right.createdAt.localeCompare(left.createdAt) || left.id.localeCompare(right.id));
-  const weekSets = sets.filter((set) => set.date >= weekStart && set.date <= weekEnd);
-  const activeDays = new Set(weekSets.map((set) => set.date)).size;
-  const sessions = getTrainingExercises(weekSets, exercises).filter((group) => group.exercise?.metric === "session");
   const currentWeek = getWeekStart(todayKey);
   const firstWeek = trainings.length ? getWeekStart([...trainings].sort((left, right) => left.date.localeCompare(right.date))[0].date) : currentWeek;
   const hasActive = exercises.some((exercise) => !exercise.archivedAt);
@@ -128,7 +126,7 @@ export function ExercisesScreen() {
       <h1 className={exercisesScreenClasses.title}>Training</h1>
       <p className={exercisesScreenClasses.subline}>
         {exercises.length || trainings.length
-          ? view === "week" ? `${activeDays} active day${activeDays === 1 ? "" : "s"} ${weekStart === currentWeek ? "this week" : "in this week"}` : "Your exercises and their progress"
+          ? view === "week" ? "Your weekly training journal" : "Your exercises and their progress"
           : "Add the exercises you train, then log your sets."}
       </p>
 
@@ -138,16 +136,27 @@ export function ExercisesScreen() {
       </div>
 
       {view === "week" ? <>
-        <div className={exercisesScreenClasses.period}>
-          <button type="button" className={exercisesScreenClasses.arrow} aria-label="Previous training week" disabled={weekStart <= firstWeek} onClick={() => setWeekStart(addDays(weekStart, -7))}>‹</button>
-          <h2 className={exercisesScreenClasses.periodTitle}>{formatDateRange(weekStart, weekEnd, todayKey)}</h2>
-          <button type="button" className={exercisesScreenClasses.arrow} aria-label="Next training week" disabled={weekStart >= currentWeek} onClick={() => setWeekStart(addDays(weekStart, 7))}>›</button>
-        </div>
+        <PeriodPager periodKey={weekStart} label="week" canPrevious={weekStart > firstWeek} canNext={weekStart < currentWeek} onPrevious={() => setWeekStart(addDays(weekStart, -7))} onNext={() => setWeekStart(addDays(weekStart, 7))} renderPage={(offset, controls) => {
+          const start = addDays(weekStart, offset * 7);
+          const end = addDays(start, 6);
+          const pageTrainings = trainings.filter((training) => training.date >= start && training.date <= end);
+          const pageSets = sets.filter((set) => set.date >= start && set.date <= end);
+          const activeDays = new Set(pageSets.map((set) => set.date)).size;
+          const sessions = getTrainingExercises(pageSets, exercises).filter((group) => group.exercise?.metric === "session");
+          return <>
+            <div className={exercisesScreenClasses.period}>
+              <button type="button" className={exercisesScreenClasses.arrow} aria-label="Previous training week" disabled={weekStart <= firstWeek} onClick={controls.onPrevious}>‹</button>
+              <h2 className={exercisesScreenClasses.periodTitle}>{formatDateRange(start, end, todayKey)}</h2>
+              <button type="button" className={exercisesScreenClasses.arrow} aria-label="Next training week" disabled={weekStart >= currentWeek} onClick={controls.onNext}>›</button>
+            </div>
+            <div className={exercisesScreenClasses.weekSummary}>
+              <p className={exercisesScreenClasses.summaryCount}>{pageTrainings.length} training{pageTrainings.length === 1 ? "" : "s"}</p>
+              <p className={exercisesScreenClasses.subline}>{activeDays} active day{activeDays === 1 ? "" : "s"} {start === currentWeek ? "this week" : "in this week"}</p>
+              {sessions.length ? <p className={exercisesScreenClasses.subline}>{sessions.map((group) => `${group.exercise!.name} ×${group.sets.length}`).join(" · ")}</p> : null}
+            </div>
+          </>;
+        }} />
         {weekStart !== currentWeek ? <Button variant="text" onClick={() => setWeekStart(currentWeek)}>This week</Button> : null}
-        <div className={exercisesScreenClasses.weekSummary}>
-          <p className={exercisesScreenClasses.summaryCount}>{weekTrainings.length} training{weekTrainings.length === 1 ? "" : "s"}</p>
-          {sessions.length ? <p className={exercisesScreenClasses.subline}>{sessions.map((group) => `${group.exercise!.name} ×${group.sets.length}`).join(" · ")}</p> : null}
-        </div>
         {weekTrainings.length ? <ol className={exercisesScreenClasses.trainingList} aria-label="Weekly trainings">
           {weekTrainings.map((training, index) => {
             const groups = getTrainingExercises(sets.filter((set) => set.trainingId === training.id), exercises);

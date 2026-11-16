@@ -24,7 +24,12 @@ const pick = clsx(pillBase, "border border-rule-strong hover:border-ink");
 
 const pickActive = clsx(pillBase, "bg-ink text-ground");
 
-const exercisePicker = clsx("-mx-6 flex gap-2 overflow-x-auto px-6 pb-1");
+const exercisePicker = clsx(
+  "-mx-6 flex gap-2 overflow-x-auto px-6 pb-1",
+  "data-[overflow-right=true]:[mask-image:linear-gradient(to_right,black_calc(100%_-_1.5rem),transparent)]",
+  "data-[overflow-left=true]:[mask-image:linear-gradient(to_right,transparent,black_1.5rem)]",
+  "[&[data-overflow-left=true][data-overflow-right=true]]:[mask-image:linear-gradient(to_right,transparent,black_1.5rem,black_calc(100%_-_1.5rem),transparent)]",
+);
 
 const chip = clsx(pillBase, "shrink-0 border border-rule-strong px-4 hover:border-ink");
 

@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { formatDateInContext } from "../../lib/dates";
@@ -330,6 +330,26 @@ function SetEntryBody({
   onSaved,
   onDelete,
 }: ISetEntryBodyProps) {
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const pickerContents = JSON.stringify(recentExercises.map(({ id, name }) => [id, name]));
+  useEffect(() => {
+    const picker = pickerRef.current;
+    if (!picker) return;
+    const update = () => {
+      picker.dataset.overflowLeft = String(picker.scrollLeft > 1);
+      picker.dataset.overflowRight = String(picker.scrollLeft + picker.clientWidth < picker.scrollWidth - 1);
+    };
+    update();
+    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(update) : null;
+    observer?.observe(picker);
+    picker.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      observer?.disconnect();
+      picker.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [pickerContents]);
   const editedSet: TSet | null = state?.mode === "edit" ? state.set : null;
   const fixedTrainingId = state?.mode === "new" ? state.trainingId : undefined;
   const fixedTraining = trainings.find((training) => training.id === fixedTrainingId);
@@ -343,7 +363,7 @@ function SetEntryBody({
   return (
     <>
       {!fixedId && recentExercises.length > 1 ? (
-        <div className={setEntrySheetClasses.exercisePicker} role="group" aria-label="Exercise">
+        <div ref={pickerRef} className={setEntrySheetClasses.exercisePicker} role="group" aria-label="Exercise">
           {recentExercises.map((item) => (
             <button
               key={item.id}

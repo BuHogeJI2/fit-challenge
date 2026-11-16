@@ -37,7 +37,8 @@ All files below are in `src/test/`:
 
 | Files | Main coverage |
 | --- | --- |
-| `app.test.tsx` | Hash routing, fallback route, mode navigation and tab swipe rules |
+| `app.test.tsx` | Hash routing, fallback route, top-tab navigation, and no section switching from content swipes |
+| `period-pager.test.tsx` | Finger tracking, distance/velocity, cancellation, edge/control/dialog guards, inert neighbors, reduced motion, arrow interruption, and hint storage failures |
 | `navigation.test.tsx` | Hash queries, direct week links, daily week history, invalid parameters, nested return paths, and section/scroll/focus restoration |
 | `weight.test.tsx` | First entry, editing, date replacement, delete/undo, storage failures, months, weeks and chart selection |
 | `exercises.test.tsx` | Exercise lifecycle, metric forms, sessions, repeat today or into a past day/undo, history, load and progress-view selection, day/week total bars and short-series charts |
@@ -65,9 +66,10 @@ Minutes/Seconds fields. Export and restore a real file, including Cancel and
 an invalid file. Check storage support and refusal states.
 
 Scroll a long history: the header stays on top and focused rows are not
-hidden under it. Swipe between Weight and Exercises in both directions, from
-a chart and from an exercise row link: the tab switches and the row does not
-open. Outward swipes, vertical scrolling, pinch zoom, the exercise picker in
+hidden under it. Switch Weight and Exercises through the top tabs. Swipe
+inside month/week headers and charts, or the weekly training summary: only
+the period changes. Swiping a list must not switch sections or activate a row.
+Boundary resistance, vertical scrolling, pinch zoom, the exercise picker in
 the set sheet and the browser's edge Back gesture must keep working.
 
 Check installation, offline reload after the first online visit and an

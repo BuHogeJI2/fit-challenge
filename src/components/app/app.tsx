@@ -1,7 +1,5 @@
-import { useMemo, useRef } from "react";
-import { Link, Redirect, Route, Router, Switch, useLocation } from "wouter";
+import { Link, Redirect, Route, Router, Switch } from "wouter";
 import { useAppLocation } from "../../lib/navigation";
-import { useHorizontalSwipe, type TSwipeHandlers } from "../../lib/gestures";
 import { DatabaseGate } from "../database-gate";
 import { ExerciseDetailScreen } from "../exercise-detail-screen";
 import { ExercisesScreen } from "../exercises-screen";
@@ -14,15 +12,6 @@ import { TrainingDetailScreen } from "../training-detail-screen";
 import { appClasses } from "./app.styles";
 
 function AppShell() {
-  const mainRef = useRef<HTMLElement>(null);
-  const [location, navigate] = useLocation();
-  const tabSwipe = useMemo<TSwipeHandlers>(() => {
-    if (location === "/weight") return { onSwipeLeft: () => navigate("/exercises") };
-    if (location === "/exercises") return { onSwipeRight: () => navigate("/weight") };
-    return {};
-  }, [location, navigate]);
-
-  useHorizontalSwipe(mainRef, tabSwipe);
 
   return (
     <div className={appClasses.frame}>
@@ -36,7 +25,7 @@ function AppShell() {
         </Link>
       </header>
       <UpdateBanner />
-      <main ref={mainRef} className={appClasses.main}>
+      <main className={appClasses.main}>
         <Switch>
           <Route path="/weight">
             <DatabaseGate>

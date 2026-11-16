@@ -120,7 +120,7 @@ describe("Exercises mode", () => {
 
     await user.click(screen.getByRole("button", { name: "Undo" }));
     expect(await within(await history()).findByRole("heading", { name: /Oct 15/ })).toBeInTheDocument();
-    expect(within(await history()).queryByRole("heading", { name: "Today" })).not.toBeInTheDocument();
+    await vi.waitFor(() => expect(within(screen.getByRole("list", { name: "History" })).queryByRole("heading", { name: "Today" })).not.toBeInTheDocument());
   });
 
   it("repeats the last set of a past day into that day and undoes it", async () => {

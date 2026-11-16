@@ -4,11 +4,9 @@ import { useLocation } from "wouter";
 import {
   addDays,
   formatDateInContext,
-  formatDateRange,
   formatMonthLabel,
   formatRelativeDate,
   getMonthKey,
-  getMonthRange,
   getWeekStart,
   shiftMonth,
   parseDateKey,
@@ -25,7 +23,6 @@ import {
 import { formatKg, formatSignedWeightValue, formatWeightValue } from "../../lib/numbers";
 import {
   getEntriesInMonth,
-  getMonthWeightSummary,
   getWeeklyWeights,
   getWeekWindow,
   getWeightSummary,
@@ -33,7 +30,6 @@ import {
   WEEKS_PER_WINDOW,
   withChangeFromPrevious,
 } from "../../lib/stats";
-import { LineChart } from "../charts";
 import { useToast } from "../ui";
 import { WeightEntryForm } from "../weight-entry-form";
 import { WeightEntrySheet } from "../weight-entry-sheet";
@@ -43,12 +39,8 @@ import { WeightWeekDetail } from "../weight-week-detail";
 import { appHref, useAppSearch, getAppPath, rememberView, useRestoreView } from "../../lib/navigation";
 import { weightScreenClasses } from "./weight-screen.styles";
 import type { TWeightSheetState, TWeightView } from "./weight-screen.types";
-import {
-  getMonthAxisLabels,
-  getRangeAxisLabels,
-  getWeekAxisLabels,
-  getWeekMiddle,
-} from "../charts/axis-labels";
+import { PeriodPager, type IPeriodPagerControls, type TPeriodOffset } from "../period-pager";
+import { WeightPeriodPanel } from "../weight-period-panel";
 
 const VIEWS: { view: TWeightView; label: string }[] = [
   { view: "month", label: "Month" },
@@ -179,107 +171,19 @@ export function WeightScreen() {
     </>;
   }
   const rows = withChangeFromPrevious(entries);
-  const monthSummary = getMonthWeightSummary(entries, monthKey);
   const weekWindow = getWeekWindow(lastWeek);
-  const windowEntries = entries.filter(
-    (entry) => entry.date >= weekWindow.start && entry.date <= weekWindow.end,
-  );
   const visibleWeeks = getWeeklyWeights(entries).filter(
     (week) => week.weekStart >= weekWindow.start && week.weekStart <= weekWindow.end,
   );
-  const windowWeekStarts = Array.from({ length: WEEKS_PER_WINDOW }, (_, index) =>
-    addDays(weekWindow.start, index * 7),
-  );
-  const formatWeek = (weekStart: string) =>
-    formatDateRange(weekStart, addDays(weekStart, 6), todayKey);
-  const countWeighIns = (count: number) => `${count} weigh-in${count === 1 ? "" : "s"}`;
-
-  const visibleEntries =
-    view === "month" ? getEntriesInMonth(entries, monthKey) : entries;
+  const visibleEntries = view === "month" ? getEntriesInMonth(entries, monthKey) : entries;
   const periodSummary = getWeightSummary(visibleEntries, null);
-  const selected =
-    visibleEntries.find((entry) => entry.date === selectedDate) ??
-    visibleEntries[visibleEntries.length - 1] ??
-    null;
-  const selectedWeekData =
-    visibleWeeks.find((week) => week.weekStart === selectedWeek) ??
-    visibleWeeks[visibleWeeks.length - 1] ??
-    null;
-
-  const chart =
-    view === "weeks"
-      ? {
-          points: visibleWeeks.map((week) => ({
-            date: getWeekMiddle(week.weekStart),
-            value: week.averageKg,
-          })),
-          backgroundPoints: windowEntries.map((entry) => ({
-            date: entry.date,
-            value: entry.weightKg,
-          })),
-          domain: weekWindow,
-          xLabels: getWeekAxisLabels(windowWeekStarts),
-          selectedDate: selectedWeekData ? getWeekMiddle(selectedWeekData.weekStart) : null,
-          onSelect: (date: string) => setSelectedWeek(getWeekStart(date)),
-          readout: selectedWeekData
-            ? `${formatWeek(selectedWeekData.weekStart)} · avg ${formatKg(selectedWeekData.averageKg)}`
-            : null,
-          label: visibleWeeks.length
-            ? `Weekly average weight chart, ${visibleWeeks.length} weeks from ${formatWeek(visibleWeeks[0].weekStart)} to ${formatWeek(visibleWeeks[visibleWeeks.length - 1].weekStart)}`
-            : "",
-          empty: "Nothing logged in these weeks.",
-        }
-      : {
-          points: visibleEntries.map((entry) => ({ date: entry.date, value: entry.weightKg })),
-          backgroundPoints: [],
-          domain:
-            view === "month"
-              ? getMonthRange(monthKey)
-              : { start: entries[0].date, end: entries[entries.length - 1].date },
-          xLabels:
-            view === "month"
-              ? getMonthAxisLabels(monthKey)
-              : getRangeAxisLabels(entries[0].date, entries[entries.length - 1].date),
-          selectedDate: selected?.date ?? null,
-          onSelect: setSelectedDate,
-          readout: selected ? `${formatDate(selected.date)} · ${formatKg(selected.weightKg)}` : null,
-          label: visibleEntries.length
-            ? `Weight chart, ${visibleEntries.length} weigh-ins from ${formatDate(visibleEntries[0].date)} to ${formatDate(visibleEntries[visibleEntries.length - 1].date)}`
-            : "",
-          empty: "Nothing logged in this month.",
-        };
-
-  const nav =
-    view === "month"
-      ? {
-          title: formatMonthLabel(monthKey, todayKey),
-          previousLabel: "Previous month",
-          nextLabel: "Next month",
-          isFirst: monthKey <= firstMonthKey,
-          isLast: monthKey >= currentMonthKey,
-          onPrevious: () => setMonthKey(shiftMonth(monthKey, -1)),
-          onNext: () => setMonthKey(shiftMonth(monthKey, 1)),
-        }
-      : view === "weeks"
-        ? {
-            title: "Weeks",
-            previousLabel: `Previous ${WEEKS_PER_WINDOW} weeks`,
-            nextLabel: `Next ${WEEKS_PER_WINDOW} weeks`,
-            isFirst: weekWindow.start <= firstWeek,
-            isLast: lastWeek >= currentWeek,
-            onPrevious: () => setLastWeek(addDays(lastWeek, -WEEKS_PER_WINDOW * 7)),
-            onNext: () => setLastWeek(addDays(lastWeek, WEEKS_PER_WINDOW * 7)),
-          }
-        : null;
-
-  const subline =
-    view === "month"
-      ? monthSummary.count
-        ? `${countWeighIns(monthSummary.count)} · average ${formatWeightValue(monthSummary.averageKg!)} · range ${formatWeightValue(monthSummary.minKg!)}–${formatWeightValue(monthSummary.maxKg!)}`
-        : "No weigh-ins this month"
-      : view === "weeks"
-        ? `${formatDateRange(weekWindow.start, weekWindow.end, todayKey)} · ${windowEntries.length ? countWeighIns(windowEntries.length) : "no weigh-ins"}`
-        : `${countWeighIns(entries.length)} since ${formatDate(entries[0].date)}`;
+  const canPrevious = view === "month" ? monthKey > firstMonthKey : view === "weeks" && weekWindow.start > firstWeek;
+  const canNext = view === "month" ? monthKey < currentMonthKey : view === "weeks" && lastWeek < currentWeek;
+  const previous = () => view === "month" ? setMonthKey(shiftMonth(monthKey, -1)) : setLastWeek(addDays(lastWeek, -WEEKS_PER_WINDOW * 7));
+  const next = () => view === "month" ? setMonthKey(shiftMonth(monthKey, 1)) : setLastWeek(addDays(lastWeek, WEEKS_PER_WINDOW * 7));
+  const renderPanel = (offset: TPeriodOffset, controls: IPeriodPagerControls) => (
+    <WeightPeriodPanel view={view} period={view === "month" ? shiftMonth(monthKey, offset) : addDays(lastWeek, offset * WEEKS_PER_WINDOW * 7)} entries={entries} todayKey={todayKey} goalWeightKg={settings.goalWeightKg} selectedDate={selectedDate} selectedWeek={selectedWeek} onSelectDate={setSelectedDate} onSelectWeek={setSelectedWeek} onEdit={(entry) => setSheet({ mode: "edit", entry })} canPrevious={canPrevious} canNext={canNext} onPrevious={controls.onPrevious} onNext={controls.onNext} />
+  );
 
   return (
     <section className={weightScreenClasses.screen}>
@@ -317,36 +221,6 @@ export function WeightScreen() {
         ) : null}
       </dl>
       </div>
-      <div className={weightScreenClasses.titleRow}>
-        <h1 className={weightScreenClasses.title}>{nav ? nav.title : "All time"}</h1>
-        {nav ? (
-          <div className={weightScreenClasses.monthNav}>
-            <button
-              type="button"
-              className={weightScreenClasses.iconButton}
-              aria-label={nav.previousLabel}
-              disabled={nav.isFirst}
-              onClick={nav.onPrevious}
-            >
-              <svg viewBox="0 0 18 18" aria-hidden="true" className={weightScreenClasses.icon}>
-                <path d="M11 3.5 5.5 9l5.5 5.5" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className={weightScreenClasses.iconButton}
-              aria-label={nav.nextLabel}
-              disabled={nav.isLast}
-              onClick={nav.onNext}
-            >
-              <svg viewBox="0 0 18 18" aria-hidden="true" className={weightScreenClasses.icon}>
-                <path d="m7 3.5 5.5 5.5L7 14.5" />
-              </svg>
-            </button>
-          </div>
-        ) : null}
-      </div>
-
       <div className={weightScreenClasses.viewSwitch} role="group" aria-label="Chart range">
         {VIEWS.map((option) => (
           <button
@@ -361,41 +235,8 @@ export function WeightScreen() {
         ))}
       </div>
 
-      <p className={weightScreenClasses.subline}>{subline}</p>
-
-
-
-      {chart.points.length ? (
-        <div className={weightScreenClasses.chart}>
-          <div className={weightScreenClasses.readoutRow}>
-          <p className={weightScreenClasses.readout} aria-live="polite">
-            {chart.readout}
-          </p>
-          {view !== "weeks" && selected ? <button type="button" aria-label={`Edit weigh-in, ${formatDate(selected.date)}`} className={weightScreenClasses.editSelected} onClick={() => setSheet({ mode: "edit", entry: selected })}>Edit entry</button> : null}
-          </div>
-          <LineChart
-            points={chart.points}
-            backgroundPoints={chart.backgroundPoints}
-            startKey={chart.domain.start}
-            endKey={chart.domain.end}
-            xLabels={chart.xLabels}
-            goalValue={settings.goalWeightKg}
-            fitGoal={view === "all"}
-            selectedDate={chart.selectedDate}
-            onSelect={chart.onSelect}
-            formatValue={formatWeightValue}
-            unit="kg"
-            minSpan={1}
-            label={chart.label}
-          />
-          {entries.length === 1 ? (
-            <p className={weightScreenClasses.subline}>
-              The line starts with your second weigh-in.
-            </p>
-          ) : null}
-        </div>
-      ) : (
-        <p className={weightScreenClasses.empty}>{chart.empty}</p>
+      {view === "all" ? renderPanel(0, { onPrevious: previous, onNext: next }) : (
+        <PeriodPager key={view} periodKey={`${view}-${view === "month" ? monthKey : lastWeek}`} label={view === "month" ? "month" : "12-week window"} canPrevious={canPrevious} canNext={canNext} onPrevious={previous} onNext={next} renderPage={renderPanel} />
       )}
 
       {view === "month" && periodSummary.first && periodSummary.latest ? (

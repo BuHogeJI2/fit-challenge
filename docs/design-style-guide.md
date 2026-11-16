@@ -78,6 +78,12 @@ width. Sheet, toast and fixed action spacing account for the bottom safe area.
 
 ## Charts
 
+Period headers and their chart (or training summary) form a swipeable region.
+Arrows and a dismissible swipe hint expose the gesture. Adjacent periods slide
+with the finger; the list below changes when navigation commits. Main section
+tabs stay fixed. All and Library have no period swipe. Overflowing exercise
+choices fade only at edges where more choices remain to scroll into view.
+
 Follow the [chart rules](roadmap.md#chart-rules): real calendar spacing, raw
 points, labelled axes and units, no zero-filled missing days, and readable
 empty, single-point and flat states. Exercise day totals use muted bars from

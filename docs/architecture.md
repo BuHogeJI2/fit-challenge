@@ -16,14 +16,16 @@ Detail links carry validated in-app `from` paths. Main tabs remember the last
 overview URL; temporary scroll and focused-link positions restore after live
 data is ready. Period changes replace history, while opening details pushes it.
 
-`AppShell` renders inside the router. Its header stays fixed at the top, and
-a one-finger horizontal swipe on `<main>` switches between exactly
-`#/weight` and `#/exercises`; other routes ignore it. The
-[swipe hook](../src/lib/gestures/use-horizontal-swipe.ts) uses native touch
-events, so normal scrolling and `touch-action` stay untouched. It ignores
-vertical moves, multitouch, starts near the screen edge (iOS Back), form
-controls and open sheets, and it suppresses the tap that would follow a
-recognized swipe.
+`AppShell` renders inside the router. Its header stays fixed at the top; the
+Weight and Exercises tabs switch sections. The shared
+[PeriodPager](../src/components/period-pager/period-pager.tsx) handles touch/pen
+drags only inside period headers and charts, or the training week summary.
+It uses pointer events and allows vertical panning and pinch zoom. It ignores
+edge starts, controls, vertical moves and open sheets, cancels on multitouch,
+and suppresses a drag's follow-up click. Mouse and keyboard users use the
+same visible arrows. Only the current panel is accessible; adjacent panels
+are inert and hidden from assistive technology. Period state commits at
+release while the track settles. Lists stay outside the moving panels.
 
 `ToastProvider` sits above the routes. Each screen is inside
 [DatabaseGate](../src/components/database-gate/database-gate.tsx), which
