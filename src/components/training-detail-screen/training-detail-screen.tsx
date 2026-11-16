@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Link, useLocation } from "wouter";
+import { appHref, useAppSearch, getAppPath, getReturnPath, rememberView, useRestoreView } from "../../lib/navigation";
 import { formatDayHeading, useToday } from "../../lib/dates";
 import { deleteSet, deleteTraining, getTraining, listExercises, listSets, restoreSet, restoreTraining, type TSet, type TTraining } from "../../lib/db";
 import { formatSetValues, getTrainingExercises, getTrainingTitle } from "../../lib/stats";
@@ -19,6 +20,9 @@ export function TrainingDetailScreen({ trainingId }: ITrainingDetailScreenProps)
   const [editing, setEditing] = useState(false);
   const toast = useToast();
   const [, navigate] = useLocation();
+  const returnTo = getReturnPath(useAppSearch(), "/exercises");
+  const selfHref = appHref(`/trainings/${trainingId}`, { from: returnTo });
+  useRestoreView(getAppPath(), Boolean(training !== undefined && sets && exercises));
   if (training === undefined || !sets || !exercises) return null;
   if (training === null) return (
     <section className={classes.screen}>
@@ -34,11 +38,11 @@ export function TrainingDetailScreen({ trainingId }: ITrainingDetailScreenProps)
     const undo = await deleteSet(set.id);
     setSheet(null);
     if (!undo) return;
-    if (undo.training) navigate("/exercises");
+    if (undo.training) navigate(returnTo);
     toast.show({ message: "Entry deleted.", action: {
       label: "Undo", onAction: async () => {
         if (await restoreSet(undo)) {
-          if (undo.training) navigate(`/trainings/${undo.record.trainingId}`);
+          if (undo.training) navigate(selfHref);
         } else toast.show({ message: "Undo is no longer available." });
       },
     } });
@@ -48,10 +52,10 @@ export function TrainingDetailScreen({ trainingId }: ITrainingDetailScreenProps)
     const undo = await deleteTraining(item.id);
     if (!undo) return;
     setEditing(false);
-    navigate("/exercises");
+    navigate(returnTo);
     toast.show({ message: "Training and its entries deleted.", action: {
       label: "Undo", onAction: async () => {
-        if (await restoreTraining(undo)) navigate(`/trainings/${item.id}`);
+        if (await restoreTraining(undo)) navigate(selfHref);
         else toast.show({ message: "Undo is no longer available." });
       },
     } });
@@ -60,7 +64,7 @@ export function TrainingDetailScreen({ trainingId }: ITrainingDetailScreenProps)
   return (
     <section className={classes.screen}>
       <div className={classes.header}>
-        <Link className={classes.back} href="/exercises">Back to week</Link>
+        <Link className={classes.back} href={returnTo} replace>Back to week</Link>
         <Button variant="quiet" onClick={() => setEditing(true)}>Edit training</Button>
       </div>
       <h1 className={classes.title}>{getTrainingTitle(training, sets, exercises)}</h1>
@@ -69,7 +73,7 @@ export function TrainingDetailScreen({ trainingId }: ITrainingDetailScreenProps)
       {groups.length ? <ul className={classes.groups} aria-label="Training exercises">
         {groups.map((group) => (
           <li className={classes.group} key={group.exerciseId}>
-            {group.exercise ? <Link className={classes.exercise} href={`/exercises/${group.exerciseId}`}>
+            {group.exercise ? <Link className={classes.exercise} href={appHref(`/exercises/${group.exerciseId}`, { from: selfHref })} onClick={() => rememberView(selfHref)}>
               <h2 className={classes.name}>{group.exercise.name}</h2><span aria-hidden="true">›</span>
             </Link> : <h2 className={classes.name}>Unknown exercise</h2>}
             <p className={classes.meta}>{group.summary}{group.exercise?.archivedAt ? " · archived" : ""}</p>
@@ -91,7 +95,7 @@ export function TrainingDetailScreen({ trainingId }: ITrainingDetailScreenProps)
       </div>
       <SetEntrySheet state={sheet} exercises={exercises} sets={sets} todayKey={todayKey} onClose={() => setSheet(null)} onSaved={(saved) => {
         setSheet(null);
-        if (saved.trainingId !== training.id) navigate(`/trainings/${saved.trainingId}`);
+        if (saved.trainingId !== training.id) navigate(appHref(`/trainings/${saved.trainingId}`, { from: returnTo }));
         toast.show({ message: "Entry saved." });
       }} onDelete={removeEntry} />
       <TrainingFormSheet training={editing ? training : null} todayKey={todayKey} entryCount={entries.length} onClose={() => setEditing(false)} onSaved={() => { setEditing(false); toast.show({ message: "Training saved." }); }} onDelete={removeTraining} />

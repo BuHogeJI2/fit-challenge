@@ -4,8 +4,9 @@ import { formatSignedWeightValue, formatWeightValue } from "../../lib/numbers";
 import { weightJournalClasses } from "./weight-journal.styles";
 import type { IWeightJournalProps } from "./weight-journal.types";
 
-export function WeightJournal({ rows, showMonth, todayKey, onEdit, previewCount = 3 }: IWeightJournalProps) {
-  const [expanded, setExpanded] = useState(false);
+export function WeightJournal({ rows, showMonth, todayKey, onEdit, previewCount = 3, expanded: controlledExpanded, onExpandedChange }: IWeightJournalProps) {
+  const [localExpanded, setExpanded] = useState(false);
+  const expanded = controlledExpanded ?? localExpanded;
   const listId = useId();
   if (!rows.length) {
     return null;
@@ -44,7 +45,7 @@ export function WeightJournal({ rows, showMonth, todayKey, onEdit, previewCount 
         </li>
       ))}
     </ol>
-    {rows.length > previewCount ? <button type="button" aria-controls={listId} aria-expanded={expanded} className={weightJournalClasses.disclosure} onClick={() => setExpanded(!expanded)}>
+    {rows.length > previewCount ? <button type="button" aria-controls={listId} aria-expanded={expanded} className={weightJournalClasses.disclosure} onClick={() => { setExpanded(!expanded); onExpandedChange?.(!expanded); }}>
       {expanded ? "Show fewer" : `Show all ${rows.length} weigh-ins`}
     </button> : null}
     </>

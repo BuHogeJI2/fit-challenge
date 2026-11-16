@@ -1,9 +1,10 @@
+import { Link } from "wouter";
 import { addDays, formatDateRange, getWeekStart } from "../../lib/dates";
 import { formatSignedWeightValue, formatWeightValue } from "../../lib/numbers";
 import { weightWeeksClasses } from "./weight-weeks.styles";
 import type { IWeightWeeksProps } from "./weight-weeks.types";
 
-export function WeightWeeks({ weeks, todayKey }: IWeightWeeksProps) {
+export function WeightWeeks({ weeks, todayKey, getWeekHref, onOpen }: IWeightWeeksProps) {
   if (!weeks.length) {
     return null;
   }
@@ -13,7 +14,8 @@ export function WeightWeeks({ weeks, todayKey }: IWeightWeeksProps) {
   return (
     <ol className={weightWeeksClasses.list} aria-label="Weeks">
       {[...weeks].reverse().map(({ weekStart, count, averageKg, changeKg }) => (
-        <li key={weekStart} className={weightWeeksClasses.row}>
+        <li key={weekStart}>
+          <Link href={getWeekHref(weekStart)} onClick={onOpen} className={weightWeeksClasses.row}>
           <span className={weightWeeksClasses.week}>
             <span className={weightWeeksClasses.range}>
               {formatDateRange(weekStart, addDays(weekStart, 6), todayKey)}
@@ -29,6 +31,8 @@ export function WeightWeeks({ weeks, todayKey }: IWeightWeeksProps) {
               {changeKg === null ? "first" : formatSignedWeightValue(changeKg)}
             </span>
           </span>
+          <span className={weightWeeksClasses.chevron} aria-hidden="true">›</span>
+          </Link>
         </li>
       ))}
     </ol>

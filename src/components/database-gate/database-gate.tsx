@@ -4,6 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db, getDataGeneration, getDatabaseNotice, subscribeDatabaseNotice } from "../../lib/db";
 import { Button, useToast } from "../ui";
 import { databaseGateClasses } from "./database-gate.styles";
+import { clearNavigationMemory } from "../../lib/navigation";
 import type {
   IDatabaseGateProps,
   IStorageErrorBoundaryState,
@@ -56,6 +57,7 @@ function GenerationScope({ children }: IDatabaseGateProps) {
   useEffect(() => {
     if (previous.current !== undefined && previous.current !== generation) {
       dismissActions();
+      clearNavigationMemory();
     }
     previous.current = generation;
   }, [dismissActions, generation]);

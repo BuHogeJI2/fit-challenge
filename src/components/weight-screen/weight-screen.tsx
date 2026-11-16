@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
+import { useLocation } from "wouter";
 import {
   addDays,
   formatDateInContext,
@@ -10,6 +11,7 @@ import {
   getMonthRange,
   getWeekStart,
   shiftMonth,
+  parseDateKey,
   useToday,
 } from "../../lib/dates";
 import {
@@ -37,6 +39,8 @@ import { WeightEntryForm } from "../weight-entry-form";
 import { WeightEntrySheet } from "../weight-entry-sheet";
 import { WeightJournal } from "../weight-journal";
 import { WeightWeeks } from "../weight-weeks";
+import { WeightWeekDetail } from "../weight-week-detail";
+import { appHref, useAppSearch, getAppPath, rememberView, useRestoreView } from "../../lib/navigation";
 import { weightScreenClasses } from "./weight-screen.styles";
 import type { TWeightSheetState, TWeightView } from "./weight-screen.types";
 import {
@@ -57,12 +61,38 @@ export function WeightScreen() {
   const entries = useLiveQuery(listWeightEntries, []);
   const settings = useLiveQuery(getSettings, []);
   const toast = useToast();
-  const [view, setView] = useState<TWeightView>("month");
-  const [monthKey, setMonthKey] = useState(() => getMonthKey(todayKey));
-  const [lastWeek, setLastWeek] = useState(() => getWeekStart(todayKey));
+  const search = useAppSearch();
+  const [, navigate] = useLocation();
+  const params = new URLSearchParams(search);
+  const rawView = params.get("view");
+  const view: TWeightView = rawView === "weeks" || rawView === "all" || rawView === "week" ? rawView : "month";
+  const rawMonth = params.get("month");
+  const monthKey = rawMonth && parseDateKey(`${rawMonth}-01`) && rawMonth <= getMonthKey(todayKey) ? rawMonth : getMonthKey(todayKey);
+  const readWeek = (value: string | null, window = false) => {
+    try {
+      if (value && parseDateKey(value) && value <= todayKey) {
+        const week = getWeekStart(value);
+        if (window) getWeekWindow(week);
+        return week;
+      }
+    } catch {
+      return getWeekStart(todayKey);
+    }
+    return getWeekStart(todayKey);
+  };
+  const detailWeek = readWeek(params.get("week"));
+  const lastWeek = readWeek(params.get("end") ?? (view === "week" ? getWindowLastWeek(detailWeek, todayKey) : null), true);
+  const updateParams = (changes: Record<string, string | null>) => {
+    const next = Object.fromEntries(params);
+    navigate(appHref("/weight", { ...next, ...changes }), { replace: true });
+  };
+  const setView = (next: TWeightView) => updateParams({ view: next, week: null });
+  const setMonthKey = (next: string) => updateParams({ month: next });
+  const setLastWeek = (next: string) => updateParams({ end: next });
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<string | null>(null);
   const [sheet, setSheet] = useState<TWeightSheetState>(null);
+  useRestoreView(getAppPath(), Boolean(entries && settings), view === "week" ? "weight-week" : "weight-overview");
 
   if (!entries || !settings) {
     return null;
@@ -72,9 +102,8 @@ export function WeightScreen() {
 
   const showSaved = (saved: TWeightEntry) => {
     setSelectedDate(saved.date);
-    setMonthKey(getMonthKey(saved.date));
     setSelectedWeek(getWeekStart(saved.date));
-    setLastWeek(getWindowLastWeek(saved.date, todayKey));
+    updateParams({ month: getMonthKey(saved.date), end: getWindowLastWeek(saved.date, todayKey), ...(view === "week" ? { week: getWeekStart(saved.date) } : {}) });
   };
 
   const handleUndo = async (undo: TPendingUndo<TWeightEntry>) => {
@@ -142,6 +171,13 @@ export function WeightScreen() {
   const firstMonthKey = getMonthKey(entries[0].date);
   const currentWeek = getWeekStart(todayKey);
   const firstWeek = getWeekStart(entries[0].date);
+  if (view === "week") {
+    return <>
+      <WeightWeekDetail weekStart={detailWeek} entries={entries} todayKey={todayKey} goalWeightKg={settings.goalWeightKg} selectedDate={selectedDate} onSelect={setSelectedDate} onEdit={(entry) => setSheet({ mode: "edit", entry })} onPrevious={() => updateParams({ week: addDays(detailWeek, -7) })} onNext={() => updateParams({ week: addDays(detailWeek, 7) })} canPrevious={detailWeek > firstWeek} canNext={detailWeek < currentWeek} backHref={appHref("/weight", { ...Object.fromEntries(params), view: "weeks", week: null, end: lastWeek })} />
+      <button type="button" className={weightScreenClasses.fab} aria-label="Log weight" onClick={() => setSheet({ mode: "new" })}><svg viewBox="0 0 22 22" aria-hidden="true" className={weightScreenClasses.fabIcon}><path d="M11 4v14M4 11h14" /></svg></button>
+      {entrySheet}
+    </>;
+  }
   const rows = withChangeFromPrevious(entries);
   const monthSummary = getMonthWeightSummary(entries, monthKey);
   const weekWindow = getWeekWindow(lastWeek);
@@ -380,10 +416,12 @@ export function WeightScreen() {
       ) : null}
 
       {view === "weeks" ? (
-        <WeightWeeks weeks={visibleWeeks} todayKey={todayKey} />
+        <WeightWeeks weeks={visibleWeeks} todayKey={todayKey} getWeekHref={(weekStart) => appHref("/weight", { ...Object.fromEntries(params), view: "week", week: weekStart, end: lastWeek })} onOpen={() => rememberView(appHref("/weight", { ...Object.fromEntries(params), view: "weeks", week: null, end: lastWeek }))} />
       ) : (
         <WeightJournal
           key={`${view}-${monthKey}`}
+          expanded={params.get("journal") === (view === "all" ? "all" : monthKey)}
+          onExpandedChange={(expanded) => updateParams({ journal: expanded ? (view === "all" ? "all" : monthKey) : null })}
           rows={
             view === "month"
               ? rows.filter(({ entry }) => getMonthKey(entry.date) === monthKey)

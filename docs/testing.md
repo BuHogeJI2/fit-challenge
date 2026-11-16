@@ -38,6 +38,7 @@ All files below are in `src/test/`:
 | Files | Main coverage |
 | --- | --- |
 | `app.test.tsx` | Hash routing, fallback route, mode navigation and tab swipe rules |
+| `navigation.test.tsx` | Hash queries, direct week links, daily week history, invalid parameters, nested return paths, and section/scroll/focus restoration |
 | `weight.test.tsx` | First entry, editing, date replacement, delete/undo, storage failures, months, weeks and chart selection |
 | `exercises.test.tsx` | Exercise lifecycle, metric forms, sessions, repeat today or into a past day/undo, history, load and progress-view selection, day/week total bars and short-series charts |
 | `training-week.test.tsx`, `training-entry.test.tsx`, `training-stats.test.ts` | Weekly training groups, library search, explicit target choice, fixed-target logging, moving/splitting, whole-training delete/undo, separate metrics and loads |

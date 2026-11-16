@@ -4,4 +4,5 @@ export interface IExerciseRowProps {
   exercise: TExercise;
   sets: TSet[];
   todayKey: string;
+  returnTo: string;
 }

@@ -68,7 +68,7 @@ width. Sheet, toast and fixed action spacing account for the bottom safe area.
   and change. Month and All initially show three rows with an explicit
   disclosure for the complete journal. Overall stats sit above range controls;
   first/latest/change below the chart belong to the selected period.
-  A week row in the Weeks view is plain text with the date
+  A week row in the Weeks view is a detail link with a chevron, the date
   range, the number of weigh-ins, the average and the change. An exercise row is a detail link with its name, latest date,
   sparkline and progress sentence.
 - **Chips:** progress-view, load and exercise-picker chips select a value

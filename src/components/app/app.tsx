@@ -1,6 +1,6 @@
 import { useMemo, useRef } from "react";
 import { Link, Redirect, Route, Router, Switch, useLocation } from "wouter";
-import { useHashLocation } from "wouter/use-hash-location";
+import { useAppLocation } from "../../lib/navigation";
 import { useHorizontalSwipe, type TSwipeHandlers } from "../../lib/gestures";
 import { DatabaseGate } from "../database-gate";
 import { ExerciseDetailScreen } from "../exercise-detail-screen";
@@ -74,7 +74,7 @@ function AppShell() {
 
 export function App() {
   return (
-    <Router hook={useHashLocation}>
+    <Router hook={useAppLocation}>
       <ToastProvider>
         <AppShell />
       </ToastProvider>

@@ -207,8 +207,8 @@ describe("Weight mode", () => {
 
     const weeks = within(screen.getByRole("list", { name: "Weeks" })).getAllByRole("listitem");
     expect(weeks.map((week) => week.textContent)).toEqual([
-      "Oct 19 – 251 weigh-in so far83.0−0.3",
-      "Oct 12 – 182 weigh-ins83.3−1.2",
+      "Oct 19 – 251 weigh-in so far83.0−0.3›",
+      "Oct 12 – 182 weigh-ins83.3−1.2›",
     ]);
 
     fireEvent.click(screen.getByTestId("chart-point-2026-10-15"));

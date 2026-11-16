@@ -7,4 +7,6 @@ export interface IWeightJournalProps {
   todayKey: string;
   onEdit: (entry: TWeightEntry) => void;
   previewCount?: number;
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
 }

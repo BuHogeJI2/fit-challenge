@@ -84,6 +84,9 @@ date spacing and the same metric as the full chart they lead to.
   current week, with previous / next window. A list of weeks shows each
   week's average, its change from the previous week with weigh-ins, and its
   number of weigh-ins ("so far" for the current week).
+- Each week row opens its daily chart, first/last/change summary and all its
+  weigh-ins. Previous/next controls browse adjacent weeks, including empty
+  ones. Back to weeks restores the overview window and position.
 - All-time view: the whole history on one chart.
 - Journal under Month and All: the three latest entries by default, with
   Show all / Show fewer. Each row has its change from the previous entry and

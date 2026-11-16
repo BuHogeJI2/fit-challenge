@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Link, useLocation } from "wouter";
-import { addDays, formatDateRange, formatDayHeading, formatRelativeDate, getWeekStart, useToday } from "../../lib/dates";
+import { addDays, formatDateRange, formatDayHeading, formatRelativeDate, getWeekStart, parseDateKey, useToday } from "../../lib/dates";
+import { appHref, useAppSearch, getAppPath, rememberView, useRestoreView } from "../../lib/navigation";
 import { listExercises, listSets, listTrainings, type TExercise, type TSet } from "../../lib/db";
 import {
   describeExerciseProgress,
@@ -31,7 +32,7 @@ const byRecentActivity = (sets: TSet[]) => (left: TExercise, right: TExercise) =
   return rightKey.localeCompare(leftKey);
 };
 
-function ExerciseRow({ exercise, sets, todayKey }: IExerciseRowProps) {
+function ExerciseRow({ exercise, sets, todayKey, returnTo }: IExerciseRowProps) {
   const exerciseSets = sets.filter((set) => set.exerciseId === exercise.id);
   const loadKg = getProgressLoad(exercise, exerciseSets);
   const daily = getDailyProgress(exercise, exerciseSets, loadKg);
@@ -40,7 +41,7 @@ function ExerciseRow({ exercise, sets, todayKey }: IExerciseRowProps) {
 
   return (
     <li className={exercisesScreenClasses.item}>
-      <Link href={`/exercises/${exercise.id}`} className={exercisesScreenClasses.row}>
+      <Link href={appHref(`/exercises/${exercise.id}`, { from: returnTo })} onClick={() => rememberView(returnTo)} className={exercisesScreenClasses.row}>
         <span className={exercisesScreenClasses.rowHead}>
           <span className={exercisesScreenClasses.name}>{exercise.name}</span>
           <span className={exercisesScreenClasses.when}>
@@ -87,10 +88,20 @@ export function ExercisesScreen() {
   const [isCreating, setIsCreating] = useState(false);
   const [setSheet, setSetSheet] = useState<TSetSheetState>(null);
   const toggleArchive = useArchiveToggle();
-  const [view, setView] = useState<"week" | "library">("week");
-  const [weekStart, setWeekStart] = useState(() => getWeekStart(todayKey));
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<"name" | "recent">("name");
+  const routeSearch = useAppSearch();
+  const params = new URLSearchParams(routeSearch);
+  const view = params.get("view") === "library" ? "library" : "week";
+  const rawWeek = params.get("week");
+  const weekStart = rawWeek && parseDateKey(rawWeek) && rawWeek <= todayKey ? getWeekStart(rawWeek) : getWeekStart(todayKey);
+  const search = params.get("q") ?? "";
+  const sort = params.get("sort") === "recent" ? "recent" : "name";
+  const updateParams = (changes: Record<string, string | null>) => navigate(appHref("/exercises", { ...Object.fromEntries(params), ...changes }), { replace: true });
+  const setView = (next: string) => updateParams({ view: next });
+  const setWeekStart = (next: string) => updateParams({ week: next });
+  const setSearch = (next: string) => updateParams({ q: next });
+  const setSort = (next: string) => updateParams({ sort: next });
+  const returnTo = appHref("/exercises", { view, week: weekStart, q: search, sort, archived: params.get("archived") });
+  useRestoreView(getAppPath(), Boolean(exercises && sets && trainings));
 
   if (!exercises || !sets || !trainings) {
     return null;
@@ -143,7 +154,7 @@ export function ExercisesScreen() {
             const title = getTrainingTitle(training, sets, exercises);
             return <li key={training.id} className={exercisesScreenClasses.trainingItem}>
               {weekTrainings[index - 1]?.date !== training.date ? <h3 className={exercisesScreenClasses.day}>{formatDayHeading(training.date, todayKey)}</h3> : null}
-              <Link href={`/trainings/${training.id}`} className={exercisesScreenClasses.trainingLink}>
+              <Link href={appHref(`/trainings/${training.id}`, { from: returnTo })} onClick={() => rememberView(returnTo)} className={exercisesScreenClasses.trainingLink}>
                 <span className={exercisesScreenClasses.trainingName}>{title}</span><span aria-hidden="true">›</span>
               </Link>
               {training.note ? <p className={exercisesScreenClasses.trainingNote}>{training.note}</p> : null}
@@ -164,20 +175,22 @@ export function ExercisesScreen() {
       {active.length ? (
         <ul className={exercisesScreenClasses.list} aria-label="Exercises">
           {active.map((exercise) => (
-            <ExerciseRow key={exercise.id} exercise={exercise} sets={sets} todayKey={todayKey} />
+            <ExerciseRow key={exercise.id} exercise={exercise} sets={sets} todayKey={todayKey} returnTo={returnTo} />
           ))}
         </ul>
       ) : <p className={exercisesScreenClasses.empty}>{search ? "No matching exercises." : "No active exercises yet."}</p>}
 
       {archived.length ? (
-        <details className={exercisesScreenClasses.archived}>
+        <details className={exercisesScreenClasses.archived} open={params.get("archived") === "1"} onToggle={(event) => {
+          if (event.currentTarget.open !== (params.get("archived") === "1")) updateParams({ archived: event.currentTarget.open ? "1" : null });
+        }}>
           <summary className={exercisesScreenClasses.archivedSummary}>
             Archived ({archived.length})
           </summary>
           <ul className={exercisesScreenClasses.archivedList}>
             {archived.map((exercise) => (
               <li key={exercise.id}>
-                <Link href={`/exercises/${exercise.id}`} className={exercisesScreenClasses.archivedLink}>
+                <Link href={appHref(`/exercises/${exercise.id}`, { from: returnTo })} onClick={() => rememberView(returnTo)} className={exercisesScreenClasses.archivedLink}>
                   {exercise.name}
                 </Link>
               </li>
@@ -212,7 +225,7 @@ export function ExercisesScreen() {
         onClose={() => setIsCreating(false)}
         onSaved={(exercise) => {
           setIsCreating(false);
-          navigate(`/exercises/${exercise.id}`);
+          navigate(appHref(`/exercises/${exercise.id}`, { from: returnTo }));
         }}
         onArchiveToggle={toggleArchive}
       />

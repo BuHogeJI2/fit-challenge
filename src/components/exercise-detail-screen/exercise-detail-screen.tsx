@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Link } from "wouter";
+import { useAppSearch, getAppPath, getReturnPath, useRestoreView } from "../../lib/navigation";
 import { formatDateInContext, formatDayHeading, getWeekStart, useToday } from "../../lib/dates";
 import {
   addSetWithUndo,
@@ -104,6 +105,9 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
   const [isEditing, setIsEditing] = useState(false);
   const [setSheet, setSetSheet] = useState<TSetSheetState>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const returnTo = getReturnPath(useAppSearch(), "/exercises");
+  const backLabel = returnTo.startsWith("/exercises?") && new URLSearchParams(returnTo.split("?")[1]).get("view") === "library" ? "Library" : "Training";
+  useRestoreView(getAppPath(), Boolean(exercise !== undefined && exercises && allSets && trainings));
 
   if (exercise === undefined || !exercises || !allSets || !trainings) {
     return null;
@@ -114,7 +118,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
       <section className={classes.screen}>
         <h1 className={classes.title}>Not found</h1>
         <p className={classes.subline}>This exercise does not exist on this device.</p>
-        <Link href="/exercises" className={classes.backLink}>
+        <Link href={returnTo} className={classes.backLink} replace>
           Back to training
         </Link>
       </section>
@@ -236,11 +240,11 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
   return (
     <section className={classes.screen}>
       <div className={classes.topRow}>
-        <Link href="/exercises" className={classes.backLink}>
+        <Link href={returnTo} className={classes.backLink} replace>
           <svg viewBox="0 0 18 18" aria-hidden="true" className={classes.backIcon}>
             <path d="M11 3.5 5.5 9l5.5 5.5" />
           </svg>
-          Training
+          {backLabel}
         </Link>
         <Button variant="quiet" onClick={() => setIsEditing(true)}>
           Edit

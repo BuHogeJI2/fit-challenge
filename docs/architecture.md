@@ -7,6 +7,15 @@ mounts `App` in StrictMode. wouter uses hash routes: `#/weight`,
 `#/exercises`, `#/exercises/:id`, `#/trainings/:id` and `#/settings`; other routes redirect to
 Weight. There is no backend, authentication or sync.
 
+The app's hash-location hook in `src/lib/navigation/` keeps view and period
+parameters inside the fragment, for example `#/weight?view=weeks&end=2026-10-19`
+or `#/exercises?view=library&q=push`. It supplies path and raw search separately
+to avoid decoding nested return paths twice. A weight week opens through
+`view=week&week=YYYY-MM-DD`, with the overview window retained in `end`.
+Detail links carry validated in-app `from` paths. Main tabs remember the last
+overview URL; temporary scroll and focused-link positions restore after live
+data is ready. Period changes replace history, while opening details pushes it.
+
 `AppShell` renders inside the router. Its header stays fixed at the top, and
 a one-finger horizontal swipe on `<main>` switches between exactly
 `#/weight` and `#/exercises`; other routes ignore it. The
