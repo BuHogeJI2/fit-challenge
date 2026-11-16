@@ -187,17 +187,18 @@ describe("exercise and set repositories", () => {
     expect(await listSetsForExercise(exercise.id)).toEqual([set]);
   });
 
-  it("does not restore a set whose exercise is gone or no longer fits", async () => {
+  it("restores an orphan set but not one whose exercise no longer fits", async () => {
     const exercise = await createExercise({ name: "Push-ups", metric: "reps" });
     const set = await addSet(repsSet(exercise.id, 20));
     const undo = (await deleteSet(set.id))!;
 
     await db.exercises.update(exercise.id, { metric: "time" });
     expect(await restoreSet(undo)).toBe(false);
+    expect(await db.sets.count()).toBe(0);
 
     await db.exercises.delete(exercise.id);
-    expect(await restoreSet(undo)).toBe(false);
-    expect(await db.sets.count()).toBe(0);
+    expect(await restoreSet(undo)).toBe(true);
+    expect(await db.sets.toArray()).toEqual([set]);
   });
 
   it("does not restore a set after the data generation changed", async () => {

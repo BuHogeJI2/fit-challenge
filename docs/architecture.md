@@ -85,13 +85,14 @@ a minute and when the page becomes visible.
   and is refused if a child exercise is archived. An empty training without
   a name or note is removed when its last entry leaves.
 - Training-delete undo restores the whole group only if its ids are vacant,
-  its exercises still fit, and the generation is unchanged. Entry undo restores
-  a parent removed by that same delete, but never one deleted later. Undo can
-  restore archived exercise history.
+  existing exercises still fit, and the generation is unchanged. Entry undo
+  restores a parent removed by that same delete, but never one deleted later.
+  Undo can restore archived exercise history.
 - Delete undo restores the original record only if its id is vacant. Weight
-  undo also needs a vacant date; set undo needs an existing exercise with a
-  matching metric. Archive undo checks the archive timestamp, and repeat-set
-  undo checks that the set's payload is unchanged.
+  undo also needs a vacant date; set undo requires a matching metric when its
+  exercise exists and preserves legacy orphan records otherwise. Archive undo
+  checks the archive timestamp, and repeat-set undo checks that the set's payload
+  is unchanged.
 - All undo operations check the captured generation inside their write
   transaction. Restore and wipe increment it in the same transaction as the
   data change, preventing old undo actions from changing replacement data.
@@ -118,8 +119,8 @@ training uses its session exercise names as a title, or “Training” when none
 exist. Library provides search and alphabetical/recent sorting over exercises.
 Legacy entries whose exercise is missing remain visible as “Unknown exercise”
 in training detail. They are read-only individually; deleting their training
-still removes the complete group. Undo requires every referenced exercise to
-exist, so it cannot restore an orphaned group. Migration never cleans them up.
+still removes the complete group and Undo restores the orphan rows unchanged.
+Migration never cleans them up.
 
 [Chart helpers](../src/lib/charts) map real calendar days to x coordinates
 or to day/week slots, pad value domains and generate ticks and SVG points.

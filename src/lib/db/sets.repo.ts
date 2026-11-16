@@ -176,7 +176,7 @@ export const deleteSet = (id: string): Promise<TSetUndo | null> =>
 
 /**
  * Puts a deleted set back, unchanged, only when its id is still free, its
- * exercise still exists with a matching metric, and no restore or wipe
+ * exercise is missing or still has a matching metric, and no restore or wipe
  * happened since it was deleted. A training removed by that delete comes
  * back with it; a training removed later does not, and the set stays
  * deleted. Returns whether the set was restored.
@@ -192,13 +192,11 @@ export const restoreSet = ({ record, training, generation }: TSetUndo) =>
 
     const parentFits = training ? parent === undefined : parent?.date === record.date;
 
-    if (
-      currentGeneration !== generation ||
-      sameId ||
-      !exercise ||
-      !isStoredFormFor(exercise.metric, record) ||
-      !parentFits
-    ) {
+    // Exercises are never deleted, so a missing one was already missing when
+    // the set was deleted; its history comes back as it was.
+    const exerciseFits = exercise === undefined || isStoredFormFor(exercise.metric, record);
+
+    if (currentGeneration !== generation || sameId || !exerciseFits || !parentFits) {
       return false;
     }
 

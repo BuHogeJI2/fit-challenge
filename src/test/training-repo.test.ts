@@ -247,6 +247,29 @@ describe("training repository", () => {
       expect(await db.sets.count()).toBe(0);
     });
 
+    it("restores an entry without its exercise together with its removed training", async () => {
+      const set = await addSet(repsSet(pushUps, 10));
+      await db.sets.update(set.id, { exerciseId: "gone" });
+      const before = await tables();
+
+      const undo = await deleteSet(set.id);
+      expect(undo?.training).toMatchObject({ id: set.trainingId });
+      expect(await tables()).toMatchObject({ trainings: [], sets: [] });
+
+      expect(await restoreSet(undo!)).toBe(true);
+      expect(await tables()).toEqual(before);
+    });
+
+    it("still refuses to restore an entry whose exercise changed its metric", async () => {
+      const set = await addSet(repsSet(pushUps, 10));
+      await addSet(repsSet(pushUps, 12));
+      const undo = await deleteSet(set.id);
+      await db.exercises.update(pushUps, { metric: "time", metricLockedAt: null });
+
+      expect(await restoreSet(undo!)).toBe(false);
+      expect(await db.sets.get(set.id)).toBeUndefined();
+    });
+
     it("restores entries of archived exercises", async () => {
       const set = await addSet({ ...repsSet(boxing, 0), reps: null });
       const undo = await deleteSet(set.id);
@@ -346,9 +369,23 @@ describe("training repository", () => {
       expect(await restoreTraining(afterRestore!)).toBe(false);
 
       const metricChanged = await deleteTraining((await addSet(repsSet(pushUps, 12))).trainingId);
-      await db.exercises.delete(pushUps);
+      await db.exercises.update(pushUps, { metric: "time", metricLockedAt: null });
       expect(await restoreTraining(metricChanged!)).toBe(false);
       expect(await tables()).toMatchObject({ trainings: [], sets: [] });
+    });
+
+    it("restores a deleted training whose entries lost their exercise, unchanged", async () => {
+      const kept = await addSet(repsSet(pushUps, 10));
+      await addSet({ ...repsSet(boxing, 0), reps: null });
+      await db.sets.update(kept.id, { exerciseId: "gone" });
+      await db.trainings.update(kept.trainingId, { name: "Old day" });
+      const before = await tables();
+
+      const undo = await deleteTraining(kept.trainingId);
+      expect(await tables()).toMatchObject({ trainings: [], sets: [] });
+
+      expect(await restoreTraining(undo!)).toBe(true);
+      expect(await tables()).toEqual(before);
     });
 
     it("restores a deleted training with archived entries", async () => {

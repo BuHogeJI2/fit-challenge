@@ -123,8 +123,8 @@ export const deleteTraining = (id: string): Promise<TTrainingUndo | null> =>
 
 /**
  * Puts a deleted training and its entries back, unchanged, only when all
- * their ids are free, every entry's exercise still exists with a matching
- * metric, and no restore or wipe happened since. Returns whether it ran.
+ * their ids are free, every entry's exercise is missing or still has a
+ * matching metric, and no restore or wipe happened since. Returns whether it ran.
  */
 export const restoreTraining = ({ training, sets, generation }: TTrainingUndo) =>
   db.transaction("rw", db.exercises, db.sets, db.trainings, db.meta, async () => {
@@ -135,9 +135,11 @@ export const restoreTraining = ({ training, sets, generation }: TTrainingUndo) =
       db.exercises.bulkGet(sets.map((set) => set.exerciseId)),
     ]);
 
+    // Exercises are never deleted, so a missing one was already missing when
+    // the training was deleted; its history comes back as it was.
     const setsFit = sets.every((set, index) => {
       const exercise = exercises[index];
-      return exercise !== undefined && isStoredFormFor(exercise.metric, set);
+      return exercise === undefined || isStoredFormFor(exercise.metric, set);
     });
 
     if (
