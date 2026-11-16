@@ -9,8 +9,6 @@ export const EDGE_RESISTANCE = 0.35;
 export const CLICK_GUARD_MS = 400;
 const VELOCITY_WINDOW_MS = 100;
 
-const HINT_STORAGE_KEY = "fit.periodPagerHintDismissed";
-
 const IGNORED_TARGETS = "input, textarea, select, button, a, [contenteditable], [data-pager-ignore]";
 
 export const isIgnoredTarget = (target: EventTarget | null) =>
@@ -70,22 +68,6 @@ export const parseTranslateX = (transform: string) => {
   if (matrix3d) return Number(matrix3d[1].split(",")[12]) || 0;
   const translate = /translate(?:3d|X)?\(\s*(-?[\d.]+)px/.exec(transform);
   return translate ? Number(translate[1]) : 0;
-};
-
-export const readHintDismissed = () => {
-  try {
-    return window.localStorage.getItem(HINT_STORAGE_KEY) === "1";
-  } catch {
-    return false;
-  }
-};
-
-export const storeHintDismissed = () => {
-  try {
-    window.localStorage.setItem(HINT_STORAGE_KEY, "1");
-  } catch {
-    // The hint is a convenience; without storage it only comes back next time.
-  }
 };
 
 export const nextFrame = (callback: () => void) => {

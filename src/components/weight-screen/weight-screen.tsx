@@ -240,7 +240,7 @@ export function WeightScreen() {
       </div>
 
       {view === "all" ? renderPanel(0, { onPrevious: previous, onNext: next }) : (
-        <PeriodPager key={view} periodKey={`${view}-${view === "month" ? monthKey : lastWeek}`} label={view === "month" ? "month" : "12-week window"} canPrevious={canPrevious} canNext={canNext} onPrevious={previous} onNext={next} renderPage={renderPanel} />
+        <PeriodPager key={view} periodKey={`${view}-${view === "month" ? monthKey : lastWeek}`} canPrevious={canPrevious} canNext={canNext} onPrevious={previous} onNext={next} renderPage={renderPanel} />
       )}
 
       {view === "month" && periodSummary.first && periodSummary.latest ? (

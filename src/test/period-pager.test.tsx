@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PeriodPager, type IPeriodPagerProps } from "../components/period-pager";
 
 const WIDTH = 300;
-const HINT_KEY = "fit.periodPagerHintDismissed";
 
 let now = 0;
 
@@ -25,7 +24,6 @@ function Harness({ min = -3, max = 0, refuse = false, onPoint = () => {}, onMove
   return (
     <PeriodPager
       periodKey={String(index)}
-      label="week"
       canPrevious={index > min}
       canNext={index < max}
       onPrevious={() => move(-1)}
@@ -285,6 +283,22 @@ describe("PeriodPager dragging", () => {
     expect(heading()).toBe("Period 0");
   });
 
+  it("keeps the drag when capture moves from the touched element to the pager", () => {
+    const onMove = vi.fn();
+    render(<Harness onMove={onMove} />);
+
+    pointer("pointerDown", point(), { x: 100 });
+    pointer("pointerMove", point(), { x: 160 });
+    fireEvent(point(), new PointerEvent("lostpointercapture", { pointerId: 1, bubbles: true }));
+    fireEvent(viewport(), new PointerEvent("gotpointercapture", { pointerId: 1 }));
+    pointer("pointerMove", viewport(), { x: 200 });
+    expect(track().style.transform).toBe("translate3d(100px, 0, 0)");
+    pointer("pointerUp", viewport(), { x: 250 });
+
+    expect(onMove).toHaveBeenCalledWith("previous");
+    expect(heading()).toBe("Period -1");
+  });
+
   it("does not track drags while the width is unknown", () => {
     setWidth(0);
     const onMove = vi.fn();
@@ -319,7 +333,6 @@ describe("PeriodPager dragging", () => {
     const onPrevious = vi.fn();
     const props: IPeriodPagerProps = {
       periodKey: "a",
-      label: "month",
       canPrevious: true,
       canNext: false,
       onPrevious,
@@ -390,46 +403,5 @@ describe("PeriodPager dragging", () => {
     expect(heading()).toBe("Period -1");
     expect(track().style.transition).toBe("none");
     expect(track().style.transform).toBe("");
-  });
-});
-
-describe("PeriodPager hint", () => {
-  it("shows a dismissible hint once for every pager", () => {
-    const { unmount } = render(<Harness />);
-
-    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
-    expect(screen.queryByText("Swipe to change week")).toBeNull();
-    expect(window.localStorage.getItem(HINT_KEY)).toBe("1");
-
-    unmount();
-    render(<Harness />);
-    expect(screen.queryByText("Swipe to change week")).toBeNull();
-  });
-
-  it("hides the hint after the first swipe and when there is nowhere to go", () => {
-    render(<Harness />);
-    expect(screen.getByText("Swipe to change week")).toBeInTheDocument();
-
-    drag(point(), [[100, 0], [180, 150], [250, 300]]);
-    expect(screen.queryByText("Swipe to change week")).toBeNull();
-    cleanup();
-
-    window.localStorage.clear();
-    render(<Harness min={0} max={0} />);
-    expect(screen.queryByText("Swipe to change week")).toBeNull();
-  });
-
-  it("keeps working when storage is blocked", () => {
-    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
-      throw new Error("Blocked");
-    });
-    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
-      throw new Error("Blocked");
-    });
-    render(<Harness />);
-
-    expect(screen.getByText("Swipe to change week")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
-    expect(screen.queryByText("Swipe to change week")).toBeNull();
   });
 });

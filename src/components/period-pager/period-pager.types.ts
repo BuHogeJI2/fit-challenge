@@ -13,7 +13,6 @@ export interface IPeriodPagerControls {
 
 export interface IPeriodPagerProps {
   periodKey: string;
-  label: string;
   canPrevious: boolean;
   canNext: boolean;
   onPrevious: () => void;

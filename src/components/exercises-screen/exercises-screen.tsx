@@ -140,7 +140,7 @@ export function ExercisesScreen() {
       </div>
 
       {view === "week" ? <>
-        <PeriodPager periodKey={weekStart} label="week" canPrevious={weekStart > firstWeek} canNext={weekStart < currentWeek} onPrevious={() => setWeekStart(addDays(weekStart, -7))} onNext={() => setWeekStart(addDays(weekStart, 7))} renderPage={(offset, controls) => {
+        <PeriodPager periodKey={weekStart} canPrevious={weekStart > firstWeek} canNext={weekStart < currentWeek} onPrevious={() => setWeekStart(addDays(weekStart, -7))} onNext={() => setWeekStart(addDays(weekStart, 7))} renderPage={(offset, controls) => {
           const start = addDays(weekStart, offset * 7);
           const end = addDays(start, 6);
           const pageTrainings = trainings.filter((training) => training.date >= start && training.date <= end);

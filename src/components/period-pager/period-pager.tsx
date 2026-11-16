@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { periodPagerClasses as classes, periodPagerMotion } from "./period-pager.styles";
 import type {
   IPagerPageProps,
@@ -21,9 +21,7 @@ import {
   nextFrame,
   parseTranslateX,
   prefersReducedMotion,
-  readHintDismissed,
   resistOffset,
-  storeHintDismissed,
 } from "./period-pager.utils";
 
 const NO_CONTROLS: IPeriodPagerControls = { onPrevious: () => {}, onNext: () => {} };
@@ -40,7 +38,6 @@ function PagerPage({ offset, controls, renderPage }: IPagerPageProps) {
  */
 export function PeriodPager({
   periodKey,
-  label,
   canPrevious,
   canNext,
   onPrevious,
@@ -53,7 +50,6 @@ export function PeriodPager({
   const pendingRef = useRef<TPendingSettle | null>(null);
   const latest = useRef({ periodKey, canPrevious, canNext, onPrevious, onNext });
   const clickGuardRef = useRef<(() => void) | null>(null);
-  const [isHintVisible, setIsHintVisible] = useState(() => !readHintDismissed());
 
   useLayoutEffect(() => {
     latest.current = { periodKey, canPrevious, canNext, onPrevious, onNext };
@@ -99,11 +95,6 @@ export function PeriodPager({
   }, []);
 
   useEffect(() => clearClickGuard, [clearClickGuard]);
-
-  const dismissHint = useCallback(() => {
-    storeHintDismissed();
-    setIsHintVisible(false);
-  }, []);
 
   const commit = useCallback(
     (direction: TPeriodDirection, offset: number, width: number) => {
@@ -231,12 +222,14 @@ export function PeriodPager({
         moveTrack(0, "snap");
         return;
       }
-      dismissHint();
       commit(direction, clampOffset(drag.baseOffset + dx, drag.width), drag.width);
     };
 
+    // Touch starts captured by the element under the finger. Moving capture to
+    // the viewport fires lostpointercapture on that element, and it bubbles here;
+    // only a capture the viewport itself loses ends the drag.
     const handleLostCapture = (event: PointerEvent) => {
-      if (dragRef.current?.pointerId === event.pointerId) cancelDrag();
+      if (event.target === viewport && dragRef.current?.pointerId === event.pointerId) cancelDrag();
     };
 
     document.addEventListener("pointerdown", handlePointerDown, true);
@@ -253,7 +246,7 @@ export function PeriodPager({
       viewport.removeEventListener("lostpointercapture", handleLostCapture);
       dragRef.current = null;
     };
-  }, [clearClickGuard, commit, dismissHint, guardNextClick, measureWidth, moveTrack, readOffset]);
+  }, [clearClickGuard, commit, guardNextClick, measureWidth, moveTrack, readOffset]);
 
   const controls = useMemo<IPeriodPagerControls>(
     () => ({
@@ -270,32 +263,22 @@ export function PeriodPager({
   );
 
   return (
-    <>
-      <div ref={viewportRef} className={classes.viewport} data-period-pager="">
-        <div ref={trackRef} className={classes.track}>
-          {canPrevious ? (
-            <div className={classes.previous} aria-hidden="true" inert>
-              <PagerPage offset={-1} controls={NO_CONTROLS} renderPage={renderPage} />
-            </div>
-          ) : null}
-          <div className={classes.current}>
-            <PagerPage offset={0} controls={controls} renderPage={renderPage} />
+    <div ref={viewportRef} className={classes.viewport} data-period-pager="">
+      <div ref={trackRef} className={classes.track}>
+        {canPrevious ? (
+          <div className={classes.previous} aria-hidden="true" inert>
+            <PagerPage offset={-1} controls={NO_CONTROLS} renderPage={renderPage} />
           </div>
-          {canNext ? (
-            <div className={classes.next} aria-hidden="true" inert>
-              <PagerPage offset={1} controls={NO_CONTROLS} renderPage={renderPage} />
-            </div>
-          ) : null}
+        ) : null}
+        <div className={classes.current}>
+          <PagerPage offset={0} controls={controls} renderPage={renderPage} />
         </div>
+        {canNext ? (
+          <div className={classes.next} aria-hidden="true" inert>
+            <PagerPage offset={1} controls={NO_CONTROLS} renderPage={renderPage} />
+          </div>
+        ) : null}
       </div>
-      {isHintVisible && (canPrevious || canNext) ? (
-        <p className={classes.hint}>
-          <span>Swipe to change {label}</span>
-          <button type="button" className={classes.hintDismiss} onClick={dismissHint}>
-            Dismiss
-          </button>
-        </p>
-      ) : null}
-    </>
+    </div>
   );
 }
