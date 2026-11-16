@@ -10,6 +10,7 @@ import { SettingsScreen } from "../settings-screen";
 import { ToastProvider } from "../ui";
 import { UpdateBanner } from "../update-banner";
 import { WeightScreen } from "../weight-screen";
+import { TrainingDetailScreen } from "../training-detail-screen";
 import { appClasses } from "./app.styles";
 
 function AppShell() {
@@ -48,6 +49,9 @@ function AppShell() {
                 <ExerciseDetailScreen key={params.id} exerciseId={params.id} />
               </DatabaseGate>
             )}
+          </Route>
+          <Route path="/trainings/:id">
+            {(params) => <DatabaseGate><TrainingDetailScreen key={params.id} trainingId={params.id} /></DatabaseGate>}
           </Route>
           <Route path="/exercises">
             <DatabaseGate>

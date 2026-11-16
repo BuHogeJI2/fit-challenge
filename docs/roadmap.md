@@ -92,6 +92,15 @@ date spacing and the same metric as the full chart they lead to.
 
 ### Exercises
 
+- Week is the default view: a Monday-based week of dated trainings, with
+  previous/next controls, a This week shortcut, active days and session counts.
+- Each entry belongs to one training. Several trainings can share a date;
+  logging shows the target and requires a choice when the date has several.
+  Training names and notes are optional. Editing a training date moves all
+  its entries together. Delete removes the group and can be undone.
+- Training detail shows its exercises and individual entries, with fixed-target
+  logging, editing, and Move to training for splitting or correcting groups.
+
 - Create, rename and archive exercises. Archived exercises keep their
   history and can be restored.
 - Each exercise has one metric: `reps`, `reps + weight`, `time` or
@@ -105,7 +114,8 @@ date spacing and the same metric as the full chart they lead to.
   "Repeat last" action that logs it today. Each day in the history can also
   repeat its own last set into that day, for filling in a past workout.
 - Edit and delete a set. Delete can be undone.
-- Exercises list: each exercise with a sparkline, a one-line progress
+- Library: searchable exercises, sorted alphabetically or by recent activity,
+  each with a sparkline, a one-line progress
   sentence (for example "Best day 30 reps, up 20 since Aug 3") and the date
   of the last set.
 - Exercise detail: chart of each day's value (bars for Day total, a line for
@@ -173,7 +183,6 @@ one-owner sign-in, so it is a separate decision.
 Not planned yet. Collected so they are not lost.
 
 - Projected goal date (needs a defined trend model first).
-- Several separate workouts on one day.
 - Workout routines or templates.
 - Rest timer between sets.
 - Distance metric (running, walking).

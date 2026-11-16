@@ -3,7 +3,9 @@ import { modeNavClasses } from "./mode-nav.styles";
 import type { IModeNavLinkProps } from "./mode-nav.types";
 
 function ModeNavLink({ href, children }: IModeNavLinkProps) {
-  const [isActive] = useRoute(`${href}/*?`);
+  const [isSection] = useRoute(`${href}/*?`);
+  const [isTraining] = useRoute("/trainings/*?");
+  const isActive = isSection || (href === "/exercises" && isTraining);
 
   return (
     <Link

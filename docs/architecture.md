@@ -4,7 +4,7 @@
 
 Fit is a Vite SPA with React and TypeScript. [main.tsx](../src/main.tsx)
 mounts `App` in StrictMode. wouter uses hash routes: `#/weight`,
-`#/exercises`, `#/exercises/:id` and `#/settings`; other routes redirect to
+`#/exercises`, `#/exercises/:id`, `#/trainings/:id` and `#/settings`; other routes redirect to
 Weight. There is no backend, authentication or sync.
 
 `AppShell` renders inside the router. Its header stays fixed at the top, and
@@ -45,7 +45,7 @@ archived exercises. IndexedDB stores these tables:
 | `settings` | `key` | `goalWeightKg` and `lastExportAt`; missing records use null defaults |
 | `meta` | `key` | Internal `dataGeneration`, defaulting to zero |
 
-New weight entries, exercises and sets get UUIDs and UTC ISO created/updated
+New weight entries, exercises, trainings and sets get UUIDs and UTC ISO created/updated
 timestamps. Dates are local `YYYY-MM-DD` keys, not UTC instants. Date helpers
 validate calendar dates and do calendar arithmetic; `useToday` refreshes once
 a minute and when the page becomes visible.
@@ -92,6 +92,13 @@ views; if that load has no sets, it falls back to the latest set's load.
 The list sentence, sparkline, detail chart and best-set highlights share it.
 Best-set highlights always mark the daily best. Progress text compares the
 latest day with the first and names a higher historical record separately.
+
+The Exercises Week view groups records by their explicit training, newest days
+first, including archived exercise history. Session frequency stays separate
+from the number of training groups. Training summaries keep weighted reps at
+different loads separate and never combine different metrics. A name-less
+training uses its session exercise names as a title, or “Training” when none
+exist. Library provides search and alphabetical/recent sorting over exercises.
 
 [Chart helpers](../src/lib/charts) map real calendar days to x coordinates
 or to day/week slots, pad value domains and generate ticks and SVG points.

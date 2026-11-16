@@ -40,6 +40,8 @@ All files below are in `src/test/`:
 | `app.test.tsx` | Hash routing, fallback route, mode navigation and tab swipe rules |
 | `weight.test.tsx` | First entry, editing, date replacement, delete/undo, storage failures, months, weeks and chart selection |
 | `exercises.test.tsx` | Exercise lifecycle, metric forms, sessions, repeat today or into a past day/undo, history, load and progress-view selection, day/week total bars and short-series charts |
+| `training-week.test.tsx`, `training-entry.test.tsx`, `training-stats.test.ts` | Weekly training groups, library search, explicit target choice, fixed-target logging, moving/splitting, whole-training delete/undo, separate metrics and loads |
+| `training-repo.test.ts`, `training-migration.test.ts`, `database-notice.test.tsx` | Training invariants and undo, real v1/v2 upgrades, record preservation, rollback/retry, and multi-window update notices |
 | `settings.test.tsx` | Goal, export, restore preview/confirmation, wipe, generation reset, persistence UI and file-read races |
 | `weight-repo.test.ts`, `exercise-repo.test.ts`, `settings-repo.test.ts` | Write invariants, rounding, metric locks, archive rules, undo guards and transaction rollback |
 | `backup.test.ts` | Strict parsing, schema 1 and 2 import, round-trip, snapshot export, full replacement, rollback, wipe and stale undo |

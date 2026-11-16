@@ -249,6 +249,7 @@ describe("Exercises mode", () => {
     expect(screen.queryByRole("button", { name: /^Repeat / })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("link", { name: "Training" }));
+    await user.click(await screen.findByRole("button", { name: "Library" }));
     expect(await screen.findByText("Archived (1)")).toBeInTheDocument();
     expect(screen.queryByRole("list", { name: "Exercises" })).not.toBeInTheDocument();
   });
@@ -297,6 +298,7 @@ describe("Exercises mode", () => {
     expect((await db.exercises.get(pushUps.id))?.progressView).toBe("best");
 
     await user.click(screen.getByRole("link", { name: "Training" }));
+    await user.click(await screen.findByRole("button", { name: "Library" }));
     const list = await screen.findByRole("list", { name: "Exercises" });
     expect(within(list).getByRole("link")).toHaveTextContent("Best set 10 reps, same as Oct 15.");
   });
@@ -329,6 +331,9 @@ describe("Exercises mode", () => {
     const user = userEvent.setup();
     renderAt("#/exercises");
 
+    expect(await screen.findByText("1 active day this week")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Library" }));
+    await user.click(screen.getByRole("button", { name: "Recent" }));
     const list = await screen.findByRole("list", { name: "Exercises" });
     const rows = within(list).getAllByRole("link");
     expect(rows.map((row) => row.textContent)).toEqual([
@@ -337,7 +342,6 @@ describe("Exercises mode", () => {
     ]);
     expect(rows[0]).toHaveTextContent("today");
     expect(rows[0]).toHaveTextContent(/29 reps/);
-    expect(screen.getByText("1 active day this week")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Log set" }));
     const sheet = screen.getByRole("dialog", { name: "Log set" });
@@ -380,6 +384,7 @@ describe("Exercises mode", () => {
     expect(within(days).getAllByRole("button", { name: "Edit session" })).toHaveLength(2);
 
     await user.click(screen.getByRole("link", { name: "Training" }));
+    await user.click(await screen.findByRole("button", { name: "Library" }));
     const list = await screen.findByRole("list", { name: "Exercises" });
     expect(within(list).getByRole("link")).toHaveTextContent("2 sessions in the last 4 weeks.");
     await user.click(screen.getByRole("button", { name: "Log set" }));
