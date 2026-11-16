@@ -34,7 +34,6 @@ export function Sheet({ open, title, onClose, children }: ISheetProps) {
     >
       {open ? (
         <div className={sheetClasses.panel}>
-          <div className={sheetClasses.handle} aria-hidden="true" />
           <div className={sheetClasses.header}>
             <h2 id={titleId} className={sheetClasses.title}>
               {title}

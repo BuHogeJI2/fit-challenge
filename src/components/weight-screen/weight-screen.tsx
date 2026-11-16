@@ -41,6 +41,7 @@ import { weightScreenClasses } from "./weight-screen.styles";
 import type { TWeightSheetState, TWeightView } from "./weight-screen.types";
 import { PeriodPager, type IPeriodPagerControls, type TPeriodOffset } from "../period-pager";
 import { WeightPeriodPanel } from "../weight-period-panel";
+import { useSavedEntry, useSelectionIndicator } from "../../lib/motion";
 
 const VIEWS: { view: TWeightView; label: string }[] = [
   { view: "month", label: "Month" },
@@ -84,6 +85,8 @@ export function WeightScreen() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<string | null>(null);
   const [sheet, setSheet] = useState<TWeightSheetState>(null);
+  const [savedEntry, markSaved] = useSavedEntry();
+  const rangeRef = useSelectionIndicator<HTMLDivElement>(view, Boolean(entries?.length && settings));
   useRestoreView(getAppPath(), Boolean(entries && settings), view === "week" ? "weight-week" : "weight-overview");
 
   if (!entries || !settings) {
@@ -93,6 +96,7 @@ export function WeightScreen() {
   const formatDate = (dateKey: string) => formatDateInContext(dateKey, todayKey);
 
   const showSaved = (saved: TWeightEntry) => {
+    markSaved(saved.id);
     setSelectedDate(saved.date);
     setSelectedWeek(getWeekStart(saved.date));
     updateParams({ month: getMonthKey(saved.date), end: getWindowLastWeek(saved.date, todayKey), ...(view === "week" ? { week: getWeekStart(saved.date) } : {}) });
@@ -165,7 +169,7 @@ export function WeightScreen() {
   const firstWeek = getWeekStart(entries[0].date);
   if (view === "week") {
     return <>
-      <WeightWeekDetail weekStart={detailWeek} entries={entries} todayKey={todayKey} goalWeightKg={settings.goalWeightKg} selectedDate={selectedDate} onSelect={setSelectedDate} onEdit={(entry) => setSheet({ mode: "edit", entry })} onPrevious={() => updateParams({ week: addDays(detailWeek, -7) })} onNext={() => updateParams({ week: addDays(detailWeek, 7) })} canPrevious={detailWeek > firstWeek} canNext={detailWeek < currentWeek} backHref={appHref("/weight", { ...Object.fromEntries(params), view: "weeks", week: null, end: lastWeek })} />
+      <WeightWeekDetail savedEntry={savedEntry} weekStart={detailWeek} entries={entries} todayKey={todayKey} goalWeightKg={settings.goalWeightKg} selectedDate={selectedDate} onSelect={setSelectedDate} onEdit={(entry) => setSheet({ mode: "edit", entry })} onPrevious={() => updateParams({ week: addDays(detailWeek, -7) })} onNext={() => updateParams({ week: addDays(detailWeek, 7) })} canPrevious={detailWeek > firstWeek} canNext={detailWeek < currentWeek} backHref={appHref("/weight", { ...Object.fromEntries(params), view: "weeks", week: null, end: lastWeek })} />
       <button type="button" className={weightScreenClasses.fab} aria-label="Log weight" onClick={() => setSheet({ mode: "new" })}><svg viewBox="0 0 22 22" aria-hidden="true" className={weightScreenClasses.fabIcon}><path d="M11 4v14M4 11h14" /></svg></button>
       {entrySheet}
     </>;
@@ -221,7 +225,7 @@ export function WeightScreen() {
         ) : null}
       </dl>
       </div>
-      <div className={weightScreenClasses.viewSwitch} role="group" aria-label="Chart range">
+      <div ref={rangeRef} className={weightScreenClasses.viewSwitch} role="group" aria-label="Chart range">
         {VIEWS.map((option) => (
           <button
             key={option.view}
@@ -261,6 +265,7 @@ export function WeightScreen() {
       ) : (
         <WeightJournal
           key={`${view}-${monthKey}`}
+          savedEntry={savedEntry}
           expanded={params.get("journal") === (view === "all" ? "all" : monthKey)}
           onExpandedChange={(expanded) => updateParams({ journal: expanded ? (view === "all" ? "all" : monthKey) : null })}
           rows={

@@ -46,7 +46,7 @@ All files below are in `src/test/`:
 | `training-repo.test.ts`, `training-migration.test.ts`, `database-notice.test.tsx` | Training invariants and undo, real v1/v2 upgrades, record preservation, rollback/retry, and multi-window update notices |
 | `settings.test.tsx` | Goal, export, restore preview/confirmation, wipe, generation reset, persistence UI and file-read races |
 | `weight-repo.test.ts`, `exercise-repo.test.ts`, `settings-repo.test.ts` | Write invariants, rounding, metric locks, archive rules, undo guards and transaction rollback |
-| `backup.test.ts` | Strict parsing, schema 1 and 2 import, round-trip, snapshot export, full replacement, rollback, wipe and stale undo |
+| `backup.test.ts` | Strict parsing, schemas 1–3 import, schema 4 round-trips, snapshot export, full replacement, rollback, wipe and stale undo |
 | `dates.test.ts`, `use-today.test.tsx` | Real dates, leap years, calendar arithmetic, week/month boundaries and day refresh |
 | `numbers.test.ts`, `exercise-text.test.ts`, `weight-format.test.ts` | Decimal/duration input, precision, progress wording, date context and axis labels |
 | `stats.test.ts` | Weight summaries, weekly averages and windows, daily bests, selected loads, grouped totals and active days |
@@ -71,6 +71,18 @@ inside month/week headers and charts, or the weekly training summary: only
 the period changes. Swiping a list must not switch sections or activate a row.
 Boundary resistance, vertical scrolling, pinch zoom, the exercise picker in
 the set sheet and the browser's edge Back gesture must keep working.
+
+Turn on reduced motion: arrows should change periods immediately, while direct
+dragging still follows the finger. Check the tab underline after text/font size
+changes, screen and disclosure fades, sheet entrance and immediate close, and
+saved-row emphasis after repeated saves and Undo. Keyboard focus must stay
+visible and usable throughout; animations must not delay logging.
+
+Before a migration release, export a real backup and open the new build against
+an existing database. Compare record counts and values, then export and restore
+the new backup. With two Fit windows, verify the reload/blocked notices without
+resetting storage. Automated migration fixtures check rollback and preservation,
+but do not replace these browser checks.
 
 Check installation, offline reload after the first online visit and an
 update between two production builds: the banner appears, Later hides it, and

@@ -2,7 +2,7 @@ import clsx from "clsx";
 
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
-const screen = clsx("flex flex-col pt-2");
+const screen = clsx("motion-screen flex flex-col pt-2");
 
 const topRow = clsx("-ml-2 flex items-center justify-between");
 

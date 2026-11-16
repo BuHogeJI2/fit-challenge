@@ -24,6 +24,7 @@ import { Button, Field, useToast } from "../ui";
 import { useArchiveToggle } from "../exercise-form-sheet/use-archive-toggle";
 import { exercisesScreenClasses } from "./exercises-screen.styles";
 import type { IExerciseRowProps } from "./exercises-screen.types";
+import { useSavedEntry, useSelectionIndicator } from "../../lib/motion";
 
 const byRecentActivity = (sets: TSet[]) => (left: TExercise, right: TExercise) => {
   const leftLast = getLatestSet(sets.filter((set) => set.exerciseId === left.id));
@@ -33,7 +34,7 @@ const byRecentActivity = (sets: TSet[]) => (left: TExercise, right: TExercise) =
   return rightKey.localeCompare(leftKey);
 };
 
-function ExerciseRow({ exercise, sets, todayKey, returnTo }: IExerciseRowProps) {
+function ExerciseRow({ exercise, sets, todayKey, returnTo, savedEntry }: IExerciseRowProps) {
   const exerciseSets = sets.filter((set) => set.exerciseId === exercise.id);
   const loadKg = getProgressLoad(exercise, exerciseSets);
   const daily = getDailyProgress(exercise, exerciseSets, loadKg);
@@ -41,7 +42,7 @@ function ExerciseRow({ exercise, sets, todayKey, returnTo }: IExerciseRowProps) 
   const lastSet = getLatestSet(exerciseSets);
 
   return (
-    <li className={exercisesScreenClasses.item}>
+    <li className={exercisesScreenClasses.item} data-saved-row={savedEntry?.id === exercise.id ? savedEntry.phase : undefined}>
       <Link href={appHref(`/exercises/${exercise.id}`, { from: returnTo })} onClick={() => rememberView(returnTo)} className={exercisesScreenClasses.row}>
         <span className={exercisesScreenClasses.rowHead}>
           <span className={exercisesScreenClasses.name}>{exercise.name}</span>
@@ -102,6 +103,9 @@ export function ExercisesScreen() {
   const setSearch = (next: string) => updateParams({ q: next });
   const setSort = (next: string) => updateParams({ sort: next });
   const returnTo = appHref("/exercises", { view, week: weekStart, q: search, sort, archived: params.get("archived") });
+  const viewRef = useSelectionIndicator<HTMLDivElement>(view, Boolean(exercises && sets && trainings));
+  const sortRef = useSelectionIndicator<HTMLDivElement>(sort, view === "library" && Boolean(exercises && sets && trainings));
+  const [savedEntry, markSaved] = useSavedEntry();
   useRestoreView(getAppPath(), Boolean(exercises && sets && trainings));
 
   if (!exercises || !sets || !trainings) {
@@ -130,7 +134,7 @@ export function ExercisesScreen() {
           : "Add the exercises you train, then log your sets."}
       </p>
 
-      <div className={exercisesScreenClasses.views} role="group" aria-label="Training view">
+      <div ref={viewRef} className={exercisesScreenClasses.views} role="group" aria-label="Training view">
         <button type="button" className={view === "week" ? exercisesScreenClasses.viewActive : exercisesScreenClasses.view} aria-pressed={view === "week"} onClick={() => setView("week")}>Week</button>
         <button type="button" className={view === "library" ? exercisesScreenClasses.viewActive : exercisesScreenClasses.view} aria-pressed={view === "library"} onClick={() => setView("library")}>Library</button>
       </div>
@@ -157,11 +161,11 @@ export function ExercisesScreen() {
           </>;
         }} />
         {weekStart !== currentWeek ? <Button variant="text" onClick={() => setWeekStart(currentWeek)}>This week</Button> : null}
-        {weekTrainings.length ? <ol className={exercisesScreenClasses.trainingList} aria-label="Weekly trainings">
+        {weekTrainings.length ? <ol key={weekStart} className={exercisesScreenClasses.trainingList} aria-label="Weekly trainings">
           {weekTrainings.map((training, index) => {
             const groups = getTrainingExercises(sets.filter((set) => set.trainingId === training.id), exercises);
             const title = getTrainingTitle(training, sets, exercises);
-            return <li key={training.id} className={exercisesScreenClasses.trainingItem}>
+            return <li key={training.id} className={exercisesScreenClasses.trainingItem} data-saved-row={savedEntry?.id === training.id ? savedEntry.phase : undefined}>
               {weekTrainings[index - 1]?.date !== training.date ? <h3 className={exercisesScreenClasses.day}>{formatDayHeading(training.date, todayKey)}</h3> : null}
               <Link href={appHref(`/trainings/${training.id}`, { from: returnTo })} onClick={() => rememberView(returnTo)} className={exercisesScreenClasses.trainingLink}>
                 <span className={exercisesScreenClasses.trainingName}>{title}</span><span aria-hidden="true">›</span>
@@ -177,14 +181,14 @@ export function ExercisesScreen() {
         </ol> : <p className={exercisesScreenClasses.empty}>No training logged in this week.</p>}
       </> : <>
         <Field label="Search exercises" type="search" value={search} placeholder="Find an exercise" onChange={(event) => setSearch(event.target.value)} />
-        <div className={exercisesScreenClasses.views} role="group" aria-label="Sort exercises">
+        <div ref={sortRef} className={exercisesScreenClasses.views} role="group" aria-label="Sort exercises">
           <button type="button" className={sort === "name" ? exercisesScreenClasses.viewActive : exercisesScreenClasses.view} aria-pressed={sort === "name"} onClick={() => setSort("name")}>A–Z</button>
           <button type="button" className={sort === "recent" ? exercisesScreenClasses.viewActive : exercisesScreenClasses.view} aria-pressed={sort === "recent"} onClick={() => setSort("recent")}>Recent</button>
         </div>
       {active.length ? (
         <ul className={exercisesScreenClasses.list} aria-label="Exercises">
           {active.map((exercise) => (
-            <ExerciseRow key={exercise.id} exercise={exercise} sets={sets} todayKey={todayKey} returnTo={returnTo} />
+            <ExerciseRow key={exercise.id} exercise={exercise} sets={sets} todayKey={todayKey} returnTo={returnTo} savedEntry={savedEntry} />
           ))}
         </ul>
       ) : <p className={exercisesScreenClasses.empty}>{search ? "No matching exercises." : "No active exercises yet."}</p>}
@@ -247,6 +251,7 @@ export function ExercisesScreen() {
         onClose={() => setSetSheet(null)}
         onSaved={(saved) => {
           setSetSheet(null);
+          markSaved(view === "week" ? saved.trainingId : saved.exerciseId);
           const metric = exercises.find((exercise) => exercise.id === saved.exerciseId)?.metric;
           toast.show({ message: metric === "session" ? "Session logged." : "Set logged." });
         }}

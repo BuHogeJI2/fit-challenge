@@ -1,7 +1,7 @@
 import clsx from "clsx";
 
 export const trainingDetailClasses = {
-  screen: clsx("flex flex-col pt-2"),
+  screen: clsx("motion-screen flex flex-col pt-2"),
   header: clsx("flex items-center justify-between gap-3"),
   back: clsx("flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ink"),
   title: clsx("m-0 mt-2 text-[2.75rem] leading-tight font-normal tracking-tight"),

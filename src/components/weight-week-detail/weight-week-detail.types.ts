@@ -1,4 +1,5 @@
 import type { TWeightEntry } from "../../lib/db";
+import type { TSavedEntry } from "../../lib/motion";
 
 export interface IWeightWeekDetailProps {
   weekStart: string;
@@ -13,4 +14,5 @@ export interface IWeightWeekDetailProps {
   canPrevious: boolean;
   canNext: boolean;
   backHref: string;
+  savedEntry?: TSavedEntry | null;
 }

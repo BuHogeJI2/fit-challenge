@@ -27,6 +27,12 @@ same visible arrows. Only the current panel is accessible; adjacent panels
 are inert and hidden from assistive technology. Period state commits at
 release while the track settles. Lists stay outside the moving panels.
 
+Shared motion values live in `src/index.css`. Tab indicators measure the selected
+control and follow size changes; saved-row feedback alternates CSS animations
+without remounting inputs or delaying writes. Screens fade after live data loads.
+Sheets keep native dialog focus and immediate dismissal. Reduced motion removes
+automatic transitions while leaving direct pointer tracking responsive.
+
 `ToastProvider` sits above the routes. Each screen is inside
 [DatabaseGate](../src/components/database-gate/database-gate.tsx), which
 opens IndexedDB. `StorageErrorBoundary` catches failed live reads as well as
@@ -110,6 +116,10 @@ from the number of training groups. Training summaries keep weighted reps at
 different loads separate and never combine different metrics. A name-less
 training uses its session exercise names as a title, or “Training” when none
 exist. Library provides search and alphabetical/recent sorting over exercises.
+Legacy entries whose exercise is missing remain visible as “Unknown exercise”
+in training detail. They are read-only individually; deleting their training
+still removes the complete group. Undo requires every referenced exercise to
+exist, so it cannot restore an orphaned group. Migration never cleans them up.
 
 [Chart helpers](../src/lib/charts) map real calendar days to x coordinates
 or to day/week slots, pad value domains and generate ticks and SVG points.

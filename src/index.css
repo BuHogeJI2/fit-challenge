@@ -32,6 +32,87 @@
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
 }
 
+:root {
+  --motion-fast: 140ms;
+  --motion-normal: 180ms;
+  --motion-slow: 240ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+  --pager-settle-duration: var(--motion-slow);
+  --pager-snap-duration: 200ms;
+  --pager-easing: var(--motion-ease);
+}
+
+@keyframes content-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes toast-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes saved-row-a {
+  from { background-color: var(--color-ground-sunken); }
+  to { background-color: transparent; }
+}
+
+@keyframes saved-row-b {
+  from { background-color: var(--color-ground-sunken); }
+  to { background-color: transparent; }
+}
+
+.motion-screen,
+.motion-reveal,
+.motion-disclosure[open] > ul {
+  animation: content-enter var(--motion-fast) var(--motion-ease);
+}
+
+.motion-toast {
+  animation: toast-enter var(--motion-normal) var(--motion-ease);
+}
+
+.motion-press {
+  transition-property: background-color, color, border-color, opacity;
+  transition-duration: var(--motion-fast);
+}
+
+.motion-press:active:not(:disabled) { opacity: 0.72; }
+
+[data-saved-row="a"] { animation: saved-row-a 700ms var(--motion-ease); }
+[data-saved-row="b"] { animation: saved-row-b 700ms var(--motion-ease); }
+
+dialog[open] {
+  transition: opacity var(--motion-normal) var(--motion-ease), transform var(--motion-slow) var(--motion-ease);
+  opacity: 1;
+  transform: translateY(0);
+}
+
+dialog[open]::backdrop {
+  transition: opacity var(--motion-normal) var(--motion-ease);
+  opacity: 1;
+}
+
+@starting-style {
+  dialog[open] { opacity: 0; transform: translateY(24px); }
+  dialog[open]::backdrop { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-screen,
+  .motion-reveal,
+  .motion-toast,
+  .motion-disclosure[open] > ul,
+  [data-saved-row],
+  dialog[open],
+  dialog[open]::backdrop {
+    animation: none;
+    transition: none;
+  }
+  .motion-press { transition: none; }
+  [data-period-pager] > div { transition: none !important; }
+}
+
 @layer base {
   html {
     min-height: 100%;

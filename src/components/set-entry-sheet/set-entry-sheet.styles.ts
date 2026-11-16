@@ -14,7 +14,7 @@ const inputBase = clsx(
 const input = clsx(inputBase, "w-[2.6ch]");
 
 const pillBase = clsx(
-  "min-h-11 cursor-pointer rounded-full text-[0.9375rem]",
+  "motion-press min-h-11 cursor-pointer rounded-full text-[0.9375rem]",
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
 );
 

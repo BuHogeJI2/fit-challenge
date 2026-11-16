@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSavedEntry } from "../../lib/motion";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Link } from "wouter";
 import { useAppSearch, getAppPath, getReturnPath, useRestoreView } from "../../lib/navigation";
@@ -105,6 +106,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
   const [isEditing, setIsEditing] = useState(false);
   const [setSheet, setSetSheet] = useState<TSetSheetState>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [savedEntry, markSaved] = useSavedEntry();
   const returnTo = getReturnPath(useAppSearch(), "/exercises");
   const backLabel = returnTo.startsWith("/exercises?") && new URLSearchParams(returnTo.split("?")[1]).get("view") === "library" ? "Library" : "Training";
   useRestoreView(getAppPath(), Boolean(exercise !== undefined && exercises && allSets && trainings));
@@ -161,7 +163,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
     try {
       if (!(await restoreSet(undo))) {
         toast.show({ message: "Undo is no longer available." });
-      }
+      } else markSaved(undo.record.date);
     } catch {
       toast.show({ message: "Could not undo. Nothing was changed." });
     }
@@ -182,6 +184,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
         seconds: values.seconds,
       });
       const dateContext = date === todayKey ? "" : ` · ${formatDateInContext(date, todayKey)}`;
+      markSaved(date);
       const targetTraining = trainings.find((training) => training.id === undo.record.trainingId);
       const trainingContext = targetTraining && trainings.filter((training) => training.date === date).length > 1
         ? ` · ${getTrainingTitle(targetTraining, allSets, exercises)}`
@@ -194,7 +197,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
             try {
               if (!(await undoAddSet(undo))) {
                 toast.show({ message: "Undo is no longer available." });
-              }
+              } else markSaved(date);
             } catch {
               toast.show({ message: "Could not undo. Nothing was changed." });
             }
@@ -359,7 +362,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
               ? getTrainingTitle(repeatTraining, allSets, exercises)
               : null;
             return (
-              <li key={day.date} className={classes.day}>
+              <li key={day.date} className={classes.day} data-saved-row={savedEntry?.id === day.date ? savedEntry.phase : undefined}>
                 <div className={classes.dayHead}>
                   <h2 className={classes.dayTitle}>{formatDayHeading(day.date, todayKey)}</h2>
                   <span className={classes.daySummary}>
@@ -453,6 +456,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
         onClose={() => setSetSheet(null)}
         onSaved={(saved) => {
           setSetSheet(null);
+          markSaved(saved.date);
           setSelectedDate(saved.date);
         }}
         onDelete={handleDeleteSet}

@@ -9,6 +9,7 @@ import { SetEntrySheet, type TSetSheetState } from "../set-entry-sheet";
 import { TrainingFormSheet } from "../training-form-sheet";
 import { Button, useToast } from "../ui";
 import { trainingDetailClasses as classes } from "./training-detail-screen.styles";
+import { useSavedEntry } from "../../lib/motion";
 import type { ITrainingDetailScreenProps } from "./training-detail-screen.types";
 
 export function TrainingDetailScreen({ trainingId }: ITrainingDetailScreenProps) {
@@ -18,6 +19,7 @@ export function TrainingDetailScreen({ trainingId }: ITrainingDetailScreenProps)
   const exercises = useLiveQuery(listExercises, []);
   const [sheet, setSheet] = useState<TSetSheetState>(null);
   const [editing, setEditing] = useState(false);
+  const [savedEntry, markSaved] = useSavedEntry();
   const toast = useToast();
   const [, navigate] = useLocation();
   const returnTo = getReturnPath(useAppSearch(), "/exercises");
@@ -42,6 +44,7 @@ export function TrainingDetailScreen({ trainingId }: ITrainingDetailScreenProps)
     toast.show({ message: "Entry deleted.", action: {
       label: "Undo", onAction: async () => {
         if (await restoreSet(undo)) {
+          markSaved(undo.record.id);
           if (undo.training) navigate(selfHref);
         } else toast.show({ message: "Undo is no longer available." });
       },
@@ -79,7 +82,7 @@ export function TrainingDetailScreen({ trainingId }: ITrainingDetailScreenProps)
             <p className={classes.meta}>{group.summary}{group.exercise?.archivedAt ? " · archived" : ""}</p>
             <ul className={classes.entries}>
               {group.sets.map((set) => (
-                <li key={set.id}>
+                <li key={set.id} data-saved-row={savedEntry?.id === set.id ? savedEntry.phase : undefined}>
                   <button type="button" className={classes.entry} disabled={!group.exercise || Boolean(group.exercise.archivedAt)} aria-label={`Edit ${group.exercise?.name ?? "entry"}: ${group.exercise ? formatSetValues(group.exercise.metric, set) : "entry"}`} onClick={() => setSheet({ mode: "edit", set })}>
                     <span className={classes.values}>{group.exercise ? formatSetValues(group.exercise.metric, set) : "Entry kept"}</span>
                     {set.note ? <span className={classes.entryNote}>{set.note}</span> : null}
@@ -95,6 +98,7 @@ export function TrainingDetailScreen({ trainingId }: ITrainingDetailScreenProps)
       </div>
       <SetEntrySheet state={sheet} exercises={exercises} sets={sets} todayKey={todayKey} onClose={() => setSheet(null)} onSaved={(saved) => {
         setSheet(null);
+        markSaved(saved.id);
         if (saved.trainingId !== training.id) navigate(appHref(`/trainings/${saved.trainingId}`, { from: returnTo }));
         toast.show({ message: "Entry saved." });
       }} onDelete={removeEntry} />

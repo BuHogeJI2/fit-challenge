@@ -151,6 +151,9 @@ date spacing and the same metric as the full chart they lead to.
 - Settings: goal weight, export / import, last export date, storage status,
   delete all data.
 - Clear states for empty data, a single record, and a storage error.
+- Top tabs switch sections; swipes and arrows page periods inside the active
+  section. Short tab, sheet, disclosure and save feedback respects reduced
+  motion and never delays a write or navigation.
 - PWA: web manifest, icons, and an offline app shell with bundled fonts, so a
   reload works offline after the first visit.
 - Tests: Vitest for domain logic (stats, chart scales, import validation,

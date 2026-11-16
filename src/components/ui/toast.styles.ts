@@ -6,7 +6,7 @@ const region = clsx(
 );
 
 const toast = clsx(
-  "pointer-events-auto flex w-full max-w-md items-center justify-between gap-4 rounded-2xl bg-ink px-5 py-2 text-ground",
+  "motion-toast pointer-events-auto flex w-full max-w-md items-center justify-between gap-4 rounded-2xl bg-ink px-5 py-2 text-ground",
 );
 
 const message = clsx("py-2 text-sm");

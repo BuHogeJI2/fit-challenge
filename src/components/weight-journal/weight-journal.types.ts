@@ -1,4 +1,5 @@
 import type { TWeightEntry } from "../../lib/db";
+import type { TSavedEntry } from "../../lib/motion";
 import type { TWeightEntryWithChange } from "../../lib/stats";
 
 export interface IWeightJournalProps {
@@ -9,4 +10,5 @@ export interface IWeightJournalProps {
   previewCount?: number;
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
+  savedEntry?: TSavedEntry | null;
 }

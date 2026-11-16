@@ -1,9 +1,10 @@
 import clsx from "clsx";
+import { selectionIndicatorClass } from "../ui/selection-indicator.styles";
 
-const nav = clsx("flex gap-4 text-sm");
+const nav = clsx(selectionIndicatorClass, "flex gap-4 text-sm");
 
 const linkBase = clsx(
-  "flex min-h-11 items-center rounded-sm",
+  "motion-press flex min-h-11 items-center rounded-sm",
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
 );
 

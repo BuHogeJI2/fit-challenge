@@ -10,8 +10,6 @@ const panel = clsx(
   "flex flex-col gap-5 rounded-t-3xl bg-ground px-6 pt-3 pb-[max(1.75rem,env(safe-area-inset-bottom))]",
 );
 
-const handle = clsx("h-1 w-9 self-center rounded-full bg-rule-strong");
-
 const header = clsx("flex items-center justify-between gap-4");
 
 const title = clsx("text-lg font-medium");
@@ -24,7 +22,6 @@ const close = clsx(
 export const sheetClasses = {
   dialog,
   panel,
-  handle,
   header,
   title,
   close,

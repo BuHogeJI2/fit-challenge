@@ -1,10 +1,11 @@
 import clsx from "clsx";
+import { selectionIndicatorClass } from "../ui/selection-indicator.styles";
 
-const screen = clsx("flex flex-col pt-6");
+const screen = clsx("motion-screen flex flex-col pt-6");
 
 const title = clsx("m-0 text-[2.75rem] leading-tight font-normal tracking-tight");
 
-const viewSwitch = clsx("mt-1 flex gap-4 text-sm");
+const viewSwitch = clsx(selectionIndicatorClass, "mt-1 flex gap-4 text-sm");
 
 const viewBase = clsx(
   "min-h-11 cursor-pointer rounded-sm",
@@ -13,7 +14,7 @@ const viewBase = clsx(
 
 const view = clsx(viewBase, "text-muted hover:text-ink");
 
-const viewActive = clsx(viewBase, "font-semibold text-ink underline underline-offset-6");
+const viewActive = clsx(viewBase, "font-semibold text-ink");
 
 const subline = clsx("m-0 text-sm text-muted");
 

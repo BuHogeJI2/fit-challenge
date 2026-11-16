@@ -3,6 +3,7 @@ import clsx from "clsx";
 const list = clsx("m-0 flex list-none flex-col border-t border-ink p-0");
 
 const item = clsx("border-b border-rule");
+const revealedItem = clsx(item, "motion-reveal");
 
 const row = clsx(
   "grid w-full cursor-pointer grid-cols-[3.5rem_1fr_auto] items-center gap-3 py-3.5 text-left",
@@ -29,6 +30,7 @@ const disclosure = clsx("min-h-11 self-start text-sm underline underline-offset-
 export const weightJournalClasses = {
   list,
   item,
+  revealedItem,
   row,
   date,
   day,

@@ -17,7 +17,7 @@ The source of truth is [src/index.css](../src/index.css) `@theme`:
 | `ink-soft` | `#44433f` | Supporting text and notes |
 | `muted` | `#66655f` | Labels, dates and secondary text |
 | `rule` | `#dad8d1` | Row dividers and chart grid |
-| `rule-strong` | `#c8c6be` | Input lines, chip borders and sheet handle |
+| `rule-strong` | `#c8c6be` | Input lines and chip borders |
 
 Geist Variable is the body font; Geist Mono Variable is used for chart axes
 and journal changes. Both are bundled through Fontsource. Body numbers use
@@ -52,7 +52,8 @@ width. Sheet, toast and fixed action spacing account for the bottom safe area.
   controls fade; keyboard focus uses a visible outline.
 - **Sheet:** the shared native modal `dialog` owns its title, Close button
   and backdrop dismissal. Forms keep validation and failed-write messages
-  inside it. The browser supplies modal focus behavior.
+  inside it. The browser supplies modal focus behavior. There is no drag handle
+  because sheets do not support drag dismissal.
 - **Field:** a visible label, an underline input and one hint or error.
   Errors set `aria-invalid`; the message is linked with `aria-describedby`.
   Sentence inputs use large underlined values with accessible labels.
@@ -83,6 +84,29 @@ Arrows and a dismissible swipe hint expose the gesture. Adjacent periods slide
 with the finger; the list below changes when navigation commits. Main section
 tabs stay fixed. All and Library have no period swipe. Overflowing exercise
 choices fade only at edges where more choices remain to scroll into view.
+
+## Motion
+
+Motion uses the shared `--motion-*` values in `src/index.css`: 140ms for fades
+and press feedback, 180ms for indicators and toasts, and 240ms for period
+settling and sheet entrance. A saved row receives 700ms of subtle background
+emphasis. The pager follows the finger directly and settles with the same
+direction when its arrows are used.
+These shared motion rules are unlayered and override Tailwind transition
+utilities on the elements that opt into them.
+
+Main tabs and view controls use a moving underline. Screens fade once loaded;
+newly disclosed rows fade without animating list height. Sheets enter upward
+with a fading backdrop where `@starting-style` is supported and close
+immediately. No route slides, chart redraw animation, number counting, automatic
+nudges or staggered lists are used.
+
+Respect `prefers-reduced-motion`: skip automatic slides, fades and emphasis,
+including indicator movement. A dragged pager still follows the finger and
+commits immediately on release. Keyboard focus and form submission never wait
+for animation.
+
+## Chart presentation
 
 Follow the [chart rules](roadmap.md#chart-rules): real calendar spacing, raw
 points, labelled axes and units, no zero-filled missing days, and readable

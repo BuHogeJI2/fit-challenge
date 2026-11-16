@@ -2,7 +2,7 @@ import clsx from "clsx";
 import type { TButtonSize, TButtonVariant } from "./button.types";
 
 const base = clsx(
-  "inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-medium transition-colors",
+  "motion-press inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-medium transition-colors",
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
   "disabled:cursor-not-allowed disabled:opacity-40",
 );

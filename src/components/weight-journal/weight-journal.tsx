@@ -4,7 +4,7 @@ import { formatSignedWeightValue, formatWeightValue } from "../../lib/numbers";
 import { weightJournalClasses } from "./weight-journal.styles";
 import type { IWeightJournalProps } from "./weight-journal.types";
 
-export function WeightJournal({ rows, showMonth, todayKey, onEdit, previewCount = 3, expanded: controlledExpanded, onExpandedChange }: IWeightJournalProps) {
+export function WeightJournal({ rows, showMonth, todayKey, onEdit, previewCount = 3, expanded: controlledExpanded, onExpandedChange, savedEntry }: IWeightJournalProps) {
   const [localExpanded, setExpanded] = useState(false);
   const expanded = controlledExpanded ?? localExpanded;
   const listId = useId();
@@ -16,8 +16,8 @@ export function WeightJournal({ rows, showMonth, todayKey, onEdit, previewCount 
     <>
     <h2 className={weightJournalClasses.heading}>{rows.length > previewCount && !expanded ? "Recent weigh-ins" : "Weigh-ins"}</h2>
     <ol id={listId} className={weightJournalClasses.list} aria-label="Weigh-ins">
-      {(expanded ? rows : rows.slice(0, previewCount)).map(({ entry, changeKg }) => (
-        <li key={entry.id} className={weightJournalClasses.item}>
+      {(expanded ? rows : rows.slice(0, previewCount)).map(({ entry, changeKg }, index) => (
+        <li key={entry.id} className={expanded && index >= previewCount ? weightJournalClasses.revealedItem : weightJournalClasses.item} data-saved-row={savedEntry?.id === entry.id ? savedEntry.phase : undefined}>
           <button
             type="button"
             className={weightJournalClasses.row}

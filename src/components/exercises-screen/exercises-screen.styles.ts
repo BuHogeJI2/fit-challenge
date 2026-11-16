@@ -1,6 +1,7 @@
 import clsx from "clsx";
+import { selectionIndicatorClass } from "../ui/selection-indicator.styles";
 
-const screen = clsx("flex flex-col pt-6");
+const screen = clsx("motion-screen flex flex-col pt-6");
 
 const title = clsx("m-0 text-[2.75rem] leading-tight font-normal tracking-tight");
 
@@ -23,7 +24,7 @@ const when = clsx("shrink-0 text-sm text-muted");
 
 const sentence = clsx("text-sm text-ink-soft");
 
-const archived = clsx("mt-6 text-sm");
+const archived = clsx("motion-disclosure mt-6 text-sm");
 
 const archivedSummary = clsx(
   "flex min-h-11 cursor-pointer items-center text-muted hover:text-ink",
@@ -45,15 +46,15 @@ const fab = clsx(
 );
 
 const fabIcon = clsx("size-[22px] fill-none stroke-ground [stroke-linecap:round] [stroke-width:1.8]");
-const views = clsx("my-3 flex gap-4 text-sm");
+const views = clsx(selectionIndicatorClass, "my-3 flex gap-4 text-sm");
 const view = clsx("min-h-11 text-muted focus-visible:outline-2 focus-visible:outline-ink");
-const viewActive = clsx(view, "font-semibold text-ink underline underline-offset-6");
+const viewActive = clsx(view, "font-semibold text-ink");
 const period = clsx("mt-2 grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-2");
 const periodTitle = clsx("m-0 text-center text-lg font-normal");
 const arrow = clsx("size-11 rounded-full text-2xl hover:bg-ground-sunken disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-ink");
 const weekSummary = clsx("my-4 border-t border-rule pt-4");
 const summaryCount = clsx("m-0 mb-1 text-base font-medium");
-const trainingList = clsx("m-0 list-none border-t border-ink p-0");
+const trainingList = clsx("motion-reveal m-0 list-none border-t border-ink p-0");
 const trainingItem = clsx("border-b border-rule py-4");
 const day = clsx("m-0 mb-3 text-sm font-medium text-muted");
 const trainingLink = clsx("flex min-h-11 items-center justify-between gap-3 no-underline focus-visible:outline-2 focus-visible:outline-ink hover:underline");

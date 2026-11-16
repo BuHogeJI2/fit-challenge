@@ -1,6 +1,6 @@
 import clsx from "clsx";
 
-const screen = clsx("flex flex-col pt-6");
+const screen = clsx("motion-screen flex flex-col pt-6");
 
 const title = clsx("m-0 text-[2.75rem] leading-tight font-normal tracking-tight");
 

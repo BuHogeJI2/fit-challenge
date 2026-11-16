@@ -8,7 +8,7 @@ import { WeightJournal } from "../weight-journal";
 import { weightWeekClasses as classes } from "./weight-week-detail.styles";
 import type { IWeightWeekDetailProps } from "./weight-week-detail.types";
 
-export function WeightWeekDetail({ weekStart, entries, todayKey, goalWeightKg, selectedDate, onSelect, onEdit, onPrevious, onNext, canPrevious, canNext, backHref }: IWeightWeekDetailProps) {
+export function WeightWeekDetail({ weekStart, entries, todayKey, goalWeightKg, selectedDate, onSelect, onEdit, onPrevious, onNext, canPrevious, canNext, backHref, savedEntry }: IWeightWeekDetailProps) {
   const end = addDays(weekStart, 6);
   const visible = entries.filter((entry) => entry.date >= weekStart && entry.date <= end);
   const summary = getWeightSummary(visible, null);
@@ -23,6 +23,6 @@ export function WeightWeekDetail({ weekStart, entries, todayKey, goalWeightKg, s
       <div><dt className={classes.label}>Last recorded</dt><dd className={classes.value}>{formatKg(summary.latest.weightKg)}<span className={classes.date}>{formatDate(summary.latest.date)}</span></dd></div>
       <div><dt className={classes.label}>Change</dt><dd className={classes.value}>{summary.changeSinceFirstKg === null ? "—" : `${formatSignedWeightValue(summary.changeSinceFirstKg)} kg`}</dd></div>
     </dl> : null}
-    <WeightJournal key={weekStart} rows={withChangeFromPrevious(entries).filter(({ entry }) => entry.date >= weekStart && entry.date <= end)} showMonth todayKey={todayKey} onEdit={onEdit} previewCount={7} />
+    <WeightJournal key={weekStart} rows={withChangeFromPrevious(entries).filter(({ entry }) => entry.date >= weekStart && entry.date <= end)} showMonth todayKey={todayKey} onEdit={onEdit} previewCount={7} savedEntry={savedEntry} />
   </section>;
 }
