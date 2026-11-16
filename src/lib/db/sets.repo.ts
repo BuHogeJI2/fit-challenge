@@ -1,92 +1,22 @@
 import { getDataGeneration } from "./data-generation";
 import { db } from "./db";
-import type { TExercise, TMetric, TPendingUndo, TSet } from "./db.types";
-import {
-  assertDateKey,
-  assertPositiveInteger,
-  createId,
-  normalizeLoadKg,
-  normalizeNote,
-  now,
-} from "./record-fields";
+import type { TExercise, TSet, TSetUndo, TTrainingTarget } from "./db.types";
+import { assertDateKey, createId, normalizeNote, now } from "./record-fields";
 import { RepositoryError } from "./repository-error";
-
-export type TSetValues = {
-  reps: number | null;
-  weightKg: number | null;
-  seconds: number | null;
-};
+import { isStoredFormFor, normalizeSetValues, type TSetValues } from "./set-values";
+import { removeTrainingIfEmpty, takeTrainingForEntry } from "./training-links";
 
 export type TSetInput = TSetValues & {
   exerciseId: string;
   date: string;
   note?: string | null;
+  target?: TTrainingTarget;
 };
 
 export type TSetUpdate = TSetValues & {
   date: string;
   note?: string | null;
-};
-
-const assertNull = (value: number | null, label: string, metric: TMetric) => {
-  if (value !== null) {
-    throw new RepositoryError("invalid_input", `${label} is not used by ${metric}.`);
-  }
-};
-
-const requireInteger = (value: number | null, label: string): number => {
-  if (value === null) {
-    throw new RepositoryError("invalid_input", `${label} is required.`);
-  }
-  assertPositiveInteger(value, label);
-  return value;
-};
-
-/**
- * Returns the stored form of set values for a metric, or throws a
- * `RepositoryError` when they do not fit it: `reps` needs reps only,
- * `reps_weight` needs reps and weight (kept to 0.01 kg), `time` needs
- * seconds only, `session` needs no values.
- */
-export const normalizeSetValues = (metric: TMetric, values: TSetValues): TSetValues => {
-  switch (metric) {
-    case "reps":
-      assertNull(values.weightKg, "Weight", metric);
-      assertNull(values.seconds, "Time", metric);
-      return { reps: requireInteger(values.reps, "Reps"), weightKg: null, seconds: null };
-    case "reps_weight":
-      assertNull(values.seconds, "Time", metric);
-      if (values.weightKg === null) {
-        throw new RepositoryError("invalid_input", "Weight is required.");
-      }
-      return {
-        reps: requireInteger(values.reps, "Reps"),
-        weightKg: normalizeLoadKg(values.weightKg),
-        seconds: null,
-      };
-    case "time":
-      assertNull(values.reps, "Reps", metric);
-      assertNull(values.weightKg, "Weight", metric);
-      return { reps: null, weightKg: null, seconds: requireInteger(values.seconds, "Time") };
-    case "session":
-      assertNull(values.reps, "Reps", metric);
-      assertNull(values.weightKg, "Weight", metric);
-      assertNull(values.seconds, "Time", metric);
-      return { reps: null, weightKg: null, seconds: null };
-  }
-};
-
-const isStoredFormFor = (metric: TMetric, set: TSet) => {
-  try {
-    const normalized = normalizeSetValues(metric, set);
-    return (
-      normalized.reps === set.reps &&
-      normalized.weightKg === set.weightKg &&
-      normalized.seconds === set.seconds
-    );
-  } catch {
-    return false;
-  }
+  target?: TTrainingTarget;
 };
 
 const getLoggableExercise = async (id: string): Promise<TExercise> => {
@@ -103,13 +33,14 @@ const getLoggableExercise = async (id: string): Promise<TExercise> => {
   return exercise;
 };
 
-export const addSet = async (input: TSetInput) => {
+const insertSet = (input: TSetInput) => {
   assertDateKey(input.date);
 
-  return db.transaction("rw", db.exercises, db.sets, async () => {
+  return db.transaction("rw", db.exercises, db.sets, db.trainings, async () => {
     const exercise = await getLoggableExercise(input.exerciseId);
     const values = normalizeSetValues(exercise.metric, input);
     const timestamp = now();
+    const { training, created } = await takeTrainingForEntry(input.date, input.target, timestamp);
 
     if (!exercise.metricLockedAt) {
       await db.exercises.put({
@@ -122,6 +53,7 @@ export const addSet = async (input: TSetInput) => {
     const set: TSet = {
       id: createId(),
       exerciseId: exercise.id,
+      trainingId: training.id,
       date: input.date,
       ...values,
       note: normalizeNote(input.note),
@@ -130,26 +62,33 @@ export const addSet = async (input: TSetInput) => {
     };
 
     await db.sets.add(set);
-    return set;
+    return { set, createdTraining: created ? training : null };
   });
 };
+
+/**
+ * Adds a set to the target training. Without a target it goes to the
+ * date's only training, or to a new one when the date has none.
+ */
+export const addSet = async (input: TSetInput) => (await insertSet(input)).set;
 
 /**
  * Adds a set and returns what `undoAddSet` needs to remove it again while
  * nothing else changed it.
  */
-export const addSetWithUndo = (input: TSetInput): Promise<TPendingUndo<TSet>> =>
-  db.transaction("rw", db.exercises, db.sets, db.meta, async () => ({
-    record: await addSet(input),
-    generation: await getDataGeneration(),
-  }));
+export const addSetWithUndo = (input: TSetInput): Promise<TSetUndo> =>
+  db.transaction("rw", db.exercises, db.sets, db.trainings, db.meta, async () => {
+    const { set, createdTraining } = await insertSet(input);
+    return { record: set, training: createdTraining, generation: await getDataGeneration() };
+  });
 
 /**
  * Removes a just-added set only if it is unchanged and no restore or wipe
- * happened since. Returns whether it ran.
+ * happened since. A training created by that add goes too, if it is
+ * unchanged and has no other entries. Returns whether it ran.
  */
-export const undoAddSet = ({ record, generation }: TPendingUndo<TSet>) =>
-  db.transaction("rw", db.sets, db.meta, async () => {
+export const undoAddSet = ({ record, training, generation }: TSetUndo) =>
+  db.transaction("rw", db.sets, db.trainings, db.meta, async () => {
     const [currentGeneration, current] = await Promise.all([
       getDataGeneration(),
       db.sets.get(record.id),
@@ -157,7 +96,7 @@ export const undoAddSet = ({ record, generation }: TPendingUndo<TSet>) =>
 
     const isUnchanged =
       current !== undefined &&
-      (["exerciseId", "date", "reps", "weightKg", "seconds", "note"] as const).every(
+      (["exerciseId", "trainingId", "date", "reps", "weightKg", "seconds", "note"] as const).every(
         (field) => current[field] === record[field],
       );
 
@@ -166,65 +105,106 @@ export const undoAddSet = ({ record, generation }: TPendingUndo<TSet>) =>
     }
 
     await db.sets.delete(record.id);
+
+    if (training) {
+      const currentTraining = await db.trainings.get(training.id);
+      const isTrainingUnchanged =
+        currentTraining !== undefined &&
+        (["date", "name", "note"] as const).every((field) => currentTraining[field] === training[field]);
+      const hasEntries = (await db.sets.where("trainingId").equals(training.id).count()) > 0;
+      if (isTrainingUnchanged && !hasEntries) {
+        await db.trainings.delete(training.id);
+      }
+    }
     return true;
   });
 
+/**
+ * Replaces a set's values, date and note. A target moves the set to that
+ * training; a new date without a target picks the training as `addSet`
+ * does. A training without a name or note that is left empty is removed.
+ */
 export const updateSet = async (id: string, update: TSetUpdate) => {
   assertDateKey(update.date);
 
-  return db.transaction("rw", db.exercises, db.sets, async () => {
+  return db.transaction("rw", db.exercises, db.sets, db.trainings, async () => {
     const set = await db.sets.get(id);
     if (!set) {
       throw new RepositoryError("not_found", "This set no longer exists.");
     }
 
     const exercise = await getLoggableExercise(set.exerciseId);
+    const values = normalizeSetValues(exercise.metric, update);
+    const timestamp = now();
+    const trainingId =
+      update.target || update.date !== set.date
+        ? (await takeTrainingForEntry(update.date, update.target, timestamp)).training.id
+        : set.trainingId;
+
     const next: TSet = {
       ...set,
+      trainingId,
       date: update.date,
-      ...normalizeSetValues(exercise.metric, update),
+      ...values,
       note: normalizeNote(update.note),
-      updatedAt: now(),
+      updatedAt: timestamp,
     };
 
     await db.sets.put(next);
+    if (trainingId !== set.trainingId) {
+      await removeTrainingIfEmpty(set.trainingId);
+    }
     return next;
   });
 };
 
-export const deleteSet = (id: string): Promise<TPendingUndo<TSet> | null> =>
-  db.transaction("rw", db.sets, db.meta, async () => {
+/**
+ * Deletes a set. Its training goes with it when the set was the last entry
+ * of a training without a name or note.
+ */
+export const deleteSet = (id: string): Promise<TSetUndo | null> =>
+  db.transaction("rw", db.sets, db.trainings, db.meta, async () => {
     const record = await db.sets.get(id);
     if (!record) {
       return null;
     }
 
     await db.sets.delete(id);
-    return { record, generation: await getDataGeneration() };
+    const training = await removeTrainingIfEmpty(record.trainingId);
+    return { record, training, generation: await getDataGeneration() };
   });
 
 /**
  * Puts a deleted set back, unchanged, only when its id is still free, its
  * exercise still exists with a matching metric, and no restore or wipe
- * happened since it was deleted. Returns whether the set was restored.
+ * happened since it was deleted. A training removed by that delete comes
+ * back with it; a training removed later does not, and the set stays
+ * deleted. Returns whether the set was restored.
  */
-export const restoreSet = ({ record, generation }: TPendingUndo<TSet>) =>
-  db.transaction("rw", db.exercises, db.sets, db.meta, async () => {
-    const [currentGeneration, sameId, exercise] = await Promise.all([
+export const restoreSet = ({ record, training, generation }: TSetUndo) =>
+  db.transaction("rw", db.exercises, db.sets, db.trainings, db.meta, async () => {
+    const [currentGeneration, sameId, exercise, parent] = await Promise.all([
       getDataGeneration(),
       db.sets.get(record.id),
       db.exercises.get(record.exerciseId),
+      db.trainings.get(record.trainingId),
     ]);
+
+    const parentFits = training ? parent === undefined : parent?.date === record.date;
 
     if (
       currentGeneration !== generation ||
       sameId ||
       !exercise ||
-      !isStoredFormFor(exercise.metric, record)
+      !isStoredFormFor(exercise.metric, record) ||
+      !parentFits
     ) {
       return false;
     }
 
+    if (training) {
+      await db.trainings.add(training);
+    }
     await db.sets.add(record);
     return true;
   });
@@ -233,3 +213,6 @@ export const listSetsForExercise = (exerciseId: string) =>
   db.sets.where("exerciseId").equals(exerciseId).toArray();
 
 export const listSets = () => db.sets.toArray();
+
+export const listSetsForTraining = (trainingId: string) =>
+  db.sets.where("trainingId").equals(trainingId).toArray();

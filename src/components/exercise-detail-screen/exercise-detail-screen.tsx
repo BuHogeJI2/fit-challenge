@@ -9,11 +9,12 @@ import {
   isRepositoryError,
   listExercises,
   listSets,
+  listTrainings,
   restoreSet,
   updateExercise,
   type TExercise,
   type TMetric,
-  type TPendingUndo,
+  type TSetUndo,
   type TProgressView,
   type TSet,
   type TSetValues,
@@ -33,6 +34,7 @@ import {
   getLoads,
   getProgressBars,
   getProgressLoad,
+  getTrainingTitle,
   groupSetsByDay,
 } from "../../lib/stats";
 import { BarChart, LineChart } from "../charts";
@@ -96,13 +98,14 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
   const exercise = useLiveQuery(async () => (await getExercise(exerciseId)) ?? null, [exerciseId]);
   const exercises = useLiveQuery(listExercises, []);
   const allSets = useLiveQuery(listSets, []);
+  const trainings = useLiveQuery(listTrainings, []);
   const toast = useToast();
   const toggleArchive = useArchiveToggle();
   const [isEditing, setIsEditing] = useState(false);
   const [setSheet, setSetSheet] = useState<TSetSheetState>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  if (exercise === undefined || !exercises || !allSets) {
+  if (exercise === undefined || !exercises || !allSets || !trainings) {
     return null;
   }
 
@@ -150,7 +153,7 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
     });
   };
 
-  const handleUndoDelete = async (undo: TPendingUndo<TSet>) => {
+  const handleUndoDelete = async (undo: TSetUndo) => {
     try {
       if (!(await restoreSet(undo))) {
         toast.show({ message: "Undo is no longer available." });
@@ -160,18 +163,27 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
     }
   };
 
-  const handleRepeat = async (values: TSetValues, date: string) => {
+  const handleRepeat = async (values: TSetValues, date: string, trainingId?: string) => {
+    if (!trainingId && (trainings ?? []).filter((training) => training.date === date).length > 1) {
+      setSetSheet({ mode: "new", exerciseId: exercise.id, date, values });
+      return;
+    }
     try {
       const undo = await addSetWithUndo({
         exerciseId: exercise.id,
         date,
+        target: trainingId ? { trainingId } : undefined,
         reps: values.reps,
         weightKg: values.weightKg,
         seconds: values.seconds,
       });
       const dateContext = date === todayKey ? "" : ` · ${formatDateInContext(date, todayKey)}`;
+      const targetTraining = trainings.find((training) => training.id === undo.record.trainingId);
+      const trainingContext = targetTraining && trainings.filter((training) => training.date === date).length > 1
+        ? ` · ${getTrainingTitle(targetTraining, allSets, exercises)}`
+        : "";
       toast.show({
-        message: `Logged ${formatSetValues(exercise.metric, undo.record)}${dateContext}`,
+        message: `Logged ${formatSetValues(exercise.metric, undo.record)}${dateContext}${trainingContext}`,
         action: {
           label: "Undo",
           onAction: async () => {
@@ -338,6 +350,10 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
           {days.map((day) => {
             const bestValue = dailyBest.find((item) => item.date === day.date)?.value ?? null;
             const dayLastSet = day.sets.at(-1);
+            const repeatTraining = trainings.find((training) => training.id === dayLastSet?.trainingId);
+            const repeatTarget = repeatTraining && trainings.filter((training) => training.date === day.date).length > 1
+              ? getTrainingTitle(repeatTraining, allSets, exercises)
+              : null;
             return (
               <li key={day.date} className={classes.day}>
                 <div className={classes.dayHead}>
@@ -371,12 +387,13 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
                     <button
                       type="button"
                       className={classes.repeatChip}
-                      aria-label={`Repeat ${formatSetValues(exercise.metric, dayLastSet)} for ${formatDayHeading(day.date, todayKey)}`}
-                      onClick={() => void handleRepeat(dayLastSet, day.date)}
+                      aria-label={`Repeat ${formatSetValues(exercise.metric, dayLastSet)} for ${formatDayHeading(day.date, todayKey)}${repeatTarget ? ` in ${repeatTarget}` : ""}`}
+                      onClick={() => void handleRepeat(dayLastSet, day.date, dayLastSet.trainingId)}
                     >
                       <svg viewBox="0 0 16 16" aria-hidden="true" className={classes.repeatIcon}>
                         <path d="M8 3v10M3 8h10" />
                       </svg>
+                      {repeatTarget}
                     </button>
                   ) : null}
                 </div>
@@ -384,6 +401,16 @@ export function ExerciseDetailScreen({ exerciseId }: IExerciseDetailScreenProps)
             );
           })}
         </ol>
+      ) : null}
+
+      {!isArchived ? (
+        <p className={classes.subline}>
+          {trainings.filter((training) => training.date === todayKey).length === 1
+            ? `Today’s entries go into ${getTrainingTitle(trainings.find((training) => training.date === todayKey)!, allSets, exercises)}.`
+            : trainings.some((training) => training.date === todayKey)
+              ? "Choose a training when repeating today."
+              : "Your first entry today starts a new training."}
+        </p>
       ) : null}
 
       {!isArchived ? (

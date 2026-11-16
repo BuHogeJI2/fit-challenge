@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 export type TDatabaseStatus =
   | { state: "opening" }
   | { state: "ready" }
+  | { state: "updated_elsewhere" }
+  | { state: "upgrade_blocked" }
   | { state: "failed"; message: string };
 
 export interface IDatabaseGateProps {

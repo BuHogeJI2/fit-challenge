@@ -251,6 +251,7 @@ export function SettingsScreen() {
             <p className={classes.text}>
               {plural(importState.counts.weightEntries, "weigh-in")},{" "}
               {plural(importState.counts.exercises, "exercise")},{" "}
+              {plural(importState.counts.trainings, "training")},{" "}
               {plural(importState.counts.sets, "set")},{" "}
               {plural(importState.counts.settings, "setting")}.
             </p>

@@ -23,9 +23,21 @@ export type TExercise = {
   updatedAt: string;
 };
 
+export type TTraining = {
+  id: string;
+  date: string;
+  name: string | null;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TTrainingTarget = { trainingId: string } | { newTraining: true };
+
 export type TSet = {
   id: string;
   exerciseId: string;
+  trainingId: string;
   date: string;
   reps: number | null;
   weightKg: number | null;
@@ -57,9 +69,27 @@ export type TRepositoryErrorCode =
   | "invalid_input"
   | "not_found"
   | "metric_locked"
-  | "archived";
+  | "archived"
+  | "training_choice_required";
 
 export type TPendingUndo<T> = {
   record: T;
   generation: number;
 };
+
+/**
+ * `training` is the parent that the same operation created (add) or removed
+ * together with its last entry (delete), or null when the parent was left
+ * as it was.
+ */
+export type TSetUndo = TPendingUndo<TSet> & {
+  training: TTraining | null;
+};
+
+export type TTrainingUndo = {
+  training: TTraining;
+  sets: TSet[];
+  generation: number;
+};
+
+export type TDatabaseNotice = "updated_elsewhere" | "upgrade_blocked";

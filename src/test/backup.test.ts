@@ -18,12 +18,20 @@ import {
 } from "../lib/db";
 import { resetDatabase } from "./db-test-utils";
 
+const withoutTrainingId = <T extends { trainingId?: string }>(set: T) => {
+  const copy: Partial<T> = { ...set };
+  delete copy.trainingId;
+  return copy as Omit<T, "trainingId">;
+};
+
 const TIMESTAMP = "2026-10-19T08:30:00.000Z";
 const stamp = { createdAt: TIMESTAMP, updatedAt: TIMESTAMP };
 
+const LEGACY_TABLES = ["weightEntries", "exercises", "sets", "settings"];
+
 const validFile = (): TBackupFile => ({
   app: "fit",
-  schemaVersion: 3,
+  schemaVersion: 4,
   exportedAt: TIMESTAMP,
   data: {
     weightEntries: [{ id: "weight", date: "2026-10-19", weightKg: 83.4, note: null, ...stamp }],
@@ -33,15 +41,43 @@ const validFile = (): TBackupFile => ({
       { id: "time", name: "Plank", metric: "time", metricLockedAt: TIMESTAMP, progressWeightKg: null, progressView: "total", archivedAt: TIMESTAMP, ...stamp },
       { id: "session", name: "Boxing", metric: "session", metricLockedAt: TIMESTAMP, progressWeightKg: null, progressView: "total", archivedAt: null, ...stamp },
     ],
+    trainings: [
+      { id: "day-19", date: "2026-10-19", name: null, note: null, ...stamp },
+      { id: "day-18", date: "2026-10-18", name: "Legs", note: "Gym", ...stamp },
+      { id: "day-17", date: "2026-10-17", name: null, note: null, ...stamp },
+      { id: "day-16", date: "2026-10-16", name: "Boxing club", note: null, ...stamp },
+    ],
     sets: [
-      { id: "rep-set", exerciseId: "reps", date: "2026-10-19", reps: 29, weightKg: null, seconds: null, note: "Easy", ...stamp },
-      { id: "load-set", exerciseId: "load", date: "2026-10-18", reps: 12, weightKg: 22.55, seconds: null, note: null, ...stamp },
-      { id: "time-set", exerciseId: "time", date: "2026-10-17", reps: null, weightKg: null, seconds: 105, note: null, ...stamp },
-      { id: "session-set", exerciseId: "session", date: "2026-10-16", reps: null, weightKg: null, seconds: null, note: "Sparring", ...stamp },
+      { id: "rep-set", exerciseId: "reps", trainingId: "day-19", date: "2026-10-19", reps: 29, weightKg: null, seconds: null, note: "Easy", ...stamp },
+      { id: "load-set", exerciseId: "load", trainingId: "day-18", date: "2026-10-18", reps: 12, weightKg: 22.55, seconds: null, note: null, ...stamp },
+      { id: "time-set", exerciseId: "time", trainingId: "day-17", date: "2026-10-17", reps: null, weightKg: null, seconds: 105, note: null, ...stamp },
+      { id: "session-set", exerciseId: "session", trainingId: "day-16", date: "2026-10-16", reps: null, weightKg: null, seconds: null, note: "Sparring", ...stamp },
     ],
     settings: [{ key: "goalWeightKg", value: 80.1 }, { key: "lastExportAt", value: TIMESTAMP }],
   },
 });
+
+type TLegacyFile = Omit<TTestFile, "data"> & { data: Record<string, Record<string, unknown>[]> };
+
+const legacyFile = (schemaVersion: 1 | 2 | 3 = 3): TLegacyFile => {
+  const { data, ...envelope } = validFile();
+  return {
+    ...envelope,
+    schemaVersion,
+    data: {
+      weightEntries: data.weightEntries,
+      exercises: data.exercises,
+      sets: data.sets.map(withoutTrainingId),
+      settings: data.settings,
+    },
+  };
+};
+
+const legacyText = (change: (file: TLegacyFile) => void = () => {}, schemaVersion: 1 | 2 | 3 = 3) => {
+  const file = legacyFile(schemaVersion);
+  change(file);
+  return JSON.stringify(file);
+};
 
 type TTestFile = {
   app: unknown;
@@ -72,7 +108,7 @@ describe("backup parsing", () => {
     expect(text).toContain('\n  "app": "fit",');
     expect(result).toEqual({
       ok: true, data: source.data, exportedAt: TIMESTAMP,
-      counts: { weightEntries: 1, exercises: 4, sets: 4, settings: 2 },
+      counts: { weightEntries: 1, exercises: 4, trainings: 4, sets: 4, settings: 2 },
     });
     expect(serializeBackup(source)).toBe(text);
   });
@@ -92,20 +128,20 @@ describe("backup parsing", () => {
   );
 
   it.each([
-    ["app", "other", "app"], ["schemaVersion", 4, "schemaVersion"],
+    ["app", "other", "app"], ["schemaVersion", 5, "schemaVersion"],
     ["schemaVersion", "1", "schemaVersion"], ["exportedAt", "2026-10-19", "exportedAt"],
   ])("rejects invalid %s", (field, value, message) => {
     expectRejected(invalidFile((file) => { Object.assign(file, { [field]: value }); }), String(message));
   });
 
-  const tables = ["weightEntries", "exercises", "sets", "settings"] as const;
+  const tables = ["weightEntries", "exercises", "trainings", "sets", "settings"] as const;
   it.each(tables)("rejects missing and unknown fields in %s", (table) => {
     expectRejected(invalidFile((file) => { delete file.data[table][0]["createdAt" in file.data[table][0] ? "createdAt" : "value"]; }), `${table}[0]`);
     expectRejected(invalidFile((file) => { file.data[table][0].extra = true; }), `${table}[0]`);
     expectRejected(JSON.stringify({ ...validFile(), data: { ...validFile().data, [table]: [null] } }), `${table}[0]`);
   });
 
-  it.each(["weightEntries", "exercises", "sets"] as const)("requires unique non-empty ids in %s", (table) => {
+  it.each(["weightEntries", "exercises", "trainings", "sets"] as const)("requires unique non-empty ids in %s", (table) => {
     for (const id of ["", "  ", null, 123]) {
       expectRejected(invalidFile((file) => { file.data[table][0].id = id; }), `${table}[0]`);
     }
@@ -114,7 +150,7 @@ describe("backup parsing", () => {
 
   it.each(["2026-02-30", "2025-02-29", "2026-13-01", "2026-1-01", "0000-01-01", null])(
     "rejects invalid date %s", (date) => {
-      for (const table of ["weightEntries", "sets"] as const) {
+      for (const table of ["weightEntries", "trainings", "sets"] as const) {
         expectRejected(invalidFile((file) => { file.data[table][0].date = date; }), `${table}[0]`);
       }
     },
@@ -127,7 +163,7 @@ describe("backup parsing", () => {
   it.each(["2026-02-30T08:30:00.000Z", "2026-10-19T24:00:00.000Z", "2026-10-19T08:60:00.000Z", "2026-10-19T08:30:60.000Z", "2026-10-19T08:30:00", "2026-10-19T08:30:00+24:00", "2026-10-19T08:30:00.000+03:00", "2026-10-19T08:30:00.0000Z", "2026-10-19T08:30:00Z", "yesterday", 123])(
     "rejects invalid timestamps: %s", (timestamp) => {
       expectRejected(invalidFile((file) => { file.exportedAt = timestamp; }), "exportedAt");
-      for (const table of ["weightEntries", "exercises", "sets"] as const) {
+      for (const table of ["weightEntries", "exercises", "trainings", "sets"] as const) {
         for (const field of ["createdAt", "updatedAt"]) {
           expectRejected(invalidFile((file) => { file.data[table][0][field] = timestamp; }), `${table}[0]`);
         }
@@ -176,6 +212,32 @@ describe("backup parsing", () => {
     expectRejected(invalidFile((file) => { file.data.sets[0].exerciseId = "missing"; }), "does not refer");
   });
 
+  it("rejects bad training names and notes and keeps empty trainings", () => {
+    for (const name of ["", " ", 42, "x".repeat(61)]) {
+      expectRejected(invalidFile((file) => { file.data.trainings[0].name = name; }), "trainings[0]");
+    }
+    expectRejected(invalidFile((file) => { file.data.trainings[0].note = 42; }), "trainings[0]");
+    const file = validFile();
+    file.data.sets = file.data.sets.slice(1);
+    expect(parseBackup(serializeBackup(file))).toMatchObject({ ok: true, data: file.data, counts: { trainings: 4, sets: 3 } });
+  });
+
+  it("requires every set to belong to a training on the same date", () => {
+    expectRejected(invalidFile((file) => { delete file.data.sets[0].trainingId; }), "sets[0]");
+    for (const trainingId of ["", " ", null, 7]) {
+      expectRejected(invalidFile((file) => { file.data.sets[0].trainingId = trainingId; }), "trainingId must be");
+    }
+    expectRejected(invalidFile((file) => { file.data.sets[0].trainingId = "missing"; }), "trainingId does not refer");
+    expectRejected(invalidFile((file) => { file.data.sets[0].trainingId = "day-18"; }), "date must match");
+  });
+
+  it("accepts several trainings on one date", () => {
+    const file = validFile();
+    file.data.trainings.push({ id: "day-19-evening", date: "2026-10-19", name: "Evening", note: null, ...stamp });
+    file.data.sets.push({ ...file.data.sets[0], id: "evening-set", trainingId: "day-19-evening" });
+    expect(parseBackup(serializeBackup(file))).toMatchObject({ ok: true, data: file.data, counts: { trainings: 5, sets: 5 } });
+  });
+
   it("requires metric locks for exercises with sets but preserves permanent locks without sets", () => {
     expectRejected(invalidFile((file) => { file.data.exercises[0].metricLockedAt = null; }), "metricLockedAt");
     const file = validFile();
@@ -205,10 +267,9 @@ describe("backup parsing", () => {
   });
 
   it("reads schema 1 exercises with the day total view", () => {
-    const text = invalidFile((file) => {
-      file.schemaVersion = 1;
+    const text = legacyText((file) => {
       for (const exercise of file.data.exercises) delete exercise.progressView;
-    });
+    }, 1);
     const result = parseBackup(text);
 
     expect(result.ok).toBe(true);
@@ -217,8 +278,39 @@ describe("backup parsing", () => {
     expectRejected(invalidFile((file) => { delete file.data.exercises[0].progressView; }), "exercises[0]");
   });
 
-  it("reads schema 2 files", () => {
-    expect(parseBackup(invalidFile((file) => { file.schemaVersion = 2; }))).toMatchObject({ ok: true });
+  it.each([1, 2, 3] as const)("reads schema %s sets into one training per date, keeping every field", (schemaVersion) => {
+    const source = legacyFile(schemaVersion);
+    if (schemaVersion === 1) for (const exercise of source.data.exercises) delete exercise.progressView;
+    source.data.sets.push(
+      { ...source.data.sets[0], id: "same-day", exerciseId: "session", reps: null, note: null, createdAt: "2026-10-19T07:00:00.000Z" },
+      { ...source.data.sets[0], id: "same-day-later", updatedAt: "2026-10-19T21:00:00.000Z" },
+    );
+    const result = parseBackup(JSON.stringify(source));
+    if (!result.ok) throw new Error(result.errors.join(" "));
+
+    expect(result.counts).toEqual({ weightEntries: 1, exercises: 4, trainings: 4, sets: 6, settings: 2 });
+    expect(result.data.sets.map(withoutTrainingId)).toEqual(source.data.sets);
+    const trainingByDate = new Map(result.data.trainings.map((training) => [training.date, training]));
+    expect(trainingByDate.size).toBe(4);
+    for (const set of result.data.sets) {
+      expect(trainingByDate.get(set.date)?.id).toBe(set.trainingId);
+    }
+    expect(trainingByDate.get("2026-10-19")).toMatchObject({
+      name: null, note: null, createdAt: "2026-10-19T07:00:00.000Z", updatedAt: "2026-10-19T21:00:00.000Z",
+    });
+    expect(result.data.weightEntries).toEqual(source.data.weightEntries);
+    expect(result.data.settings).toEqual(source.data.settings);
+  });
+
+  it("rejects trainings in files written before trainings existed", () => {
+    expectRejected(legacyText((file) => { file.data.trainings = []; }), "Backup data:");
+    expectRejected(legacyText((file) => { file.data.sets[0].trainingId = "day-19"; }), "sets[0]");
+    expectRejected(legacyText((file) => { file.data.sets[0].reps = 0; }), "sets[0]");
+    expectRejected(legacyText((file) => { file.data.sets[0].exerciseId = "missing"; }), "does not refer");
+    const missingTrainings: Omit<TBackupFile, "data"> & { data: Partial<TBackupData> } = validFile();
+    delete missingTrainings.data.trainings;
+    expectRejected(JSON.stringify(missingTrainings), `Backup data: expected exactly ${["weightEntries", "exercises", "trainings", "sets", "settings"].join(", ")}`);
+    expect(LEGACY_TABLES).toEqual(Object.keys(legacyFile().data));
   });
 
   it("requires unique, known setting keys and valid values", () => {
@@ -262,13 +354,14 @@ describe("backup persistence", () => {
 
   const snapshot = async () => ({ data: (await exportData()).data, meta: await db.meta.toArray() });
 
-  it("round-trips all four tables and excludes meta", async () => {
+  it("round-trips all five tables and excludes meta", async () => {
     await restoreBackup(validFile().data);
     const exported = await exportData();
     const parsed = parseBackup(serializeBackup(exported));
     if (!parsed.ok) throw new Error(parsed.errors.join(" "));
-    expect(Object.keys(exported.data).sort()).toEqual(["exercises", "sets", "settings", "weightEntries"]);
-    expect(parsed.counts).toEqual({ weightEntries: 1, exercises: 4, sets: 4, settings: 2 });
+    expect(exported.schemaVersion).toBe(4);
+    expect(Object.keys(exported.data).sort()).toEqual(["exercises", "sets", "settings", "trainings", "weightEntries"]);
+    expect(parsed.counts).toEqual({ weightEntries: 1, exercises: 4, trainings: 4, sets: 4, settings: 2 });
     expect(Number.isFinite(Date.parse(parsed.exportedAt))).toBe(true);
     await wipeAllData();
     await restoreBackup(parsed.data);
@@ -276,11 +369,25 @@ describe("backup persistence", () => {
     expect(await getDataGeneration()).toBe(3);
   });
 
-  it("opens one readonly transaction over exactly the four export tables", async () => {
+  it("imports an old file, exports it as schema 4 and round-trips it again unchanged", async () => {
+    const legacy = parseBackup(legacyText());
+    if (!legacy.ok) throw new Error(legacy.errors.join(" "));
+    await restoreBackup(legacy.data);
+    const first = await exportData();
+    const reparsed = parseBackup(serializeBackup(first));
+    if (!reparsed.ok) throw new Error(reparsed.errors.join(" "));
+    expect(reparsed.data).toEqual(first.data);
+    await restoreBackup(reparsed.data);
+    expect((await exportData()).data).toEqual(first.data);
+    expect(first.data.sets.map(withoutTrainingId))
+      .toEqual(expect.arrayContaining(legacyFile().data.sets));
+  });
+
+  it("opens one readonly transaction over exactly the five export tables", async () => {
     const transaction = vi.spyOn(db, "transaction");
     await exportData();
     expect(transaction).toHaveBeenCalledExactlyOnceWith(
-      "r", db.weightEntries, db.exercises, db.sets, db.settings, expect.any(Function),
+      "r", [db.weightEntries, db.exercises, db.trainings, db.sets, db.settings], expect.any(Function),
     );
   });
 
@@ -292,9 +399,10 @@ describe("backup persistence", () => {
     let write: Promise<unknown> | undefined;
     const readWeights = db.weightEntries.toArray.bind(db.weightEntries);
     vi.spyOn(db.weightEntries, "toArray").mockImplementationOnce(() => readWeights().then((entries) => {
-      write = other.transaction("rw", [other.weightEntries, other.exercises, other.sets, other.settings], async () => {
+      write = other.transaction("rw", [other.weightEntries, other.exercises, other.trainings, other.sets, other.settings], async () => {
         await other.weightEntries.clear();
         await other.exercises.clear();
+        await other.trainings.clear();
         await other.sets.clear();
         await other.settings.clear();
       });
@@ -303,7 +411,7 @@ describe("backup persistence", () => {
     try {
       expect((await exportData()).data).toEqual(before);
       await write;
-      expect((await exportData()).data).toEqual({ weightEntries: [], exercises: [], sets: [], settings: [] });
+      expect((await exportData()).data).toEqual({ weightEntries: [], exercises: [], trainings: [], sets: [], settings: [] });
     } finally {
       other.close();
     }
@@ -341,7 +449,7 @@ describe("backup persistence", () => {
     expect(await getDataGeneration()).toBe(1);
     const add = vi.spyOn(db.weightEntries, "bulkAdd");
     await wipeAllData();
-    expect((await exportData()).data).toEqual({ weightEntries: [], exercises: [], sets: [], settings: [] });
+    expect((await exportData()).data).toEqual({ weightEntries: [], exercises: [], trainings: [], sets: [], settings: [] });
     expect(await db.meta.toArray()).toEqual([{ key: "dataGeneration", value: 2 }]);
     expect(add).not.toHaveBeenCalled();
   });
@@ -358,6 +466,7 @@ describe("backup persistence", () => {
     await restoreBackup(validFile().data);
     const replacement = validFile().data;
     replacement.weightEntries = [];
+    replacement.trainings = [];
     replacement.sets = [];
     replacement.exercises = [];
     replacement.settings = [{ key: "goalWeightKg", value: null }];

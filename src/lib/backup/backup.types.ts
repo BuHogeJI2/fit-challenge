@@ -1,15 +1,16 @@
-import type { TExercise, TSet, TSettingRecord, TWeightEntry } from "../db";
+import type { TExercise, TSet, TSettingRecord, TTraining, TWeightEntry } from "../db";
 
 export type TBackupData = {
   weightEntries: TWeightEntry[];
   exercises: TExercise[];
+  trainings: TTraining[];
   sets: TSet[];
   settings: TSettingRecord[];
 };
 
 export type TBackupFile = {
   app: "fit";
-  schemaVersion: 3;
+  schemaVersion: 4;
   exportedAt: string;
   data: TBackupData;
 };

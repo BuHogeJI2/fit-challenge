@@ -1,13 +1,15 @@
 import { useId, useState } from "react";
 import type { FormEvent } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
 import { formatDateInContext } from "../../lib/dates";
-import { addSet, isRepositoryError, updateSet, type TExercise, type TSet } from "../../lib/db";
+import { addSet, isRepositoryError, listTrainings, updateSet, type TExercise, type TSet, type TTrainingTarget } from "../../lib/db";
 import { formatLoadValue, parseDecimal } from "../../lib/numbers";
-import { formatSetValues, getEntryNoun, getLatestSet } from "../../lib/stats";
+import { formatSetValues, getEntryNoun, getLatestSet, getTrainingTitle } from "../../lib/stats";
 import { Button, Field, Sheet } from "../ui";
 import { setEntrySheetClasses } from "./set-entry-sheet.styles";
 import type {
   ISetEntryFormProps,
+  ISetEntryBodyProps,
   ISetEntrySheetProps,
   TReadResult,
 } from "./set-entry-sheet.types";
@@ -32,29 +34,33 @@ const parseWholeNumber = (text: string) => {
   return value !== null && value > 0 ? value : null;
 };
 
-function SetEntryForm({ exercise, set, sets, todayKey, onSaved, onDelete }: ISetEntryFormProps) {
+function SetEntryForm({ exercise, set, sets, todayKey, date, onDateChange, trainings, exercises, target, onTargetChange, fixedTraining, values, onSaved, onDelete }: ISetEntryFormProps) {
   const repsId = useId();
   const loadId = useId();
   const timeId = useId();
   const secondsId = useId();
   const lastSet = set ?? getLatestSet(sets.filter((item) => item.exerciseId === exercise.id));
+  const initial = set ?? values ?? lastSet;
   const isSession = exercise.metric === "session";
   const noun = getEntryNoun(exercise.metric);
 
-  const [date, setDate] = useState(set?.date ?? todayKey);
-  const [repsText, setRepsText] = useState(lastSet?.reps?.toString() ?? "");
+  const [repsText, setRepsText] = useState(initial?.reps?.toString() ?? "");
   const [loadText, setLoadText] = useState(
-    lastSet?.weightKg != null ? formatLoadValue(lastSet.weightKg) : "",
+    initial?.weightKg != null ? formatLoadValue(initial.weightKg) : "",
   );
   const [minutesText, setMinutesText] = useState(
-    lastSet?.seconds != null ? String(Math.floor(lastSet.seconds / 60)) : "",
+    initial?.seconds != null ? String(Math.floor(initial.seconds / 60)) : "",
   );
   const [secondsText, setSecondsText] = useState(
-    lastSet?.seconds != null ? String(lastSet.seconds % 60).padStart(2, "0") : "",
+    initial?.seconds != null ? String(initial.seconds % 60).padStart(2, "0") : "",
   );
   const [note, setNote] = useState(set?.note ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const dayTrainings = trainings.filter((training) => training.date === date);
+  const resolvedTarget = target ?? (dayTrainings.length === 1
+    ? { trainingId: dayTrainings[0].id }
+    : dayTrainings.length === 0 ? { newTraining: true as const } : undefined);
 
   const readValues = (): TReadResult => {
     if (isSession) {
@@ -101,12 +107,17 @@ function SetEntryForm({ exercise, set, sets, todayKey, onSaved, onDelete }: ISet
       return;
     }
 
+    if (!resolvedTarget) {
+      setError("Choose a training or start a new one.");
+      return;
+    }
+
     setIsSaving(true);
     setError(null);
     try {
       const saved = set
-        ? await updateSet(set.id, { date, note, ...result.values })
-        : await addSet({ exerciseId: exercise.id, date, note, ...result.values });
+        ? await updateSet(set.id, { date, note, target: resolvedTarget, ...result.values })
+        : await addSet({ exerciseId: exercise.id, date, note, target: resolvedTarget, ...result.values });
       onSaved(saved);
     } catch (saveError) {
       setError(
@@ -244,8 +255,40 @@ function SetEntryForm({ exercise, set, sets, todayKey, onSaved, onDelete }: ISet
         value={date}
         max={todayKey}
         required
-        onChange={(event) => setDate(event.target.value)}
+        disabled={fixedTraining}
+        onChange={(event) => onDateChange(event.target.value)}
       />
+
+      <fieldset className={setEntrySheetClasses.trainingPicker}>
+        <legend className={setEntrySheetClasses.trainingLabel}>{set ? "Move to training" : "Training"}</legend>
+        {dayTrainings.length ? (
+          <div className={setEntrySheetClasses.trainingOptions}>
+            {dayTrainings.map((training) => {
+              const title = getTrainingTitle(training, sets, exercises);
+              const matching = dayTrainings.filter((item) => getTrainingTitle(item, sets, exercises) === title);
+              const ordinal = matching.findIndex((item) => item.id === training.id) + 1;
+              const isSelected = Boolean(resolvedTarget && "trainingId" in resolvedTarget && resolvedTarget.trainingId === training.id);
+              return (
+                <button
+                  key={training.id}
+                  type="button"
+                  disabled={fixedTraining}
+                  aria-pressed={isSelected}
+                  className={isSelected ? setEntrySheetClasses.chipActive : setEntrySheetClasses.chip}
+                  onClick={() => onTargetChange({ trainingId: training.id })}
+                >
+                  {title}{matching.length > 1 ? ` · ${ordinal}` : ""}
+                </button>
+              );
+            })}
+            {!fixedTraining ? (
+              <button type="button" className={resolvedTarget && "newTraining" in resolvedTarget ? setEntrySheetClasses.chipActive : setEntrySheetClasses.chip} aria-pressed={Boolean(resolvedTarget && "newTraining" in resolvedTarget)} onClick={() => onTargetChange({ newTraining: true })}>
+                New training
+              </button>
+            ) : null}
+          </div>
+        ) : <p className={setEntrySheetClasses.hint}>Starts a new training on this date.</p>}
+      </fieldset>
 
       <Field
         label="Note, optional"
@@ -275,45 +318,33 @@ function SetEntryForm({ exercise, set, sets, todayKey, onSaved, onDelete }: ISet
   );
 }
 
-export function SetEntrySheet({
+function SetEntryBody({
   state,
   exercises,
   sets,
   todayKey,
-  onClose,
+  trainings,
+  onExerciseChange,
+  exercise,
+  recentExercises,
   onSaved,
   onDelete,
-}: ISetEntrySheetProps) {
+}: ISetEntryBodyProps) {
   const editedSet: TSet | null = state?.mode === "edit" ? state.set : null;
-  const [pickedId, setPickedId] = useState<string | null>(null);
+  const fixedTrainingId = state?.mode === "new" ? state.trainingId : undefined;
+  const fixedTraining = trainings.find((training) => training.id === fixedTrainingId);
+  const [date, setDate] = useState(editedSet?.date ?? fixedTraining?.date ?? (state?.mode === "new" ? state.date : undefined) ?? todayKey);
+  const [target, setTarget] = useState<TTrainingTarget | undefined>(
+    fixedTrainingId || editedSet ? { trainingId: fixedTrainingId ?? editedSet!.trainingId } : undefined,
+  );
 
   const fixedId = editedSet?.exerciseId ?? (state?.mode === "new" ? state.exerciseId : undefined);
-  const activeExercises = exercises.filter((exercise) => !exercise.archivedAt);
-  const lastActivity = (exercise: TExercise) => {
-    const last = getLatestSet(sets.filter((set) => set.exerciseId === exercise.id));
-    return last ? `${last.date}${last.createdAt}` : exercise.createdAt;
-  };
-  const recentFirst = [...activeExercises].sort((left, right) =>
-    lastActivity(right).localeCompare(lastActivity(left)),
-  );
-  const exercise: TExercise | undefined = fixedId
-    ? exercises.find((item) => item.id === fixedId)
-    : (recentFirst.find((item) => item.id === pickedId) ?? recentFirst[0]);
-
-  const handleClose = () => {
-    setPickedId(null);
-    onClose();
-  };
 
   return (
-    <Sheet
-      open={state !== null}
-      title={`${editedSet ? "Edit" : "Log"} ${exercise ? getEntryNoun(exercise.metric) : "set"}`}
-      onClose={handleClose}
-    >
-      {!fixedId && recentFirst.length > 1 ? (
+    <>
+      {!fixedId && recentExercises.length > 1 ? (
         <div className={setEntrySheetClasses.exercisePicker} role="group" aria-label="Exercise">
-          {recentFirst.map((item) => (
+          {recentExercises.map((item) => (
             <button
               key={item.id}
               type="button"
@@ -323,7 +354,7 @@ export function SetEntrySheet({
                   ? setEntrySheetClasses.chipActive
                   : setEntrySheetClasses.chip
               }
-              onClick={() => setPickedId(item.id)}
+              onClick={() => onExerciseChange(item.id)}
             >
               {item.name}
             </button>
@@ -337,15 +368,43 @@ export function SetEntrySheet({
           set={editedSet}
           sets={sets}
           todayKey={todayKey}
-          onSaved={(saved) => {
-            setPickedId(null);
-            onSaved(saved);
+          date={date}
+          onDateChange={(nextDate) => {
+            setDate(nextDate);
+            setTarget(editedSet?.date === nextDate ? { trainingId: editedSet.trainingId } : undefined);
           }}
+          trainings={trainings}
+          exercises={exercises}
+          target={target}
+          onTargetChange={setTarget}
+          fixedTraining={Boolean(fixedTrainingId)}
+          values={state?.mode === "new" ? state.values : undefined}
+          onSaved={onSaved}
           onDelete={onDelete}
         />
       ) : (
         <p className={setEntrySheetClasses.hint}>Add an exercise first.</p>
       )}
+    </>
+  );
+}
+
+export function SetEntrySheet(props: ISetEntrySheetProps) {
+  const trainings = useLiveQuery(listTrainings, []);
+  const [pickedExerciseId, setPickedExerciseId] = useState<string | null>(null);
+  const fixedExerciseId = props.state?.mode === "edit" ? props.state.set.exerciseId : props.state?.exerciseId;
+  const recentExercises = props.exercises.filter((item) => !item.archivedAt).sort((left, right) => {
+    const latest = (item: TExercise) => {
+      const last = getLatestSet(props.sets.filter((set) => set.exerciseId === item.id));
+      return last ? `${last.date}${last.createdAt}` : item.createdAt;
+    };
+    return latest(right).localeCompare(latest(left));
+  });
+  const exercise = props.exercises.find((item) => item.id === (fixedExerciseId ?? pickedExerciseId)) ?? recentExercises[0];
+  const noun = exercise ? getEntryNoun(exercise.metric) : "set";
+  return (
+    <Sheet open={props.state !== null} title={`${props.state?.mode === "edit" ? "Edit" : "Log"} ${noun}`} onClose={() => { setPickedExerciseId(null); props.onClose(); }}>
+      {props.state && trainings ? <SetEntryBody {...props} trainings={trainings} exercise={exercise} recentExercises={recentExercises} onExerciseChange={setPickedExerciseId} onSaved={(saved) => { setPickedExerciseId(null); props.onSaved(saved); }} /> : null}
     </Sheet>
   );
 }

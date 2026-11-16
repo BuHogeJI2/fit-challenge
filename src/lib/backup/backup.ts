@@ -2,20 +2,23 @@ import { parseDateKey } from "../dates";
 import { bumpDataGeneration, db } from "../db";
 import type { TBackupData, TBackupFile } from "./backup.types";
 
+const dataTables = () => [db.weightEntries, db.exercises, db.trainings, db.sets, db.settings];
+
 export const exportData = (): Promise<TBackupFile> =>
-  db.transaction("r", db.weightEntries, db.exercises, db.sets, db.settings, async () => {
-    const [weightEntries, exercises, sets, settings] = await Promise.all([
+  db.transaction("r", dataTables(), async () => {
+    const [weightEntries, exercises, trainings, sets, settings] = await Promise.all([
       db.weightEntries.toArray(),
       db.exercises.toArray(),
+      db.trainings.toArray(),
       db.sets.toArray(),
       db.settings.toArray(),
     ]);
 
     return {
       app: "fit",
-      schemaVersion: 3,
+      schemaVersion: 4,
       exportedAt: new Date().toISOString(),
-      data: { weightEntries, exercises, sets, settings },
+      data: { weightEntries, exercises, trainings, sets, settings },
     };
   });
 
@@ -27,24 +30,24 @@ export const getBackupFileName = (todayKey: string): string => {
 };
 
 const clearData = async () => {
-  await db.weightEntries.clear();
-  await db.exercises.clear();
-  await db.sets.clear();
-  await db.settings.clear();
+  for (const table of dataTables()) {
+    await table.clear();
+  }
 };
 
 export const restoreBackup = (data: TBackupData): Promise<void> =>
-  db.transaction("rw", [db.weightEntries, db.exercises, db.sets, db.settings, db.meta], async () => {
+  db.transaction("rw", [...dataTables(), db.meta], async () => {
     await clearData();
     await db.weightEntries.bulkAdd(data.weightEntries);
     await db.exercises.bulkAdd(data.exercises);
+    await db.trainings.bulkAdd(data.trainings);
     await db.sets.bulkAdd(data.sets);
     await db.settings.bulkAdd(data.settings);
     await bumpDataGeneration();
   });
 
 export const wipeAllData = (): Promise<void> =>
-  db.transaction("rw", [db.weightEntries, db.exercises, db.sets, db.settings, db.meta], async () => {
+  db.transaction("rw", [...dataTables(), db.meta], async () => {
     await clearData();
     await bumpDataGeneration();
   });

@@ -2,6 +2,7 @@ import { parseDateKey } from "../dates";
 import {
   DEFAULT_PROGRESS_VIEW,
   EXERCISE_NAME_MAX_LENGTH,
+  groupLegacySets,
   normalizeSetValues,
   PROGRESS_VIEWS,
   type TExercise,
@@ -9,25 +10,31 @@ import {
   type TProgressView,
   type TSet,
   type TSettingRecord,
+  type TTraining,
   type TWeightEntry,
+  TRAINING_NAME_MAX_LENGTH,
 } from "../db";
 import { roundToHundredth, roundToTenth } from "../numbers";
 import type { TBackupData, TParseBackupResult } from "./backup.types";
 
 const MAX_ERRORS = 20;
-const SCHEMA_VERSIONS = [1, 2, 3];
-const TABLES = ["weightEntries", "exercises", "sets", "settings"] as const;
+const SCHEMA_VERSIONS = [1, 2, 3, 4];
+const LEGACY_TABLES = ["weightEntries", "exercises", "sets", "settings"];
+const TABLES = ["weightEntries", "exercises", "trainings", "sets", "settings"];
 const WEIGHT_FIELDS = ["id", "date", "weightKg", "note", "createdAt", "updatedAt"];
 const EXERCISE_FIELDS = [
   "id", "name", "metric", "metricLockedAt", "progressWeightKg", "progressView", "archivedAt", "createdAt",
   "updatedAt",
 ];
-const SET_FIELDS = [
+const LEGACY_SET_FIELDS = [
   "id", "exerciseId", "date", "reps", "weightKg", "seconds", "note", "createdAt", "updatedAt",
 ];
+const SET_FIELDS = [...LEGACY_SET_FIELDS, "trainingId"];
+const TRAINING_FIELDS = ["id", "date", "name", "note", "createdAt", "updatedAt"];
 
 type TRecord = Record<string, unknown>;
 type TReport = (message: string) => void;
+type TParsedSet = Omit<TSet, "trainingId"> & { trainingId?: string };
 
 const isRecord = (value: unknown): value is TRecord =>
   value !== null && typeof value === "object" && !Array.isArray(value);
@@ -143,14 +150,47 @@ const readExercise = (value: unknown, report: TReport): TExercise | null => {
   return { id, name, metric, metricLockedAt, progressWeightKg, progressView, archivedAt, createdAt, updatedAt };
 };
 
-const readSet = (value: unknown, report: TReport): TSet | null => {
-  if (!isRecord(value) || !hasFields(value, SET_FIELDS)) {
+const readTraining = (value: unknown, report: TReport): TTraining | null => {
+  if (!isRecord(value) || !hasFields(value, TRAINING_FIELDS)) {
+    report("expected exactly id, date, name, note, createdAt and updatedAt.");
+    return null;
+  }
+  const { id, date, name, note, createdAt, updatedAt } = value;
+  if (!isId(id)) {
+    report("id must be a non-empty string.");
+    return null;
+  }
+  if (!isDate(date)) {
+    report("date must be a real YYYY-MM-DD date.");
+    return null;
+  }
+  if (name !== null && (typeof name !== "string" || !name.trim() || name.length > TRAINING_NAME_MAX_LENGTH)) {
+    report(`name must be null or contain 1 to ${TRAINING_NAME_MAX_LENGTH} characters.`);
+    return null;
+  }
+  if (!isNote(note)) {
+    report("note must be a string or null.");
+    return null;
+  }
+  if (!isTimestamp(createdAt) || !isTimestamp(updatedAt)) {
+    report("createdAt and updatedAt must be UTC timestamps in YYYY-MM-DDTHH:mm:ss.sssZ form.");
+    return null;
+  }
+  return { id, date, name, note, createdAt, updatedAt };
+};
+
+const readSetWith = (fields: readonly string[]) => (value: unknown, report: TReport): TParsedSet | null => {
+  if (!isRecord(value) || !hasFields(value, fields)) {
     report("expected exactly the set fields, including nullable fields.");
     return null;
   }
-  const { id, exerciseId, date, reps, weightKg, seconds, note, createdAt, updatedAt } = value;
+  const { id, exerciseId, trainingId, date, reps, weightKg, seconds, note, createdAt, updatedAt } = value;
   if (!isId(id) || !isId(exerciseId)) {
     report("id and exerciseId must be non-empty strings.");
+    return null;
+  }
+  if (Object.hasOwn(value, "trainingId") && !isId(trainingId)) {
+    report("trainingId must be a non-empty string.");
     return null;
   }
   if (!isDate(date)) {
@@ -173,7 +213,8 @@ const readSet = (value: unknown, report: TReport): TSet | null => {
     report("createdAt and updatedAt must be UTC timestamps in YYYY-MM-DDTHH:mm:ss.sssZ form.");
     return null;
   }
-  return { id, exerciseId, date, reps, weightKg, seconds, note, createdAt, updatedAt };
+  const set = { id, exerciseId, date, reps, weightKg, seconds, note, createdAt, updatedAt };
+  return isId(trainingId) ? { ...set, trainingId } : set;
 };
 
 const readSetting = (value: unknown, report: TReport): TSettingRecord | null => {
@@ -222,10 +263,21 @@ const checkUnique = (
   });
 };
 
-const checkRelationships = (data: TBackupData, report: TReport) => {
-  const exercises = new Map(data.exercises.map((exercise) => [exercise.id, exercise]));
-  data.sets.forEach((set, index) => {
+const checkRelationships = (
+  exerciseList: TExercise[], trainingList: TTraining[] | null, sets: TParsedSet[], report: TReport,
+) => {
+  const exercises = new Map(exerciseList.map((exercise) => [exercise.id, exercise]));
+  const trainings = trainingList && new Map(trainingList.map((training) => [training.id, training]));
+  sets.forEach((set, index) => {
     const label = recordLabel("sets", index, set);
+    if (trainings) {
+      const training = set.trainingId === undefined ? undefined : trainings.get(set.trainingId);
+      if (!training) {
+        report(`${label}: trainingId does not refer to a training.`);
+      } else if (training.date !== set.date) {
+        report(`${label}: date must match the date of its training.`);
+      }
+    }
     const exercise = exercises.get(set.exerciseId);
     if (!exercise) {
       report(`${label}: exerciseId does not refer to an exercise.`);
@@ -261,40 +313,58 @@ export const parseBackup = (text: string): TParseBackupResult => {
     return { ok: false, errors: ["Backup: expected exactly app, schemaVersion, exportedAt and data."] };
   }
   if (input.app !== "fit") report('Backup: app must be "fit".');
-  if (!SCHEMA_VERSIONS.includes(input.schemaVersion as number)) report("Backup: schemaVersion must be 1, 2 or 3.");
+  if (!SCHEMA_VERSIONS.includes(input.schemaVersion as number)) report("Backup: schemaVersion must be 1, 2, 3 or 4.");
   if (!isTimestamp(input.exportedAt)) report("Backup: exportedAt must be a UTC timestamp in YYYY-MM-DDTHH:mm:ss.sssZ form.");
-  if (!isRecord(input.data) || !hasFields(input.data, TABLES)) {
-    report("Backup data: expected exactly weightEntries, exercises, sets and settings.");
+  // Schemas 1 to 3 predate trainings: their sets get one training per date below.
+  const isLegacy = input.schemaVersion === 1 || input.schemaVersion === 2 || input.schemaVersion === 3;
+  const tables = isLegacy ? LEGACY_TABLES : TABLES;
+  if (!isRecord(input.data) || !hasFields(input.data, tables)) {
+    report(`Backup data: expected exactly ${tables.join(", ")}.`);
     return { ok: false, errors };
   }
   const { weightEntries, exercises, sets, settings } = input.data;
-  if (!Array.isArray(weightEntries) || !Array.isArray(exercises) || !Array.isArray(sets) || !Array.isArray(settings)) {
-    report("Backup data: weightEntries, exercises, sets and settings must all be arrays.");
+  const trainings = isLegacy ? [] : input.data.trainings;
+  if (
+    !Array.isArray(weightEntries) || !Array.isArray(exercises) || !Array.isArray(trainings) ||
+    !Array.isArray(sets) || !Array.isArray(settings)
+  ) {
+    report(`Backup data: ${tables.join(", ")} must all be arrays.`);
     return { ok: false, errors };
   }
 
-  const data: TBackupData = {
-    weightEntries: readTable(weightEntries, "weightEntries", readWeight, report),
-    exercises: readTable(
-      input.schemaVersion === 1 ? exercises.map(upgradeExerciseFromV1) : exercises,
-      "exercises", readExercise, report,
-    ),
-    sets: readTable(sets, "sets", readSet, report),
-    settings: readTable(settings, "settings", readSetting, report),
-  };
+  const parsedWeights = readTable(weightEntries, "weightEntries", readWeight, report);
+  const parsedExercises = readTable(
+    input.schemaVersion === 1 ? exercises.map(upgradeExerciseFromV1) : exercises,
+    "exercises", readExercise, report,
+  );
+  const parsedTrainings = readTable(trainings, "trainings", readTraining, report);
+  const parsedSets = readTable(sets, "sets", readSetWith(isLegacy ? LEGACY_SET_FIELDS : SET_FIELDS), report);
+  const parsedSettings = readTable(settings, "settings", readSetting, report);
   checkUnique(weightEntries, "weightEntries", "id", report);
   checkUnique(exercises, "exercises", "id", report);
+  checkUnique(trainings, "trainings", "id", report);
   checkUnique(sets, "sets", "id", report);
   checkUnique(weightEntries, "weightEntries", "date", report);
   checkUnique(settings, "settings", "key", report);
-  if (errors.length === 0) checkRelationships(data, report);
+  if (errors.length === 0) checkRelationships(parsedExercises, isLegacy ? null : parsedTrainings, parsedSets, report);
   if (errors.length > 0 || !isTimestamp(input.exportedAt)) return { ok: false, errors };
 
+  const linked = isLegacy
+    ? groupLegacySets(parsedSets, () => crypto.randomUUID())
+    : { trainings: parsedTrainings, sets: parsedSets as TSet[] };
+  const result: TBackupData = {
+    weightEntries: parsedWeights,
+    exercises: parsedExercises,
+    trainings: linked.trainings,
+    sets: linked.sets,
+    settings: parsedSettings,
+  };
+
   return {
-    ok: true, data, exportedAt: input.exportedAt,
+    ok: true, data: result, exportedAt: input.exportedAt,
     counts: {
-      weightEntries: data.weightEntries.length, exercises: data.exercises.length,
-      sets: data.sets.length, settings: data.settings.length,
+      weightEntries: result.weightEntries.length, exercises: result.exercises.length,
+      trainings: result.trainings.length, sets: result.sets.length, settings: result.settings.length,
     },
   };
 };

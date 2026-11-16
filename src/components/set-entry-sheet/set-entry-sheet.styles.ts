@@ -35,6 +35,9 @@ const hint = clsx("m-0 text-sm text-ink-soft");
 const error = clsx("m-0 text-sm font-medium");
 
 const actions = clsx("flex flex-col gap-2");
+const trainingPicker = clsx("m-0 min-w-0 border-0 p-0");
+const trainingLabel = clsx("mb-2 text-sm text-muted");
+const trainingOptions = clsx("flex flex-wrap gap-2");
 
 export const setEntrySheetClasses = {
   form,
@@ -50,4 +53,7 @@ export const setEntrySheetClasses = {
   hint,
   error,
   actions,
+  trainingPicker,
+  trainingLabel,
+  trainingOptions,
 };

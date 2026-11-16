@@ -1,8 +1,8 @@
 import { Component, Fragment, useEffect, useRef, useState } from "react";
 import type { ErrorInfo } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, getDataGeneration } from "../../lib/db";
-import { useToast } from "../ui";
+import { db, getDataGeneration, getDatabaseNotice, subscribeDatabaseNotice } from "../../lib/db";
+import { Button, useToast } from "../ui";
 import { databaseGateClasses } from "./database-gate.styles";
 import type {
   IDatabaseGateProps,
@@ -68,21 +68,30 @@ function GenerationScope({ children }: IDatabaseGateProps) {
 }
 
 export function DatabaseGate({ children }: IDatabaseGateProps) {
-  const [status, setStatus] = useState<TDatabaseStatus>({ state: "opening" });
+  const [status, setStatus] = useState<TDatabaseStatus>(() => {
+    const notice = getDatabaseNotice();
+    return notice ? { state: notice } : { state: "opening" };
+  });
 
   useEffect(() => {
     let isActive = true;
+    const unsubscribe = subscribeDatabaseNotice((notice) => {
+      if (isActive) setStatus({ state: notice });
+    });
 
     db.open()
       .then(() => {
-        if (isActive) setStatus({ state: "ready" });
+        if (isActive && getDatabaseNotice() !== "updated_elsewhere") setStatus({ state: "ready" });
       })
       .catch((error: unknown) => {
-        if (isActive) setStatus({ state: "failed", message: toMessage(error) });
+        if (isActive) setStatus(error instanceof Error && error.name === "VersionError"
+          ? { state: "updated_elsewhere" }
+          : { state: "failed", message: toMessage(error) });
       });
 
     return () => {
       isActive = false;
+      unsubscribe();
     };
   }, []);
 
@@ -92,6 +101,18 @@ export function DatabaseGate({ children }: IDatabaseGateProps) {
 
   if (status.state === "failed") {
     return <StorageError message={status.message} />;
+  }
+
+  if (status.state === "updated_elsewhere" || status.state === "upgrade_blocked") {
+    return (
+      <section className={databaseGateClasses.screen} role="status">
+        <h1 className={databaseGateClasses.title}>{status.state === "updated_elsewhere" ? "Fit was updated" : "Waiting for other windows"}</h1>
+        <p className={databaseGateClasses.body}>{status.state === "updated_elsewhere"
+          ? "Fit was updated in another window. Reload to continue. Your saved data is kept."
+          : "Close other Fit windows to finish the update. Your saved data is kept."}</p>
+        <Button onClick={() => window.location.reload()}>Reload</Button>
+      </section>
+    );
   }
 
   return (

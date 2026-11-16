@@ -35,6 +35,7 @@ const set = (
 ): TSet => ({
   id: `${date}-${time}-${JSON.stringify(values)}`,
   exerciseId: "exercise",
+  trainingId: `training-${date}`,
   date,
   reps: values.reps ?? null,
   weightKg: values.weightKg ?? null,

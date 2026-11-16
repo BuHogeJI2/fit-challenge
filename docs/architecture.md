@@ -31,14 +31,17 @@ success. Derived summaries and chart data stay outside the database.
 ## Database and writes
 
 [db.ts](../src/lib/db/db.ts) defines the `fit` Dexie database, schema version
-2. Version 2 gives existing exercises the `total` progress view. IndexedDB
-stores these tables:
+3. Version 2 gives existing exercises the `total` progress view. Version 3 adds
+trainings and links existing sets to one training per recorded date. It preserves
+original set fields, ids and timestamps, including records for missing or
+archived exercises. IndexedDB stores these tables:
 
 | Table | Primary key | Other indexes / purpose |
 | --- | --- | --- |
 | `weightEntries` | `id` | Unique `date` |
 | `exercises` | `id` | Exercise name, metric, permanent lock, selected load, progress view, archive date |
-| `sets` | `id` | `exerciseId`, `date`, `[exerciseId+date]` |
+| `sets` | `id` | `exerciseId`, `trainingId`, `date`, `[exerciseId+date]` |
+| `trainings` | `id` | `date`; optional name and note |
 | `settings` | `key` | `goalWeightKg` and `lastExportAt`; missing records use null defaults |
 | `meta` | `key` | Internal `dataGeneration`, defaulting to zero |
 
@@ -59,6 +62,15 @@ a minute and when the page becomes visible.
 - The first set and `metricLockedAt` are written together. The lock remains
   after every set is deleted. Archived exercises keep their history, but
   adding or editing their sets is refused.
+- Every set belongs to a training on the same local date. A first entry can
+  create its training in the same transaction. Several trainings on a date
+  require an explicit target. Moving a training moves its entries atomically,
+  and is refused if a child exercise is archived. An empty training without
+  a name or note is removed when its last entry leaves.
+- Training-delete undo restores the whole group only if its ids are vacant,
+  its exercises still fit, and the generation is unchanged. Entry undo restores
+  a parent removed by that same delete, but never one deleted later. Undo can
+  restore archived exercise history.
 - Delete undo restores the original record only if its id is vacant. Weight
   undo also needs a vacant date; set undo needs an existing exercise with a
   matching metric. Archive undo checks the archive timestamp, and repeat-set
@@ -92,21 +104,29 @@ for sparse data and the Month/Weeks/All goal-line behavior.
 
 ## Backup and storage
 
-[Backup](../src/lib/backup) exports the four data tables in one readonly
-transaction, excluding `meta`. Files use `app: "fit"`, `schemaVersion: 3`
-and the name `fit-YYYY-MM-DD.json`. Schema 3 adds the `session` metric.
-Schema 1 and 2 files still import; schema 1 exercises get the `total`
-progress view. Parsing has no writes: it validates exact
+[Backup](../src/lib/backup) exports the five data tables in one readonly
+transaction, excluding `meta`. Files use `app: "fit"`, `schemaVersion: 4`
+and the name `fit-YYYY-MM-DD.json`. Schema 3 added the `session` metric;
+schema 4 adds trainings. Schema 1, 2 and 3 files still import; schema 1
+exercises get the `total` progress view. Older files receive one training per
+recorded date after validation, using the same conversion as the database
+upgrade, so preview counts match the restore. Schema 4 validates training
+references and matching dates. Parsing has no writes: it validates exact
 fields, values, ids, dates, references, metric locks and settings, and returns
 at most 20 errors. Timestamps must match `toISOString()` form so string-based
 ordering remains valid. Invalid values are rejected, never rounded on import.
 
 Settings validates a selected file before showing its name, date and counts.
 Only the latest file read may publish a preview or error. Confirmation fully
-replaces the data in one transaction over the four tables plus `meta`;
+replaces the data in one transaction over the five tables plus `meta`;
 failure rolls everything back. Wipe clears those tables and increments the
 generation. The storage helper reports persistent-storage support and asks
 for it when requested; JSON backups remain separate from that browser choice.
+
+Never lower the Dexie schema version; a rollback release keeps the current
+schema. Another window upgrading the database closes this connection and shows
+a Reload notice. A blocked upgrade asks the user to close other Fit windows.
+Neither path resets or deletes the database.
 
 ## PWA updates
 

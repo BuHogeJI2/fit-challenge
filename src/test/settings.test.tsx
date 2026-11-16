@@ -108,7 +108,7 @@ describe("Settings", () => {
 
     const preview = await screen.findByRole("region", { name: "Restore preview" });
     expect(preview).toHaveTextContent("fit-2026-10-18.json");
-    expect(preview).toHaveTextContent("2 weigh-ins, 1 exercise, 1 set, 0 settings.");
+    expect(preview).toHaveTextContent("2 weigh-ins, 1 exercise, 1 training, 1 set, 0 settings.");
     expect(await listWeightEntries()).toHaveLength(1);
 
     await user.click(within(preview).getByRole("button", { name: "Replace my data" }));
