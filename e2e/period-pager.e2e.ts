@@ -14,7 +14,7 @@ const seedWeights = (page: Page) =>
             date.setDate(date.getDate() - daysAgo);
             const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
             const stamp = date.toISOString();
-            store.put({ id: `w${daysAgo}`, date: key, weightKg: 80 + daysAgo / 100, note: null, createdAt: stamp, updatedAt: stamp });
+            store.put({ id: `w${daysAgo}`, date: key, weightKg: 80 + Math.round(daysAgo / 3) / 10, note: null, createdAt: stamp, updatedAt: stamp });
           }
           transaction.oncomplete = () => resolve();
           transaction.onerror = () => reject(transaction.error);
@@ -48,6 +48,8 @@ test("a touch swipe that starts on the chart changes the month", async ({ page }
   for (let step = 1; step <= 12; step += 1) {
     await touch("touchMove", startX + step * 15);
   }
+  const track = page.locator("[data-period-pager] > div");
+  await expect(track).toHaveAttribute("style", /translate3d\(1\d\dpx/);
   await touch("touchEnd", startX + 180);
 
   await expect(heading).not.toHaveText(before ?? "");
