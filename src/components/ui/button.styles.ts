@@ -15,9 +15,9 @@ const sizeClasses: Record<TButtonSize, string> = {
 const variantClasses: Record<TButtonVariant, string> = {
   filled: "bg-ink text-ground hover:bg-black",
   outline: "border border-ink bg-transparent text-ink hover:bg-ground-sunken",
-  text: "min-h-11 bg-transparent px-0 text-ink underline underline-offset-4 hover:text-black",
+  soft: "bg-ground-sunken text-ink hover:bg-rule",
   quiet: "min-h-11 bg-transparent px-0 text-muted hover:text-ink",
 };
 
 export const getButtonClassName = (variant: TButtonVariant, size: TButtonSize) =>
-  clsx(base, variant === "text" || variant === "quiet" ? null : sizeClasses[size], variantClasses[variant]);
+  clsx(base, variant === "quiet" ? null : sizeClasses[size], variantClasses[variant]);

@@ -22,6 +22,7 @@
 @theme {
   --color-ground: #f3f2ee;
   --color-ground-sunken: #ebe9e3;
+  --color-ground-raised: #fbfaf7;
   --color-ink: #222222;
   --color-ink-soft: #44433f;
   --color-muted: #66655f;

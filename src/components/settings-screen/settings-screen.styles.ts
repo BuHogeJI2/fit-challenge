@@ -4,7 +4,7 @@ const screen = clsx("motion-screen flex flex-col pt-6");
 
 const title = clsx("m-0 text-[2.75rem] leading-tight font-normal tracking-tight");
 
-const section = clsx("mt-8 flex flex-col items-start gap-3 border-t border-ink pt-5");
+const section = clsx("mt-10 flex flex-col items-start gap-3");
 
 const heading = clsx("m-0 text-lg font-medium");
 

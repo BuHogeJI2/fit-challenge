@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { BarChart, BarSparkline } from "../components/charts";
+import { BarChart, TrainingDaysChart } from "../components/charts";
 
 afterEach(cleanup);
 
@@ -63,20 +63,34 @@ describe("BarChart", () => {
   });
 });
 
-describe("BarSparkline", () => {
-  it("renders nothing for no data", () => {
-    const { container } = render(<BarSparkline bars={[]} startKey="2026-10-15" endKey="2026-10-19" stepDays={1} />);
-    expect(container.querySelector("svg")).toBeNull();
+describe("TrainingDaysChart", () => {
+  const days = [
+    { date: "2026-10-12", count: 1 },
+    { date: "2026-10-13", count: 0 },
+    { date: "2026-10-14", count: 2 },
+    { date: "2026-10-15", count: 0 },
+    { date: "2026-10-16", count: 0 },
+    { date: "2026-10-17", count: 0 },
+    { date: "2026-10-18", count: 0 },
+  ];
+
+  it("prints whole counts over bars and names every day", () => {
+    render(<TrainingDaysChart days={days} todayKey="2026-10-15" />);
+
+    expect(screen.getByRole("img")).toHaveAccessibleName("Trainings per day: Mon 1, Tue 0, Wed 2, Thu 0, Fri 0, Sat 0, Sun 0");
+    const monday = screen.getByTestId("training-day-2026-10-12");
+    const wednesday = screen.getByTestId("training-day-2026-10-14");
+    expect(monday.querySelector("text")).toHaveTextContent("1");
+    expect(Number(wednesday.querySelector("rect")?.getAttribute("height"))).toBe(2 * Number(monday.querySelector("rect")?.getAttribute("height")));
   });
 
-  it("draws passive bars on real day slots", () => {
-    const { container } = render(<BarSparkline bars={bars} startKey="2026-10-15" endKey="2026-10-19" stepDays={1} />);
-    const svg = container.querySelector("svg")!;
-    const rects = barRects(container);
+  it("marks past empty days and leaves later days blank", () => {
+    render(<TrainingDaysChart days={days} todayKey="2026-10-15" />);
 
-    expect(svg.getAttribute("aria-hidden")).toBe("true");
-    expect(rects).toHaveLength(2);
-    expect(rects[1].x - rects[0].x).toBeCloseTo((340 / 5) * 4);
-    expect(rects[1].height).toBeGreaterThan(rects[0].height);
+    const today = screen.getByTestId("training-day-2026-10-15");
+    const later = screen.getByTestId("training-day-2026-10-16");
+    expect(today.querySelector("rect")).toBeNull();
+    expect(today.querySelector("path")).not.toBeNull();
+    expect(later.querySelector("path")).toBeNull();
   });
 });

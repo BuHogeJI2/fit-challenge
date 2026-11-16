@@ -12,7 +12,7 @@ const toast = clsx(
 const message = clsx("py-2 text-sm");
 
 const action = clsx(
-  "min-h-11 cursor-pointer rounded-sm text-sm font-semibold underline underline-offset-4",
+  "min-h-11 shrink-0 cursor-pointer rounded-full bg-ground/15 px-4 text-sm font-semibold hover:bg-ground/25",
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ground",
 );
 

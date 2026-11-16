@@ -307,7 +307,7 @@ export function SettingsScreen() {
             </div>
           </div>
         ) : (
-          <Button variant="text" onClick={() => setIsConfirmingWipe(true)}>
+          <Button variant="soft" size="sm" onClick={() => setIsConfirmingWipe(true)}>
             Delete all data
           </Button>
         )}

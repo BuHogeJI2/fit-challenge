@@ -99,7 +99,7 @@ describe("weekly training journal", () => {
     expect(moved?.note).toBe("After sparring");
   });
 
-  it("searches the library and browses historical weeks", async () => {
+  it("lists the library A–Z and browses historical weeks", async () => {
     await seed();
     await createExercise({ name: "Plank", metric: "time" });
     await createTraining({ date: "2026-10-12", name: "Last week" });
@@ -111,13 +111,15 @@ describe("weekly training journal", () => {
     await user.click(screen.getByRole("button", { name: "This week" }));
     await user.click(screen.getByRole("button", { name: "Library" }));
     const list = screen.getByRole("list", { name: "Exercises" });
-    expect(within(list).getAllByRole("link").map((link) => link.textContent?.split("no ")[0])).toHaveLength(3);
-    await user.type(screen.getByLabelText("Search exercises"), "push");
-    expect(within(list).getAllByRole("link")).toHaveLength(1);
-    expect(within(list).getByRole("link")).toHaveTextContent("Push-ups");
-    await user.clear(screen.getByLabelText("Search exercises"));
-    await user.type(screen.getByLabelText("Search exercises"), "missing");
-    expect(screen.getByText("No matching exercises.")).toBeInTheDocument();
+    expect(within(list).getAllByRole("link").map((link) => link.textContent)).toEqual([
+      "BoxingToday · 1 session in 4 weeks›",
+      "PlankNo sets yet›",
+      "Push-upsToday · 1 set · 20 reps›",
+    ]);
+    expect(screen.queryByLabelText("Search exercises")).toBeNull();
+    expect(screen.getByRole("button", { name: "New exercise" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Week" }));
+    expect(screen.queryByRole("button", { name: "New exercise" })).toBeNull();
   });
 
   it("returns to the week after deleting the last unnamed entry, and Undo reopens it", async () => {
@@ -128,7 +130,7 @@ describe("weekly training journal", () => {
     await user.click(await screen.findByRole("button", { name: "Edit Push-ups: 12 reps" }));
     await user.click(within(screen.getByRole("dialog", { name: "Edit set" })).getByRole("button", { name: "Delete set" }));
     await screen.findByText("Entry deleted.");
-    expect(await screen.findByRole("heading", { name: "Training" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Oct 19 – 25" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Training not found" })).toBeNull();
     expect(await db.trainings.count()).toBe(0);
     await user.click(screen.getByRole("button", { name: "Undo" }));

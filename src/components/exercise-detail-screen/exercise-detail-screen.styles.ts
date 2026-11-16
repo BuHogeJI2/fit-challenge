@@ -39,9 +39,9 @@ const readout = clsx("m-0 min-h-5 text-sm font-medium");
 
 const empty = clsx("my-10 text-center text-sm text-muted");
 
-const days = clsx("m-0 mt-4 flex list-none flex-col border-t border-ink p-0");
+const days = clsx("m-0 mt-4 flex list-none flex-col p-0");
 
-const day = clsx("flex flex-col gap-2.5 border-b border-rule py-4");
+const day = clsx("flex flex-col gap-2.5 border-t border-rule py-4 first:border-t-0");
 
 const dayHead = clsx("flex items-baseline justify-between gap-4");
 

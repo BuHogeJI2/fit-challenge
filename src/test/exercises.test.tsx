@@ -36,7 +36,9 @@ describe("Exercises mode", () => {
     const user = userEvent.setup();
     renderAt("#/exercises");
 
-    expect(await screen.findByText("Add the exercises you train, then log your sets.")).toBeInTheDocument();
+    expect(await screen.findByText("Add your exercises in the Library, then log your sets.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Library" }));
+    expect(screen.getByText("Add the exercises you train, then log your sets.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "New exercise" }));
     const sheet = screen.getByRole("dialog", { name: "New exercise" });
     await user.type(within(sheet).getByLabelText("Name"), "Push-ups");
@@ -300,7 +302,7 @@ describe("Exercises mode", () => {
     await user.click(screen.getByRole("link", { name: "Training" }));
     await user.click(await screen.findByRole("button", { name: "Library" }));
     const list = await screen.findByRole("list", { name: "Exercises" });
-    expect(within(list).getByRole("link")).toHaveTextContent("Best set 10 reps, same as Oct 15.");
+    expect(within(list).getByRole("link")).toHaveTextContent("Today · 3 sets · 30 reps");
   });
 
   it("runs day total bars to today and groups a long history by week", async () => {
@@ -331,17 +333,16 @@ describe("Exercises mode", () => {
     const user = userEvent.setup();
     renderAt("#/exercises");
 
-    expect(await screen.findByText("1 active day this week")).toBeInTheDocument();
+    expect(await screen.findByText(/1 active day/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Library" }));
-    await user.click(screen.getByRole("button", { name: "Recent" }));
     const list = await screen.findByRole("list", { name: "Exercises" });
     const rows = within(list).getAllByRole("link");
     expect(rows.map((row) => row.textContent)).toEqual([
-      expect.stringContaining("Push-ups"),
       expect.stringContaining("Plank"),
+      expect.stringContaining("Push-ups"),
     ]);
-    expect(rows[0]).toHaveTextContent("today");
-    expect(rows[0]).toHaveTextContent(/29 reps/);
+    expect(rows[0]).toHaveTextContent(/Last Oct 13 · 1 set/);
+    expect(rows[1]).toHaveTextContent("Today · 1 set · 29 reps");
 
     await user.click(screen.getByRole("button", { name: "Log set" }));
     const sheet = screen.getByRole("dialog", { name: "Log set" });
@@ -355,9 +356,25 @@ describe("Exercises mode", () => {
     expect((await listSetsForExercise(plank.id)).map((set) => set.seconds ?? 0).sort((a, b) => a - b)).toEqual([90, 120]);
   });
 
+  it("keeps weighted library rows short", async () => {
+    const squat = await createExercise({ name: "Squat", metric: "reps_weight" });
+    const press = await createExercise({ name: "Press", metric: "reps_weight" });
+    for (const weightKg of [60, 60, 60]) {
+      await addSet({ exerciseId: squat.id, date: "2026-10-16", reps: 8, weightKg, seconds: null });
+    }
+    for (const weightKg of [20, 22.5, 25]) {
+      await addSet({ exerciseId: press.id, date: "2026-10-19", reps: 6, weightKg, seconds: null });
+    }
+    renderAt("#/exercises?view=library");
+
+    const rows = within(await screen.findByRole("list", { name: "Exercises" })).getAllByRole("link");
+    expect(rows[0]).toHaveTextContent("Today · 3 sets · mixed weights");
+    expect(rows[1]).toHaveTextContent("Last Oct 16 · 3 sets at 60 kg");
+  });
+
   it("tracks sessions by how often, without values", async () => {
     const user = userEvent.setup();
-    renderAt("#/exercises");
+    renderAt("#/exercises?view=library");
 
     await user.click(await screen.findByRole("button", { name: "New exercise" }));
     const form = screen.getByRole("dialog", { name: "New exercise" });
@@ -383,10 +400,9 @@ describe("Exercises mode", () => {
     expect(within(days).getAllByText("1 session")).toHaveLength(2);
     expect(within(days).getAllByRole("button", { name: "Edit session" })).toHaveLength(2);
 
-    await user.click(screen.getByRole("link", { name: "Training" }));
-    await user.click(await screen.findByRole("button", { name: "Library" }));
+    await user.click(screen.getByRole("link", { name: "Library" }));
     const list = await screen.findByRole("list", { name: "Exercises" });
-    expect(within(list).getByRole("link")).toHaveTextContent("2 sessions in the last 4 weeks.");
+    expect(within(list).getByRole("link")).toHaveTextContent("Today · 2 sessions in 4 weeks");
     await user.click(screen.getByRole("button", { name: "Log set" }));
     await user.click(within(screen.getByRole("dialog", { name: "Log session" })).getByRole("button", { name: "Log session" }));
     expect(await screen.findByText("Session logged.")).toBeInTheDocument();

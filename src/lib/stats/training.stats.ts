@@ -1,3 +1,4 @@
+import { addDays } from "../dates";
 import type { TExercise, TSet, TTraining } from "../db";
 import { formatDuration, formatLoadValue, formatReps } from "../numbers";
 
@@ -54,4 +55,26 @@ export const getTrainingTitle = (
     .filter((exercise) => exercise.metric === "session" && sessionIds.has(exercise.id))
     .map((exercise) => exercise.name);
   return names.length ? names.join(" + ") : "Training";
+};
+
+export type TTrainingDayCount = {
+  date: string;
+  count: number;
+};
+
+/**
+ * Counts the trainings on each of the seven days from `weekStart`. A training
+ * left without entries is kept in history but not counted.
+ */
+export const getTrainingDayCounts = (
+  trainings: readonly TTraining[],
+  sets: readonly TSet[],
+  weekStart: string,
+): TTrainingDayCount[] => {
+  const withEntries = new Set(sets.map((set) => set.trainingId));
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = addDays(weekStart, index);
+    const count = trainings.filter((training) => training.date === date && withEntries.has(training.id)).length;
+    return { date, count };
+  });
 };

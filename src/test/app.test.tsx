@@ -39,7 +39,7 @@ describe("App shell", () => {
     await user.click(screen.getByRole("link", { name: "Exercises" }));
 
     expect(window.location.hash).toBe("#/exercises");
-    expect(await screen.findByRole("heading", { name: "Training" })).toBeInTheDocument();
+    expect(await screen.findByRole("group", { name: "Training view" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Exercises" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -94,7 +94,7 @@ describe("Section swipe boundaries", () => {
     swipe([600, 300], [480, 310]);
     expect(window.location.hash).toBe("#/weight");
     await userEvent.setup().click(screen.getByRole("link", { name: "Exercises" }));
-    await screen.findByRole("heading", { name: "Training" });
+    await screen.findByRole("group", { name: "Training view" });
     swipe([400, 300], [520, 290]);
     expect(window.location.hash).toBe("#/exercises");
     await userEvent.setup().click(screen.getByRole("link", { name: "Weight" }));

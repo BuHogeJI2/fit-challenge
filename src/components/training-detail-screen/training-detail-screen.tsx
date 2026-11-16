@@ -28,7 +28,7 @@ export function TrainingDetailScreen({ trainingId }: ITrainingDetailScreenProps)
   if (training === undefined || !sets || !exercises) return null;
   if (training === null) return (
     <section className={classes.screen}>
-      <Link className={classes.back} href="/exercises">Back to training</Link>
+      <Link className={classes.back} href="/exercises" aria-label="Back to training"><span className={classes.backIcon} aria-hidden="true">‹</span>Training</Link>
       <h1 className={classes.title}>Training not found</h1>
       <p className={classes.empty}>This training no longer exists on this device.</p>
     </section>
@@ -67,7 +67,7 @@ export function TrainingDetailScreen({ trainingId }: ITrainingDetailScreenProps)
   return (
     <section className={classes.screen}>
       <div className={classes.header}>
-        <Link className={classes.back} href={returnTo} replace>Back to week</Link>
+        <Link className={classes.back} href={returnTo} aria-label="Back to week" replace><span className={classes.backIcon} aria-hidden="true">‹</span>Week</Link>
         <Button variant="quiet" onClick={() => setEditing(true)}>Edit training</Button>
       </div>
       <h1 className={classes.title}>{getTrainingTitle(training, sets, exercises)}</h1>

@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
 
-export type TButtonVariant = "filled" | "outline" | "text" | "quiet";
+export type TButtonVariant = "filled" | "outline" | "soft" | "quiet";
 
 export type TButtonSize = "md" | "sm";
 
