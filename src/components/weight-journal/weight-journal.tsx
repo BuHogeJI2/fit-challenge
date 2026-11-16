@@ -1,16 +1,21 @@
+import { useId, useState } from "react";
 import { formatDateInContext, formatDayOfMonth, formatWeekdayShort } from "../../lib/dates";
 import { formatSignedWeightValue, formatWeightValue } from "../../lib/numbers";
 import { weightJournalClasses } from "./weight-journal.styles";
 import type { IWeightJournalProps } from "./weight-journal.types";
 
-export function WeightJournal({ rows, showMonth, todayKey, onEdit }: IWeightJournalProps) {
+export function WeightJournal({ rows, showMonth, todayKey, onEdit, previewCount = 3 }: IWeightJournalProps) {
+  const [expanded, setExpanded] = useState(false);
+  const listId = useId();
   if (!rows.length) {
     return null;
   }
 
   return (
-    <ol className={weightJournalClasses.list} aria-label="Weigh-ins">
-      {rows.map(({ entry, changeKg }) => (
+    <>
+    <h2 className={weightJournalClasses.heading}>{rows.length > previewCount && !expanded ? "Recent weigh-ins" : "Weigh-ins"}</h2>
+    <ol id={listId} className={weightJournalClasses.list} aria-label="Weigh-ins">
+      {(expanded ? rows : rows.slice(0, previewCount)).map(({ entry, changeKg }) => (
         <li key={entry.id} className={weightJournalClasses.item}>
           <button
             type="button"
@@ -39,5 +44,9 @@ export function WeightJournal({ rows, showMonth, todayKey, onEdit }: IWeightJour
         </li>
       ))}
     </ol>
+    {rows.length > previewCount ? <button type="button" aria-controls={listId} aria-expanded={expanded} className={weightJournalClasses.disclosure} onClick={() => setExpanded(!expanded)}>
+      {expanded ? "Show fewer" : `Show all ${rows.length} weigh-ins`}
+    </button> : null}
+    </>
   );
 }

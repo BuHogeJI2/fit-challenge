@@ -2,7 +2,7 @@ import clsx from "clsx";
 
 const screen = clsx("flex flex-col pt-6");
 
-const titleRow = clsx("flex items-baseline justify-between gap-4");
+const titleRow = clsx("mt-6 flex items-baseline justify-between gap-4");
 
 const title = clsx("m-0 text-[2.75rem] leading-tight font-normal tracking-tight");
 
@@ -29,7 +29,10 @@ const viewActive = clsx(viewBase, "font-semibold text-ink underline underline-of
 
 const subline = clsx("m-0 text-sm text-muted");
 
-const stats = clsx("m-0 mt-6 grid grid-cols-3 gap-4 border-t border-rule pt-4");
+const stats = clsx("m-0 grid grid-cols-3 gap-4 border-b border-rule pb-4");
+const overallLabel = clsx("m-0 mb-2 text-xs font-medium text-muted");
+const periodStats = clsx("m-0 mt-4 grid grid-cols-3 gap-3 border-t border-rule pt-4");
+const editSelected = clsx("min-h-11 self-start text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ink");
 
 const stat = clsx("flex flex-col gap-1");
 
@@ -42,6 +45,7 @@ const statNote = clsx("text-xs font-normal text-muted");
 const chart = clsx("mt-6 flex flex-col gap-2");
 
 const readout = clsx("m-0 min-h-5 text-sm font-medium");
+const readoutRow = clsx("flex min-h-11 items-center justify-between gap-3");
 
 const empty = clsx("my-12 text-center text-sm text-muted");
 
@@ -67,12 +71,16 @@ export const weightScreenClasses = {
   viewActive,
   subline,
   stats,
+  overallLabel,
+  periodStats,
+  editSelected,
   stat,
   statLabel,
   statValue,
   statNote,
   chart,
   readout,
+  readoutRow,
   empty,
   firstUse,
   fab,

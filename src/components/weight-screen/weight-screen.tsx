@@ -160,6 +160,7 @@ export function WeightScreen() {
 
   const visibleEntries =
     view === "month" ? getEntriesInMonth(entries, monthKey) : entries;
+  const periodSummary = getWeightSummary(visibleEntries, null);
   const selected =
     visibleEntries.find((entry) => entry.date === selectedDate) ??
     visibleEntries[visibleEntries.length - 1] ??
@@ -246,6 +247,40 @@ export function WeightScreen() {
 
   return (
     <section className={weightScreenClasses.screen}>
+      <div role="region" aria-label="Overall weight">
+        <p className={weightScreenClasses.overallLabel}>Overall</p>
+      <dl className={weightScreenClasses.stats}>
+        <div className={weightScreenClasses.stat}>
+          <dt className={weightScreenClasses.statLabel}>Latest</dt>
+          <dd className={weightScreenClasses.statValue}>
+            {formatKg(summary.latest!.weightKg)}
+            <span className={weightScreenClasses.statNote}>
+              {formatRelativeDate(summary.latest!.date, todayKey)}
+            </span>
+          </dd>
+        </div>
+        {summary.changeSinceFirstKg !== null ? (
+          <div className={weightScreenClasses.stat}>
+            <dt className={weightScreenClasses.statLabel}>
+              Since {formatDate(summary.first!.date)}
+            </dt>
+            <dd className={weightScreenClasses.statValue}>
+              {formatSignedWeightValue(summary.changeSinceFirstKg)} kg
+            </dd>
+          </div>
+        ) : null}
+        {summary.toGoalKg !== null ? (
+          <div className={weightScreenClasses.stat}>
+            <dt className={weightScreenClasses.statLabel}>
+              Goal {formatWeightValue(settings.goalWeightKg!)}
+            </dt>
+            <dd className={weightScreenClasses.statValue}>
+              {summary.toGoalKg > 0 ? `${formatKg(summary.toGoalKg)} to go` : "Reached"}
+            </dd>
+          </div>
+        ) : null}
+      </dl>
+      </div>
       <div className={weightScreenClasses.titleRow}>
         <h1 className={weightScreenClasses.title}>{nav ? nav.title : "All time"}</h1>
         {nav ? (
@@ -292,43 +327,16 @@ export function WeightScreen() {
 
       <p className={weightScreenClasses.subline}>{subline}</p>
 
-      <dl className={weightScreenClasses.stats}>
-        <div className={weightScreenClasses.stat}>
-          <dt className={weightScreenClasses.statLabel}>Latest</dt>
-          <dd className={weightScreenClasses.statValue}>
-            {formatKg(summary.latest!.weightKg)}
-            <span className={weightScreenClasses.statNote}>
-              {formatRelativeDate(summary.latest!.date, todayKey)}
-            </span>
-          </dd>
-        </div>
-        {summary.changeSinceFirstKg !== null ? (
-          <div className={weightScreenClasses.stat}>
-            <dt className={weightScreenClasses.statLabel}>
-              Since {formatDate(summary.first!.date)}
-            </dt>
-            <dd className={weightScreenClasses.statValue}>
-              {formatSignedWeightValue(summary.changeSinceFirstKg)} kg
-            </dd>
-          </div>
-        ) : null}
-        {summary.toGoalKg !== null ? (
-          <div className={weightScreenClasses.stat}>
-            <dt className={weightScreenClasses.statLabel}>
-              Goal {formatWeightValue(settings.goalWeightKg!)}
-            </dt>
-            <dd className={weightScreenClasses.statValue}>
-              {summary.toGoalKg > 0 ? `${formatKg(summary.toGoalKg)} to go` : "Reached"}
-            </dd>
-          </div>
-        ) : null}
-      </dl>
+
 
       {chart.points.length ? (
         <div className={weightScreenClasses.chart}>
+          <div className={weightScreenClasses.readoutRow}>
           <p className={weightScreenClasses.readout} aria-live="polite">
             {chart.readout}
           </p>
+          {view !== "weeks" && selected ? <button type="button" aria-label={`Edit weigh-in, ${formatDate(selected.date)}`} className={weightScreenClasses.editSelected} onClick={() => setSheet({ mode: "edit", entry: selected })}>Edit entry</button> : null}
+          </div>
           <LineChart
             points={chart.points}
             backgroundPoints={chart.backgroundPoints}
@@ -354,10 +362,28 @@ export function WeightScreen() {
         <p className={weightScreenClasses.empty}>{chart.empty}</p>
       )}
 
+      {view === "month" && periodSummary.first && periodSummary.latest ? (
+        <dl className={weightScreenClasses.periodStats} aria-label="Month comparison">
+          <div className={weightScreenClasses.stat}>
+            <dt className={weightScreenClasses.statLabel}>First recorded</dt>
+            <dd className={weightScreenClasses.statValue}>{formatKg(periodSummary.first.weightKg)}<span className={weightScreenClasses.statNote}>{formatDate(periodSummary.first.date)}</span></dd>
+          </div>
+          <div className={weightScreenClasses.stat}>
+            <dt className={weightScreenClasses.statLabel}>{view === "month" && monthKey < currentMonthKey ? "Last recorded" : "Latest recorded"}</dt>
+            <dd className={weightScreenClasses.statValue}>{formatKg(periodSummary.latest.weightKg)}<span className={weightScreenClasses.statNote}>{formatDate(periodSummary.latest.date)}</span></dd>
+          </div>
+          <div className={weightScreenClasses.stat}>
+            <dt className={weightScreenClasses.statLabel}>Change</dt>
+            <dd className={weightScreenClasses.statValue}>{periodSummary.changeSinceFirstKg === null ? "—" : `${formatSignedWeightValue(periodSummary.changeSinceFirstKg)} kg`}</dd>
+          </div>
+        </dl>
+      ) : null}
+
       {view === "weeks" ? (
         <WeightWeeks weeks={visibleWeeks} todayKey={todayKey} />
       ) : (
         <WeightJournal
+          key={`${view}-${monthKey}`}
           rows={
             view === "month"
               ? rows.filter(({ entry }) => getMonthKey(entry.date) === monthKey)

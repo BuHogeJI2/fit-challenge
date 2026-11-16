@@ -23,6 +23,8 @@ const values = clsx("flex flex-col items-end");
 const value = clsx("text-[1.0625rem] font-medium");
 
 const change = clsx("font-mono text-xs text-muted");
+const heading = clsx("m-0 mt-5 mb-2 text-sm font-medium text-muted");
+const disclosure = clsx("min-h-11 self-start text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ink");
 
 export const weightJournalClasses = {
   list,
@@ -35,4 +37,6 @@ export const weightJournalClasses = {
   values,
   value,
   change,
+  heading,
+  disclosure,
 };

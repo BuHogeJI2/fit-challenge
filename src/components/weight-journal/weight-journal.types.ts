@@ -6,4 +6,5 @@ export interface IWeightJournalProps {
   showMonth: boolean;
   todayKey: string;
   onEdit: (entry: TWeightEntry) => void;
+  previewCount?: number;
 }

@@ -28,6 +28,36 @@ describe("Weight mode", () => {
     vi.restoreAllMocks();
   });
 
+  it("keeps the month compact, separates overall stats, and edits a hidden chart entry", async () => {
+    for (let day = 1; day <= 30; day += 1) {
+      await saveWeightEntry({ date: `2026-09-${String(day).padStart(2, "0")}`, weightKg: 90 - day / 10, note: day === 1 ? "First September entry" : null });
+    }
+    await saveWeightEntry({ date: "2026-10-19", weightKg: 84, note: null });
+    const user = userEvent.setup();
+    renderWeight();
+    await user.click(await screen.findByRole("button", { name: "Previous month" }));
+    const overall = screen.getByRole("region", { name: "Overall weight" });
+    expect(overall).toHaveTextContent("84.0 kg");
+    expect(overall.compareDocumentPosition(screen.getByRole("group", { name: "Chart range" })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const comparison = screen.getByLabelText("Month comparison");
+    expect(comparison).toHaveTextContent("First recorded89.9 kgSep 1");
+    expect(comparison).toHaveTextContent("Last recorded87.0 kgSep 30");
+    expect(comparison).toHaveTextContent("−2.9 kg");
+    const journal = screen.getByRole("list", { name: "Weigh-ins" });
+    expect(within(journal).getAllByRole("button")).toHaveLength(3);
+    expect(screen.getByRole("button", { name: "Show all 30 weigh-ins" })).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(screen.getByTestId("chart-point-2026-09-01"));
+    await user.click(screen.getByRole("button", { name: "Edit weigh-in, Sep 1" }));
+    const sheet = screen.getByRole("dialog", { name: "Edit weigh-in" });
+    expect(within(sheet).getByLabelText("Weight in kg")).toHaveValue("89.9");
+    expect(within(sheet).getByLabelText("Note, optional")).toHaveValue("First September entry");
+    await user.click(within(sheet).getByRole("button", { name: "Close" }));
+    await user.click(screen.getByRole("button", { name: "Show all 30 weigh-ins" }));
+    expect(within(journal).getAllByRole("button")).toHaveLength(30);
+    await user.click(screen.getByRole("button", { name: "Show fewer" }));
+    expect(within(journal).getAllByRole("button")).toHaveLength(3);
+  });
+
   it("starts the journal from the first-use form", async () => {
     const user = userEvent.setup();
     renderWeight();

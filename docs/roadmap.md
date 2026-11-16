@@ -78,16 +78,19 @@ date spacing and the same metric as the full chart they lead to.
 - Decimal input accepts both `83.4` and `83,4`.
 - Edit and delete an entry. Delete can be undone.
 - Month view: month chart with dated points, previous / next month, and a
-  month summary (count, average, range).
+  month summary (count, average, range), plus first/latest recorded weight,
+  their dates and change. No value is invented for an unrecorded month start.
 - Weeks view: weekly averages in 12-week windows, counted back from the
   current week, with previous / next window. A list of weeks shows each
   week's average, its change from the previous week with weigh-ins, and its
   number of weigh-ins ("so far" for the current week).
 - All-time view: the whole history on one chart.
-- Journal list under the chart: entries newest first, each with its change
-  from the previous entry and its note.
-- Header numbers: latest weight with its date, change since the first entry,
-  and distance to the goal when a goal is set.
+- Journal under Month and All: the three latest entries by default, with
+  Show all / Show fewer. Each row has its change from the previous entry and
+  note. A selected chart entry can be edited even when its row is hidden.
+- Overall numbers above the range controls: latest weight with its date,
+  change since the first entry, and distance to the goal when set. These
+  always cover the full history.
 - Optional goal weight, shown as a labelled line on the chart.
 
 ### Exercises
