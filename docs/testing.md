@@ -10,11 +10,15 @@ pnpm lint
 pnpm test
 pnpm exec vitest run src/test/backup.test.ts
 pnpm exec vitest
+pnpm test:browser
 pnpm build
 ```
 
 `pnpm test` runs the full suite once; `pnpm exec vitest` starts watch mode.
 Typecheck uses `tsc -b`; build also typechecks before producing `dist/`.
+`pnpm test:browser` runs the Playwright tests in `e2e/` against a Vite dev
+server in mobile Chromium; it needs the Chromium build for its Playwright
+version (`pnpm exec playwright install chromium`).
 
 ## Setup
 
@@ -38,24 +42,27 @@ All files below are in `src/test/`:
 | Files | Main coverage |
 | --- | --- |
 | `app.test.tsx` | Hash routing, fallback route, top-tab navigation, and no section switching from content swipes |
-| `period-pager.test.tsx` | Finger tracking, distance/velocity, cancellation, edge/control/dialog guards, inert neighbors, reduced motion, arrow interruption, and hint storage failures |
+| `period-pager.test.tsx` | Finger tracking, distance/velocity, cancellation, edge/control/dialog guards, inert neighbors, reduced motion, arrow interruption, and capture moving from a touched child to the pager |
 | `navigation.test.tsx` | Hash queries, direct week links, daily week history, invalid parameters, nested return paths, and section/scroll/focus restoration |
 | `weight.test.tsx` | First entry, editing, date replacement, delete/undo, storage failures, months, weeks and chart selection |
 | `exercises.test.tsx` | Exercise lifecycle, metric forms, sessions, repeat today or into a past day/undo, history, load and progress-view selection, day/week total bars and short-series charts |
-| `training-week.test.tsx`, `training-entry.test.tsx`, `training-stats.test.ts` | Weekly training groups, library search, explicit target choice, fixed-target logging, moving/splitting, whole-training delete/undo, separate metrics and loads |
+| `training-week.test.tsx`, `training-entry.test.tsx`, `training-stats.test.ts` | Weekly training groups, the A–Z library, explicit target choice, fixed-target logging, moving/splitting, whole-training delete/undo, separate metrics and loads |
 | `training-repo.test.ts`, `training-migration.test.ts`, `database-notice.test.tsx` | Training invariants and undo, real v1/v2 upgrades, record preservation, rollback/retry, and multi-window update notices |
 | `settings.test.tsx` | Goal, export, restore preview/confirmation, wipe, generation reset, persistence UI and file-read races |
 | `weight-repo.test.ts`, `exercise-repo.test.ts`, `settings-repo.test.ts` | Write invariants, rounding, metric locks, archive rules, undo guards and transaction rollback |
 | `backup.test.ts` | Strict parsing, schemas 1–3 import, schema 4 round-trips, snapshot export, full replacement, rollback, wipe and stale undo |
 | `dates.test.ts`, `use-today.test.tsx` | Real dates, leap years, calendar arithmetic, week/month boundaries and day refresh |
 | `numbers.test.ts`, `exercise-text.test.ts`, `weight-format.test.ts` | Decimal/duration input, precision, progress wording, date context and axis labels |
-| `stats.test.ts` | Weight summaries, weekly averages and windows, daily bests, selected loads, grouped totals and active days |
-| `charts.test.ts`, `sparkline.test.tsx`, `bar-chart.test.tsx` | Date spacing, day/week slots, padded domains, nonnegative floors, ticks, bars and sparse SVG output |
+| `stats.test.ts` | Weight summaries, weekly averages, first/last and within-week change, windows, daily bests, selected loads, grouped totals and active days |
+| `charts.test.ts`, `bar-chart.test.tsx` | Date spacing, day/week slots, padded domains, nonnegative floors, ticks, bars, the training week chart and sparse SVG output |
 | `update-banner.test.tsx` | The new-version banner reloads only on Reload and hides on Later (the service worker itself is mocked) |
 
 ## Limits and manual checks
 
-There is no real-browser or end-to-end test suite. fake-indexeddb does not
+`e2e/period-pager.e2e.ts` sends real touch input through the Chrome DevTools
+Protocol: the browser first captures the pointer on the touched element and
+the pager then takes it over, which jsdom cannot reproduce. It covers only
+Chromium; iOS Safari still needs the phone check below. fake-indexeddb does not
 prove behavior under browser storage limits, eviction or private browsing.
 Mocked downloads and persistence responses do not prove that a browser saved
 a file or granted persistence.
@@ -73,7 +80,7 @@ Boundary resistance, vertical scrolling, pinch zoom, the exercise picker in
 the set sheet and the browser's edge Back gesture must keep working.
 
 Turn on reduced motion: arrows should change periods immediately, while direct
-dragging still follows the finger. Check the tab underline after text/font size
+dragging still follows the finger. Check the segmented control pill after text/font size
 changes, screen and disclosure fades, sheet entrance and immediate close, and
 saved-row emphasis after repeated saves and Undo. Keyboard focus must stay
 visible and usable throughout; animations must not delay logging.

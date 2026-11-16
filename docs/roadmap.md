@@ -64,8 +64,7 @@ These apply to every full-size chart in the app:
 - Sessions are always weekly bars: the number of sessions in each
   Monday-based week, because how often matters more than which day.
 
-Sparklines in lists are simplified: no axes and no tapping, but the same
-date spacing and the same metric as the full chart they lead to.
+Lists carry no charts; each list row leads to the full chart.
 
 ## MVP (v1.0)
 
@@ -81,9 +80,11 @@ date spacing and the same metric as the full chart they lead to.
   month summary (count, average, range), plus first/latest recorded weight,
   their dates and change. No value is invented for an unrecorded month start.
 - Weeks view: weekly averages in 12-week windows, counted back from the
-  current week, with previous / next window. A list of weeks shows each
-  week's average, its change from the previous week with weigh-ins, and its
-  number of weigh-ins ("so far" for the current week).
+  current week, with previous / next window; the window's date span is its
+  title and the chart labels the average line and the weigh-in dots. A list of
+  weeks shows each week's first and last weigh-in, the change between them
+  with its direction, and its number of weigh-ins ("so far" for the current
+  week). A week with one weigh-in shows only that value.
 - Each week row opens its daily chart, first/last/change summary and all its
   weigh-ins. Previous/next controls browse adjacent weeks, including empty
   ones. Back to weeks restores the overview window and position.
@@ -99,7 +100,9 @@ date spacing and the same metric as the full chart they lead to.
 ### Exercises
 
 - Week is the default view: a Monday-based week of dated trainings, with
-  previous/next controls, a This week shortcut, active days and session counts.
+  previous/next controls, a This week shortcut, active days, session counts
+  and a seven-day chart of how many trainings happened each day. A training
+  without entries stays in the list but is not counted.
 - Each entry belongs to one training. Several trainings can share a date;
   logging shows the target and requires a choice when the date has several.
   Training names and notes are optional. Editing a training date moves all
@@ -120,17 +123,17 @@ date spacing and the same metric as the full chart they lead to.
   "Repeat last" action that logs it today. Each day in the history can also
   repeat its own last set into that day, for filling in a past workout.
 - Edit and delete a set. Delete can be undone.
-- Library: searchable exercises, sorted alphabetically or by recent activity,
-  each with a sparkline, a one-line progress
-  sentence (for example "Best day 30 reps, up 20 since Aug 3") and the date
-  of the last set.
+- Library: active exercises in alphabetical order, with New exercise above
+  the list. Each row shows what its latest training held ("Last Aug 3 · 3
+  sets · 60 reps"), or the sessions in the last 4 weeks. Archived exercises
+  sit in a closed group below.
 - Exercise detail: chart of each day's value (bars for Day total, a line for
   Best set) and the history grouped by date, with each day's sets and total. A per-exercise toggle picks the value:
   **Day total** (the default: all reps; reps at the chosen weight for
   `reps + weight`; total hold for `time`) or **Best set** (most reps; most
   reps at the chosen weight; longest hold). Three sets of 10 count as 30 in
   the day total and 10 as the best set.
-- The sparkline, the progress sentence and the detail chart all use the
+- The progress sentence and the detail chart both use the
   exercise's selected view and, for `reps + weight`, the same selected weight,
   named in the text ("reps at 24 kg").
 - "This week" summary: number of active days.

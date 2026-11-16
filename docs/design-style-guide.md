@@ -12,11 +12,12 @@ The source of truth is [src/index.css](../src/index.css) `@theme`:
 | Token | Value | Current role |
 | --- | --- | --- |
 | `ground` | `#f3f2ee` | Page and sheet background |
-| `ground-sunken` | `#ebe9e3` | Panels and hover surfaces |
+| `ground-sunken` | `#ebe9e3` | Panels, soft buttons, segmented tracks and hover surfaces |
+| `ground-raised` | `#fbfaf7` | The selected option of a segmented control |
 | `ink` | `#222222` | Main text, actions and chart marks |
 | `ink-soft` | `#44433f` | Supporting text and notes |
 | `muted` | `#66655f` | Labels, dates and secondary text |
-| `rule` | `#dad8d1` | Row dividers and chart grid |
+| `rule` | `#dad8d1` | Faint row separators in dense lists and chart grid |
 | `rule-strong` | `#c8c6be` | Input lines and chip borders |
 
 Geist Variable is the body font; Geist Mono Variable is used for chart axes
@@ -25,7 +26,8 @@ tabular spacing. There is no serif font.
 
 | Use | Size |
 | --- | --- |
-| Screen titles | 2.75rem, normal weight, tight tracking |
+| Period titles (month, week or window span) | 1.75rem, normal weight, tight tracking; long spans wrap instead of truncating |
+| Detail titles (exercise, training) | 2.75rem, normal weight, tight tracking |
 | Main sentence inputs / surrounding sentence | 2.5rem / 1.75rem |
 | Exercise names / section headings | 1.5rem / 1.125rem |
 | Body and controls | 1rem; supporting prose and set chips also use 0.9375rem |
@@ -36,8 +38,10 @@ tabular spacing. There is no serif font.
 
 The app is full width up to `max-w-md` (28rem), centered on wider screens.
 Header and main content use 1.5rem horizontal padding. Main content reserves
-7rem below it for floating controls. Rules separate lists and sections;
-ordinary rows have no card background.
+7rem below it for floating controls. Space separates sections. A faint `rule`
+line appears only between rows of dense lists (weigh-ins, weeks, exercise
+and training history); training days and the library use spacing alone.
+There are no strong ink rules, and ordinary rows have no card background.
 
 Sheets sit at the bottom, are at most 92vh tall, and use a rounded top edge
 and an ink backdrop. At the `sm` breakpoint they share the app's maximum
@@ -46,9 +50,18 @@ width. Sheet, toast and fixed action spacing account for the bottom safe area.
 ## Component roles
 
 - **Button:** `filled` uses ground text on ink for primary actions; `outline` is a
-  bordered secondary action; `text` is underlined; `quiet` is muted. Filled
-  and outline controls have `md` and `sm` sizes with minimum heights of
-  3.25rem and 2.75rem. Text/quiet controls are at least 2.75rem high. Disabled
+  bordered secondary action; `soft` is a sunken filled pill for secondary
+  actions such as Edit, Show all, This week and New exercise; `quiet` is muted
+  text. No action is underlined. Filled, outline and soft controls have `md`
+  and `sm` sizes with minimum heights of 3.25rem and 2.75rem. Quiet controls
+  are at least 2.75rem high.
+- **Top tabs:** Weight and Exercises mark the active section by weight and
+  contrast only.
+- **Segmented control:** switches a screen's subviews (Month/Weeks/All,
+  Week/Library). A sunken rounded track holds 2.75rem options; the selected
+  one sits on a raised pill with semibold ink text and exposes `aria-pressed`.
+- **Back links:** muted text with a chevron, keeping a full accessible name
+  such as "Back to weeks". Disabled
   controls fade; keyboard focus uses a visible outline.
 - **Sheet:** the shared native modal `dialog` owns its title, Close button
   and backdrop dismissal. Forms keep validation and failed-write messages
@@ -70,8 +83,14 @@ width. Sheet, toast and fixed action spacing account for the bottom safe area.
   disclosure for the complete journal. Overall stats sit above range controls;
   first/latest/change below the chart belong to the selected period.
   A week row in the Weeks view is a detail link with a chevron, the date
-  range, the number of weigh-ins, the average and the change. An exercise row is a detail link with its name, latest date,
-  sparkline and progress sentence.
+  range, the first and last weigh-in of the week ("80.8 → 80.4 kg"), the
+  change between them with its direction, the number of weigh-ins ("so far"
+  for the current week) and the measured weekdays when they are not Monday and
+  Sunday. A week with one weigh-in shows its value and no change. A library
+  row is a detail link with the exercise name, a chevron and one line about
+  its latest training: "Last Oct 13 · 3 sets · 60 reps", "N sets at 60 kg" for
+  one load, "N sets · mixed weights" for several, or the sessions in the last
+  4 weeks. Library rows have no chart.
 - **Chips:** progress-view, load and exercise-picker chips select a value
   and expose `aria-pressed`; quick-rep chips fill the input. History chips
   open set editing. A stronger outline marks daily bests, at the selected load for
@@ -80,7 +99,7 @@ width. Sheet, toast and fixed action spacing account for the bottom safe area.
 ## Charts
 
 Period headers and their chart (or training summary) form a swipeable region.
-Arrows and a dismissible swipe hint expose the gesture. Adjacent periods slide
+The arrows are the visible controls; there is no swipe hint. Adjacent periods slide
 with the finger; the list below changes when navigation commits. Main section
 tabs stay fixed. All and Library have no period swipe. Overflowing exercise
 choices fade only at edges where more choices remain to scroll into view.
@@ -95,7 +114,8 @@ direction when its arrows are used.
 These shared motion rules are unlayered and override Tailwind transition
 utilities on the elements that opt into them.
 
-Main tabs and view controls use a moving underline. Screens fade once loaded;
+The segmented control's pill slides to the selected option; top tabs change
+only in weight and color. Screens fade once loaded;
 newly disclosed rows fade without animating list height. Sheets enter upward
 with a fading backdrop where `@starting-style` is supported and close
 immediately. No route slides, chart redraw animation, number counting, automatic
@@ -117,5 +137,8 @@ chart draws the daily weigh-ins as small muted dots behind the weekly line.
 
 Full charts use a 342×224 viewBox. A point tap or Left/Right arrow selection
 updates a visible live text readout; the list also exposes the records.
-Sparklines use 342×32, share the date scale, have no axes or interaction and
-are hidden from assistive technology.
+The training week chart uses a 342×112 viewBox with one column per day,
+Monday to Sunday. A bar's height is its number of trainings (two fill the
+chart), the count is printed above it, a past empty day gets a short tick and
+a later day stays blank. Trainings without entries are not counted. It has no
+axes, grid or interaction; its accessible name lists every day's count.

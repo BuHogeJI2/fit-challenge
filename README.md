@@ -18,6 +18,7 @@ browser.
 - wouter
 - vite-plugin-pwa
 - Vitest + React Testing Library
+- Playwright (one real-touch browser test)
 
 ## Prerequisites
 
@@ -39,6 +40,7 @@ No environment variables are needed.
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm test:browser
 pnpm build
 pnpm preview
 ```

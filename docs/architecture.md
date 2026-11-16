@@ -9,7 +9,7 @@ Weight. There is no backend, authentication or sync.
 
 The app's hash-location hook in `src/lib/navigation/` keeps view and period
 parameters inside the fragment, for example `#/weight?view=weeks&end=2026-10-19`
-or `#/exercises?view=library&q=push`. It supplies path and raw search separately
+or `#/exercises?view=library&archived=1`. It supplies path and raw search separately
 to avoid decoding nested return paths twice. A weight week opens through
 `view=week&week=YYYY-MM-DD`, with the overview window retained in `end`.
 Detail links carry validated in-app `from` paths. Main tabs remember the last
@@ -103,11 +103,11 @@ a minute and when the page becomes visible.
 weekly weight averages in Monday-based weeks with the 12-week windows of the
 Weeks view, daily exercise bests, daily totals and distinct active days in a Monday-based
 week. Missing days are omitted. Each exercise stores a progress view, `total`
-(default) or `best`; the list sentence, sparkline and detail chart all chart
-that daily series. A `session` exercise is always `total`, and its day total
+(default) or `best`; the detail sentence and chart both use that daily
+series. A `session` exercise is always `total`, and its day total
 is the number of sessions that day. Weighted progress uses one exact selected load for both
 views; if that load has no sets, it falls back to the latest set's load.
-The list sentence, sparkline, detail chart and best-set highlights share it.
+The detail sentence, chart and best-set highlights share it.
 Best-set highlights always mark the daily best. Progress text compares the
 latest day with the first and names a higher historical record separately.
 
@@ -116,7 +116,10 @@ first, including archived exercise history. Session frequency stays separate
 from the number of training groups. Training summaries keep weighted reps at
 different loads separate and never combine different metrics. A name-less
 training uses its session exercise names as a title, or “Training” when none
-exist. Library provides search and alphabetical/recent sorting over exercises.
+exist. `getTrainingDayCounts` counts the trainings with at least one entry on
+each day of a week; the week chart and its training total both use it, so a
+training left without entries stays listed but is not counted. Library lists
+active exercises alphabetically, each with a summary of its latest training.
 Legacy entries whose exercise is missing remain visible as “Unknown exercise”
 in training detail. They are read-only individually; deleting their training
 still removes the complete group and Undo restores the orphan rows unchanged.
@@ -126,9 +129,8 @@ Migration never cleans them up.
 or to day/week slots, pad value domains and generate ticks and SVG points.
 Full charts use a nonnegative domain, visible raw points or bars and a text
 readout with keyboard selection. The exercise `total` view draws a bar chart
-and bar sparkline from `getProgressBars`, which ends at today and switches to
-weekly bars over 60 days, or always for sessions; the `best` view and weight use line charts.
-Sparklines are passive. See the [chart rules](roadmap.md#chart-rules)
+from `getProgressBars`, which ends at today and switches to
+weekly bars over 60 days, or always for sessions; the `best` view and weight use line charts. See the [chart rules](roadmap.md#chart-rules)
 for sparse data and the Month/Weeks/All goal-line behavior.
 
 ## Backup and storage
