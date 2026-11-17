@@ -26,6 +26,9 @@ and suppresses a drag's follow-up click. Mouse and keyboard users use the
 same visible arrows. Only the current panel is accessible; adjacent panels
 are inert and hidden from assistive technology. Period state commits at
 release while the track settles. Lists stay outside the moving panels.
+Unavailable directions stay pinned without a bounce. Pointer endings are
+observed across the document; app interruptions reset the drag, and a fresh
+primary touch replaces stale gesture state.
 
 Shared motion values live in `src/index.css`. Tab indicators measure the selected
 control and follow size changes; saved-row feedback alternates CSS animations

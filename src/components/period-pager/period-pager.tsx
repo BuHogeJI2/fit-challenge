@@ -11,6 +11,7 @@ import type {
 } from "./period-pager.types";
 import {
   AXIS_LOCK_PX,
+  boundOffset,
   clampOffset,
   CLICK_GUARD_MS,
   EDGE_GUARD_PX,
@@ -21,7 +22,6 @@ import {
   nextFrame,
   parseTranslateX,
   prefersReducedMotion,
-  resistOffset,
 } from "./period-pager.utils";
 
 const NO_CONTROLS: IPeriodPagerControls = { onPrevious: () => {}, onNext: () => {} };
@@ -139,21 +139,32 @@ export function PeriodPager({
     const viewport = viewportRef.current;
     if (!viewport) return;
 
-    const cancelDrag = () => {
-      const drag = dragRef.current;
-      dragRef.current = null;
-      if (drag?.isLocked) {
-        guardNextClick();
-        moveTrack(0, "snap");
+    const releaseCapture = (pointerId: number) => {
+      try {
+        if (viewport.hasPointerCapture?.(pointerId)) viewport.releasePointerCapture(pointerId);
+      } catch {
+        // The browser may have already discarded an interrupted pointer.
       }
     };
 
-    const handlePointerDown = (event: PointerEvent) => {
-      clearClickGuard();
-      if (dragRef.current) {
-        if (event.pointerId !== dragRef.current.pointerId) cancelDrag();
-        return;
+    const cancelDrag = (motion: TMotion = "snap") => {
+      const drag = dragRef.current;
+      dragRef.current = null;
+      if (!drag) return;
+      releaseCapture(drag.pointerId);
+      if (drag.isLocked) {
+        guardNextClick();
       }
+      if (drag.isLocked || drag.baseOffset) moveTrack(0, motion);
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (dragRef.current) {
+        // A fresh primary touch must not inherit an interrupted gesture.
+        cancelDrag();
+        if (!event.isPrimary) return;
+      }
+      clearClickGuard();
       if (event.pointerType !== "touch" && event.pointerType !== "pen") return;
       if (!event.isPrimary || !(event.target instanceof Node) || !viewport.contains(event.target)) return;
       if (event.clientX < EDGE_GUARD_PX || event.clientX > window.innerWidth - EDGE_GUARD_PX) return;
@@ -161,7 +172,8 @@ export function PeriodPager({
       const width = measureWidth();
       if (width <= 0) return;
 
-      const baseOffset = clampOffset(readOffset(), width);
+      pendingRef.current = null;
+      const baseOffset = boundOffset(readOffset(), width, latest.current.canPrevious, latest.current.canNext);
       moveTrack(baseOffset, "none");
       dragRef.current = {
         pointerId: event.pointerId,
@@ -201,13 +213,26 @@ export function PeriodPager({
 
       drag.samples = [...drag.samples.slice(-5), { x: event.clientX, time: performance.now() }];
       const { canPrevious: hasPrevious, canNext: hasNext } = latest.current;
-      moveTrack(clampOffset(drag.baseOffset + resistOffset(dx, hasPrevious, hasNext), drag.width), "none");
+      if ((dx < 0 && !hasNext) || (dx > 0 && !hasPrevious)) {
+        // Rebase here so reversing away from the boundary follows immediately.
+        drag.startX = event.clientX;
+        drag.baseOffset = 0;
+        drag.samples = [{ x: event.clientX, time: performance.now() }];
+        moveTrack(0, "none");
+        return;
+      }
+      moveTrack(boundOffset(drag.baseOffset + dx, drag.width, hasPrevious, hasNext), "none");
     };
 
     const handlePointerUp = (event: PointerEvent) => {
       const drag = dragRef.current;
       if (!drag || event.pointerId !== drag.pointerId) return;
+      if (isDialogOpen()) {
+        cancelDrag();
+        return;
+      }
       dragRef.current = null;
+      releaseCapture(drag.pointerId);
       if (!drag.isLocked) {
         if (drag.baseOffset) moveTrack(0, "snap");
         return;
@@ -217,12 +242,28 @@ export function PeriodPager({
       const dx = event.clientX - drag.startX;
       const samples = [...drag.samples, { x: event.clientX, time: performance.now() }];
       const { canPrevious: hasPrevious, canNext: hasNext } = latest.current;
+      const offset = boundOffset(drag.baseOffset + dx, drag.width, hasPrevious, hasNext);
       const direction = getReleaseDirection(dx, getVelocity(samples), drag.width, hasPrevious, hasNext);
       if (!direction) {
-        moveTrack(0, "snap");
+        moveTrack(0, offset === 0 ? "none" : "snap");
         return;
       }
-      commit(direction, clampOffset(drag.baseOffset + dx, drag.width), drag.width);
+      commit(direction, offset, drag.width);
+    };
+
+    const handlePointerCancel = (event: PointerEvent) => {
+      if (dragRef.current?.pointerId === event.pointerId) cancelDrag();
+    };
+
+    const resetInteraction = () => {
+      pendingRef.current = null;
+      cancelDrag("none");
+      clearClickGuard();
+      moveTrack(0, "none");
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") resetInteraction();
     };
 
     // Touch starts captured by the element under the finger. Moving capture to
@@ -233,17 +274,24 @@ export function PeriodPager({
     };
 
     document.addEventListener("pointerdown", handlePointerDown, true);
-    viewport.addEventListener("pointermove", handlePointerMove);
-    viewport.addEventListener("pointerup", handlePointerUp);
-    viewport.addEventListener("pointercancel", cancelDrag);
+    document.addEventListener("pointermove", handlePointerMove, true);
+    document.addEventListener("pointerup", handlePointerUp, true);
+    document.addEventListener("pointercancel", handlePointerCancel, true);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", resetInteraction);
+    window.addEventListener("pagehide", resetInteraction);
     viewport.addEventListener("lostpointercapture", handleLostCapture);
 
     return () => {
       document.removeEventListener("pointerdown", handlePointerDown, true);
-      viewport.removeEventListener("pointermove", handlePointerMove);
-      viewport.removeEventListener("pointerup", handlePointerUp);
-      viewport.removeEventListener("pointercancel", cancelDrag);
+      document.removeEventListener("pointermove", handlePointerMove, true);
+      document.removeEventListener("pointerup", handlePointerUp, true);
+      document.removeEventListener("pointercancel", handlePointerCancel, true);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", resetInteraction);
+      window.removeEventListener("pagehide", resetInteraction);
       viewport.removeEventListener("lostpointercapture", handleLostCapture);
+      if (dragRef.current) releaseCapture(dragRef.current.pointerId);
       dragRef.current = null;
     };
   }, [clearClickGuard, commit, guardNextClick, measureWidth, moveTrack, readOffset]);

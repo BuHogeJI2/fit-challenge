@@ -61,8 +61,10 @@ All files below are in `src/test/`:
 
 `e2e/period-pager.e2e.ts` sends real touch input through the Chrome DevTools
 Protocol: the browser first captures the pointer on the touched element and
-the pager then takes it over, which jsdom cannot reproduce. It covers only
-Chromium; iOS Safari still needs the phone check below. fake-indexeddb does not
+the pager then takes it over, which jsdom cannot reproduce. It checks finger
+tracking and repeated boundary/reverse swipes in Month, Weeks, individual
+weight weeks and training weeks. It covers only Chromium; iOS Safari still
+needs the phone check below. fake-indexeddb does not
 prove behavior under browser storage limits, eviction or private browsing.
 Mocked downloads and persistence responses do not prove that a browser saved
 a file or granted persistence.
@@ -76,7 +78,9 @@ Scroll a long history: the header stays on top and focused rows are not
 hidden under it. Switch Weight and Exercises through the top tabs. Swipe
 inside month/week headers and charts, or the weekly training summary: only
 the period changes. Swiping a list must not switch sections or activate a row.
-Boundary resistance, vertical scrolling, pinch zoom, the exercise picker in
+Unavailable periods must stay still, and an immediate reverse swipe must work.
+Repeat boundary/reverse swipes and interrupt a drag by switching apps, then
+check swipes and arrows again. Vertical scrolling, pinch zoom, the exercise picker in
 the set sheet and the browser's edge Back gesture must keep working.
 
 Turn on reduced motion: arrows should change periods immediately, while direct

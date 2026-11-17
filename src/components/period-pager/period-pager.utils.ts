@@ -5,7 +5,6 @@ export const EDGE_GUARD_PX = 24;
 export const COMMIT_SHARE = 0.25;
 export const FLICK_VELOCITY = 0.5;
 export const FLICK_MIN_PX = 16;
-export const EDGE_RESISTANCE = 0.35;
 export const CLICK_GUARD_MS = 400;
 const VELOCITY_WINDOW_MS = 100;
 
@@ -20,9 +19,9 @@ export const prefersReducedMotion = () =>
   typeof window.matchMedia === "function" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/** Slows the drag toward a side that has no period. */
-export const resistOffset = (dx: number, canPrevious: boolean, canNext: boolean) =>
-  (dx > 0 && !canPrevious) || (dx < 0 && !canNext) ? dx * EDGE_RESISTANCE : dx;
+/** Keeps a drag within the neighboring periods that actually exist. */
+export const boundOffset = (offset: number, width: number, canPrevious: boolean, canNext: boolean) =>
+  Math.max(canNext ? -width : 0, Math.min(canPrevious ? width : 0, offset));
 
 /**
  * Keeps the track within one page of rest. Only the neighbours are

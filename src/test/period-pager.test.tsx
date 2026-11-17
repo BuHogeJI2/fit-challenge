@@ -162,16 +162,96 @@ describe("PeriodPager dragging", () => {
     expect(onMove).not.toHaveBeenCalled();
   });
 
-  it("resists toward a missing period and never moves there", () => {
+  it("stays still toward a missing period and follows a reversal immediately", () => {
     const onMove = vi.fn();
     render(<Harness onMove={onMove} />);
 
     pointer("pointerDown", point(), { x: 250 });
     pointer("pointerMove", point(), { x: 150 });
-    expect(track().style.transform).toBe("translate3d(-35px, 0, 0)");
-    pointer("pointerUp", point(), { x: 50 });
+    expect(track().style.transform).toBe("");
+    pointer("pointerMove", point(), { x: 50 });
+    expect(track().style.transform).toBe("");
+    pointer("pointerMove", point(), { x: 100 });
+    expect(track().style.transform).toBe("translate3d(50px, 0, 0)");
+    pointer("pointerUp", point(), { x: 150 });
+    expect(heading()).toBe("Period -1");
+    expect(onMove).toHaveBeenCalledExactlyOnceWith("previous");
+  });
+
+  it.each([
+    ["future", -3, 0, 250, 100, 150, 250, "Period -1"],
+    ["past", 0, 3, 100, 250, 250, 100, "Period 1"],
+  ] as const)("recovers immediately from the %s boundary", (_side, min, max, start, end, reverseStart, reverseEnd, expected) => {
+    const onMove = vi.fn();
+    render(<Harness min={min} max={max} onMove={onMove} />);
+
+    drag(point(), [[start, 0], [end, 150], [end, 300]]);
     expect(onMove).not.toHaveBeenCalled();
     expect(track().style.transform).toBe("");
+    drag(point(), [[reverseStart, 0], [(reverseStart + reverseEnd) / 2, 150], [reverseEnd, 300]]);
+    expect(heading()).toBe(expected);
+  });
+
+  it.each(["pointerUp", "pointerCancel"] as const)("cleans up a %s outside the pager", (type) => {
+    render(<Harness />);
+    pointer("pointerDown", point(), { x: 250 });
+    pointer("pointerMove", point(), { x: 150 });
+    pointer(type, document.body, { x: 150 });
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+    expect(heading()).toBe("Period -1");
+    drag(point(-1), [[100, 0], [200, 150], [220, 300]]);
+    expect(heading()).toBe("Period -2");
+  });
+
+  it.each([1, 2])("recovers a stale drag when a fresh primary pointer %s starts", (id) => {
+    render(<Harness />);
+    pointer("pointerDown", point(), { x: 250 });
+    pointer("pointerMove", point(), { x: 150 });
+
+    pointer("pointerDown", point(), { x: 100, id });
+    pointer("pointerMove", point(), { x: 200, id });
+    pointer("pointerUp", point(), { x: 220, id });
+    expect(heading()).toBe("Period -1");
+  });
+
+  it.each(["blur", "pagehide", "hidden"])("cleans up when the app is interrupted by %s", (reason) => {
+    render(<Harness />);
+    pointer("pointerDown", point(), { x: 100 });
+    pointer("pointerMove", point(), { x: 150 });
+    if (reason === "hidden") {
+      vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+      fireEvent(document, new Event("visibilitychange"));
+    } else fireEvent(window, new Event(reason));
+    expect(track().style.transform).toBe("");
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+    expect(heading()).toBe("Period -1");
+  });
+
+  it("ignores ending events from another pointer", () => {
+    render(<Harness />);
+    pointer("pointerDown", point(), { x: 100 });
+    pointer("pointerMove", point(), { x: 150 });
+    pointer("pointerUp", document.body, { x: 150, id: 2, isPrimary: false });
+    pointer("pointerCancel", document.body, { x: 150, id: 2, isPrimary: false });
+    pointer("pointerUp", document.body, { x: 220 });
+    expect(heading()).toBe("Period -1");
+  });
+
+  it("does not let a refused older navigation snap a new drag back", () => {
+    vi.useFakeTimers({ toFake: ["requestAnimationFrame"] });
+    render(<Harness refuse />);
+    drag(point(), [[100, 0], [200, 150], [220, 300]]);
+    pointer("pointerDown", point(), { x: 100 });
+    pointer("pointerMove", point(), { x: 130 });
+    const offset = track().style.transform;
+    act(() => {
+      vi.advanceTimersToNextFrame();
+      vi.advanceTimersToNextFrame();
+    });
+    expect(track().style.transform).toBe(offset);
+    pointer("pointerCancel", document.body, { x: 130 });
   });
 
   it("swallows the click after a drag but not after a tap", () => {
