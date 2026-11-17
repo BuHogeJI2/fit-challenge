@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../components/app";
@@ -104,25 +104,18 @@ describe("period navigation", () => {
     expect(new URLSearchParams(window.location.hash.split("?")[1]).get("week")).toBe("2026-10-12");
   });
 
-  it("swipes periods inside both sections without switching sections", async () => {
+  it("changes periods inside both sections without switching sections", async () => {
     await saveWeightEntry({ date: "2026-09-30", weightKg: 85 });
     await saveWeightEntry({ date: "2026-10-19", weightKg: 83 });
     await createTraining({ date: "2026-10-12", name: "Previous training" });
     await createTraining({ date: "2026-10-19", name: "Current training" });
-    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ width: 300 } as DOMRect);
     renderAt("#/weight");
-    const point = await screen.findByTestId("chart-point-2026-10-19");
-    const swipe = (target: Element) => {
-      fireEvent.pointerDown(target, { pointerId: 1, pointerType: "touch", isPrimary: true, clientX: 100, clientY: 100 });
-      fireEvent.pointerMove(target, { pointerId: 1, pointerType: "touch", isPrimary: true, clientX: 190, clientY: 100 });
-      fireEvent.pointerUp(target, { pointerId: 1, pointerType: "touch", isPrimary: true, clientX: 200, clientY: 100 });
-    };
-    swipe(point);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Previous month" }));
     expect(await screen.findByRole("heading", { name: "September" })).toBeInTheDocument();
     expect(window.location.hash).toContain("/weight");
-    await userEvent.setup().click(screen.getByRole("link", { name: "Exercises" }));
-    const heading = await screen.findByRole("heading", { name: "Oct 19 – 25" });
-    swipe(heading);
+    await user.click(screen.getByRole("link", { name: "Exercises" }));
+    await user.click(await screen.findByRole("button", { name: "Previous training week" }));
     expect(await screen.findByRole("link", { name: "Previous training" })).toBeInTheDocument();
     expect(window.location.hash).toContain("/exercises");
     expect(new URLSearchParams(window.location.hash.split("?")[1]).get("week")).toBe("2026-10-12");

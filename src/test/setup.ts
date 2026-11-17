@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import "fake-indexeddb/auto";
 import "@testing-library/jest-dom/vitest";
 
@@ -16,3 +17,11 @@ if (typeof HTMLDialogElement.prototype.showModal !== "function") {
     this.dispatchEvent(new Event("close"));
   };
 }
+
+// jsdom has no layout or native touch scrolling; browser tests exercise Embla.
+vi.mock("embla-carousel-react", () => ({ default: () => [() => {}, undefined] }));
+globalThis.ResizeObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};

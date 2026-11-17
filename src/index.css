@@ -38,9 +38,6 @@
   --motion-normal: 180ms;
   --motion-slow: 240ms;
   --motion-ease: cubic-bezier(0.2, 0, 0, 1);
-  --pager-settle-duration: var(--motion-slow);
-  --pager-snap-duration: 200ms;
-  --pager-easing: var(--motion-ease);
 }
 
 @keyframes content-enter {
@@ -111,7 +108,6 @@ dialog[open]::backdrop {
     transition: none;
   }
   .motion-press { transition: none; }
-  [data-period-pager] > div { transition: none !important; }
 }
 
 @layer base {

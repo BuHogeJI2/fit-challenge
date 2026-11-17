@@ -18,17 +18,19 @@ data is ready. Period changes replace history, while opening details pushes it.
 
 `AppShell` renders inside the router. Its header stays fixed at the top; the
 Weight and Exercises tabs switch sections. The shared
-[PeriodPager](../src/components/period-pager/period-pager.tsx) handles touch/pen
-drags only inside period headers and charts, or the training week summary.
-It uses pointer events and allows vertical panning and pinch zoom. It ignores
-edge starts, controls, vertical moves and open sheets, cancels on multitouch,
-and suppresses a drag's follow-up click. Mouse and keyboard users use the
-same visible arrows. Only the current panel is accessible; adjacent panels
-are inert and hidden from assistive technology. Period state commits at
-release while the track settles. Lists stay outside the moving panels.
-Unavailable directions stay pinned without a bounce. Pointer endings are
-observed across the document; app interruptions reset the drag, and a fresh
-primary touch replaces stale gesture state.
+[PeriodPager](../src/components/period-pager/period-pager.tsx) uses Embla Carousel
+8.6.0 for touch navigation across full periods, including their history lists.
+Embla owns axis detection, non-passive horizontal touch handling, momentum,
+boundary resistance and suppression of a drag's follow-up click. Links and
+buttons accept drags; fields, editable content, disclosure summaries and
+explicit `data-pager-ignore` regions keep their own gestures. Open sheets block
+background drags. Mouse and keyboard users use visible arrows. Only the current
+slide is accessible; neighbors are inert and hidden from assistive technology.
+Period state commits after settling, then a layout effect rebuilds the adjacent
+periods and recenters before paint. Reduced-motion jumps also listen for select,
+because Embla updates its selected index after emitting settle on a jump.
+A ResizeObserver fits the viewport to the committed slide; content-height changes
+do not restart a drag. Width changes and app interruptions reset the carousel.
 
 Shared motion values live in `src/index.css`. Tab indicators measure the selected
 control and follow size changes; saved-row feedback alternates CSS animations

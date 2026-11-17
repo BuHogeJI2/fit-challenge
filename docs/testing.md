@@ -42,7 +42,7 @@ All files below are in `src/test/`:
 | Files | Main coverage |
 | --- | --- |
 | `app.test.tsx` | Hash routing, fallback route, top-tab navigation, and no section switching from content swipes |
-| `period-pager.test.tsx` | Finger tracking, distance/velocity, cancellation, edge/control/dialog guards, inert neighbors, reduced motion, arrow interruption, and capture moving from a touched child to the pager |
+| `period-pager.test.tsx` | Embla adapter: settle/commit/recenter, parent refusal, interruption cleanup, inert neighbors, touch exclusions and reduced motion |
 | `navigation.test.tsx` | Hash queries, direct week links, daily week history, invalid parameters, nested return paths, and section/scroll/focus restoration |
 | `weight.test.tsx` | First entry, editing, date replacement, delete/undo, storage failures, months, weeks and chart selection |
 | `exercises.test.tsx` | Exercise lifecycle, metric forms, sessions, repeat today or into a past day/undo, history, load and progress-view selection, day/week total bars and short-series charts |
@@ -60,11 +60,13 @@ All files below are in `src/test/`:
 ## Limits and manual checks
 
 `e2e/period-pager.e2e.ts` sends real touch input through the Chrome DevTools
-Protocol: the browser first captures the pointer on the touched element and
-the pager then takes it over, which jsdom cannot reproduce. It checks finger
-tracking and repeated boundary/reverse swipes in Month, Weeks, individual
-weight weeks and training weeks. It covers only Chromium; iOS Safari still
-needs the phone check below. fake-indexeddb does not
+Protocol and exercises the real Embla engine. It checks tracking before release,
+row-start swipes and taps, repeated boundary/reverse swipes in all four period
+views, vertical scrolling, arrow navigation, empty months and reduced motion.
+Pager unit tests mock Embla events to check the settle/select bridge, including
+zero-duration event ordering. Other UI tests use the arrows without a carousel
+engine. Neither proves touch behavior.
+Chromium coverage does not replace an installed iOS app check. fake-indexeddb does not
 prove behavior under browser storage limits, eviction or private browsing.
 Mocked downloads and persistence responses do not prove that a browser saved
 a file or granted persistence.
@@ -76,9 +78,9 @@ an invalid file. Check storage support and refusal states.
 
 Scroll a long history: the header stays on top and focused rows are not
 hidden under it. Switch Weight and Exercises through the top tabs. Swipe
-inside month/week headers and charts, or the weekly training summary: only
-the period changes. Swiping a list must not switch sections or activate a row.
-Unavailable periods must stay still, and an immediate reverse swipe must work.
+inside month/week headers, charts and history rows: only the period changes.
+A plain tap must still open the row. Unavailable periods resist and return to
+the same period, and an immediate reverse swipe must work.
 Repeat boundary/reverse swipes and interrupt a drag by switching apps, then
 check swipes and arrows again. Vertical scrolling, pinch zoom, the exercise picker in
 the set sheet and the browser's edge Back gesture must keep working.

@@ -98,19 +98,20 @@ width. Sheet, toast and fixed action spacing account for the bottom safe area.
 
 ## Charts
 
-Period headers and their chart (or training summary) form a swipeable region.
+Each complete period, including its chart, summary and history list, is swipeable.
 The arrows are the visible controls; there is no swipe hint. Adjacent periods slide
-with the finger; the list below changes when navigation commits. Main section
-tabs stay fixed. All and Library have no period swipe. Overflowing exercise
-choices fade only at edges where more choices remain to scroll into view.
+with the finger and settle before the selected period changes. Missing periods
+have the carousel's natural edge resistance. Main section tabs stay fixed.
+All and Library have no period swipe. Overflowing exercise choices fade only
+at edges where more choices remain to scroll into view.
 
 ## Motion
 
 Motion uses the shared `--motion-*` values in `src/index.css`: 140ms for fades
-and press feedback, 180ms for indicators and toasts, and 240ms for period
-settling and sheet entrance. A saved row receives 700ms of subtle background
-emphasis. The pager follows the finger directly and settles with the same
-direction when its arrows are used.
+and press feedback, 180ms for indicators and toasts, and 240ms for sheet
+entrance. Embla owns the period carousel's momentum and settling. A saved row
+receives 700ms of subtle background emphasis. The pager follows the finger
+directly and settles with the same direction when its arrows are used.
 These shared motion rules are unlayered and override Tailwind transition
 utilities on the elements that opt into them.
 

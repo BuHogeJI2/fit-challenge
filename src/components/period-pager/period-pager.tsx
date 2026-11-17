@@ -1,28 +1,8 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { periodPagerClasses as classes, periodPagerMotion } from "./period-pager.styles";
-import type {
-  IPagerPageProps,
-  IPeriodPagerControls,
-  IPeriodPagerProps,
-  TDrag,
-  TMotion,
-  TPendingSettle,
-  TPeriodDirection,
-} from "./period-pager.types";
-import {
-  AXIS_LOCK_PX,
-  boundOffset,
-  clampOffset,
-  CLICK_GUARD_MS,
-  EDGE_GUARD_PX,
-  getReleaseDirection,
-  getVelocity,
-  isDialogOpen,
-  isIgnoredTarget,
-  nextFrame,
-  parseTranslateX,
-  prefersReducedMotion,
-} from "./period-pager.utils";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
+import { periodPagerClasses as classes, getTrackClassName } from "./period-pager.styles";
+import type { IPagerPageProps, IPeriodPagerControls, IPeriodPagerProps, TPeriodOffset } from "./period-pager.types";
+import { canDragPeriod, prefersReducedMotion } from "./period-pager.utils";
 
 const NO_CONTROLS: IPeriodPagerControls = { onPrevious: () => {}, onNext: () => {} };
 
@@ -30,303 +10,150 @@ function PagerPage({ offset, controls, renderPage }: IPagerPageProps) {
   return renderPage(offset, controls);
 }
 
-/**
- * Shows one period with its neighbours beside it. A horizontal touch drag
- * follows the finger and, on release, moves to the neighbouring period;
- * the arrows a page renders through `controls` take the same path. The
- * period changes at release, and the slide only finishes the movement.
- */
-export function PeriodPager({
-  periodKey,
-  canPrevious,
-  canNext,
-  onPrevious,
-  onNext,
-  renderPage,
-}: IPeriodPagerProps) {
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<TDrag | null>(null);
-  const pendingRef = useRef<TPendingSettle | null>(null);
+/** Slides complete periods using native touch handling; commits a new period after settling. */
+export function PeriodPager({ periodKey, canPrevious, canNext, onPrevious, onNext, renderPage }: IPeriodPagerProps) {
+  const [initialIndex] = useState(canPrevious ? 1 : 0);
+  const [emblaRef, api] = useEmblaCarousel({
+    startIndex: initialIndex,
+    loop: false,
+    align: "start",
+    containScroll: "keepSnaps",
+    skipSnaps: false,
+    watchDrag: canDragPeriod,
+    watchFocus: false,
+    watchResize: false,
+    watchSlides: false,
+  });
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const currentRef = useRef<HTMLDivElement>(null);
   const latest = useRef({ periodKey, canPrevious, canNext, onPrevious, onNext });
-  const clickGuardRef = useRef<(() => void) | null>(null);
+  const dragging = useRef(false);
+  const pending = useRef(false);
+  const touched = useRef(false);
+  const refusalFrame = useRef(0);
+  const currentIndex = canPrevious ? 1 : 0;
 
   useLayoutEffect(() => {
     latest.current = { periodKey, canPrevious, canNext, onPrevious, onNext };
   });
 
-  const moveTrack = useCallback((offset: number, motion: TMotion) => {
-    const track = trackRef.current;
-    if (!track) return;
-    track.style.transition = motion === "none" || prefersReducedMotion() ? "none" : periodPagerMotion[motion];
-    track.style.transform = offset ? `translate3d(${offset}px, 0, 0)` : "";
+  const cancelRefusal = useCallback(() => {
+    cancelAnimationFrame(refusalFrame.current);
+    pending.current = false;
   }, []);
 
-  const readOffset = useCallback(() => {
-    const track = trackRef.current;
-    if (!track) return 0;
-    return parseTranslateX(window.getComputedStyle(track).transform || track.style.transform);
-  }, []);
+  const reset = useCallback(() => {
+    cancelRefusal();
+    dragging.current = false;
+    touched.current = false;
+    api?.reInit({ startIndex: latest.current.canPrevious ? 1 : 0 });
+  }, [api, cancelRefusal]);
 
-  const measureWidth = useCallback(() => viewportRef.current?.getBoundingClientRect().width ?? 0, []);
-
-  const clearClickGuard = useCallback(() => clickGuardRef.current?.(), []);
-
-  // The browser still sends the click of the finger that dragged; it must not
-  // select what is under the finger. A new touch or a keyboard click is real.
-  const guardNextClick = useCallback(() => {
-    clickGuardRef.current?.();
-    const until = performance.now() + CLICK_GUARD_MS;
-    const swallow = (event: MouseEvent) => {
-      if (event.detail === 0) return;
-      cleanup();
-      if (performance.now() > until) return;
-      event.preventDefault();
-      event.stopPropagation();
-    };
-    const cleanup = () => {
-      window.removeEventListener("click", swallow, true);
-      window.clearTimeout(timer);
-      if (clickGuardRef.current === cleanup) clickGuardRef.current = null;
-    };
-    window.addEventListener("click", swallow, true);
-    const timer = window.setTimeout(cleanup, CLICK_GUARD_MS);
-    clickGuardRef.current = cleanup;
-  }, []);
-
-  useEffect(() => clearClickGuard, [clearClickGuard]);
-
-  const commit = useCallback(
-    (direction: TPeriodDirection, offset: number, width: number) => {
-      const { periodKey: key, onPrevious: goPrevious, onNext: goNext } = latest.current;
-      const pending: TPendingSettle = {
-        periodKey: key,
-        fromOffset: clampOffset(direction === "next" ? offset + width : offset - width, width),
-      };
-      pendingRef.current = pending;
-      if (direction === "next") goNext();
-      else goPrevious();
-      // Two frames give a state update outside React's own events time to
-      // commit; a period that still has not changed was refused.
-      nextFrame(() =>
-        nextFrame(() => {
-          if (pendingRef.current === pending) {
-            pendingRef.current = null;
-            moveTrack(0, "snap");
-          }
-        }),
-      );
-    },
-    [moveTrack],
-  );
-
-  useLayoutEffect(() => {
-    const pending = pendingRef.current;
-    pendingRef.current = null;
-    if (dragRef.current?.isLocked) guardNextClick();
-    dragRef.current = null;
-    if (!pending || pending.periodKey === periodKey) {
-      moveTrack(0, "none");
-      return;
-    }
-    moveTrack(pending.fromOffset, "none");
-    // Reading layout applies the start position before the settle begins.
-    void trackRef.current?.offsetWidth;
-    moveTrack(0, "settle");
-  }, [periodKey, guardNextClick, moveTrack]);
+  // Recenter only after React has replaced the settled period, never during a drag.
+  useLayoutEffect(reset, [reset, periodKey, canPrevious, canNext]);
 
   useEffect(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-
-    const releaseCapture = (pointerId: number) => {
-      try {
-        if (viewport.hasPointerCapture?.(pointerId)) viewport.releasePointerCapture(pointerId);
-      } catch {
-        // The browser may have already discarded an interrupted pointer.
-      }
-    };
-
-    const cancelDrag = (motion: TMotion = "snap") => {
-      const drag = dragRef.current;
-      dragRef.current = null;
-      if (!drag) return;
-      releaseCapture(drag.pointerId);
-      if (drag.isLocked) {
-        guardNextClick();
-      }
-      if (drag.isLocked || drag.baseOffset) moveTrack(0, motion);
-    };
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (dragRef.current) {
-        // A fresh primary touch must not inherit an interrupted gesture.
-        cancelDrag();
-        if (!event.isPrimary) return;
-      }
-      clearClickGuard();
-      if (event.pointerType !== "touch" && event.pointerType !== "pen") return;
-      if (!event.isPrimary || !(event.target instanceof Node) || !viewport.contains(event.target)) return;
-      if (event.clientX < EDGE_GUARD_PX || event.clientX > window.innerWidth - EDGE_GUARD_PX) return;
-      if (isIgnoredTarget(event.target) || isDialogOpen()) return;
-      const width = measureWidth();
-      if (width <= 0) return;
-
-      pendingRef.current = null;
-      const baseOffset = boundOffset(readOffset(), width, latest.current.canPrevious, latest.current.canNext);
-      moveTrack(baseOffset, "none");
-      dragRef.current = {
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        baseOffset,
-        width,
-        isLocked: false,
-        samples: [{ x: event.clientX, time: performance.now() }],
-      };
-    };
-
-    const handlePointerMove = (event: PointerEvent) => {
-      const drag = dragRef.current;
-      if (!drag || event.pointerId !== drag.pointerId) return;
-      if (isDialogOpen()) {
-        cancelDrag();
-        return;
-      }
-
-      const dx = event.clientX - drag.startX;
-      const dy = event.clientY - drag.startY;
-      if (!drag.isLocked) {
-        if (Math.abs(dy) >= AXIS_LOCK_PX && Math.abs(dy) > Math.abs(dx)) {
-          dragRef.current = null;
-          if (drag.baseOffset) moveTrack(0, "snap");
-          return;
+    if (!api) return;
+    let active = true;
+    const commit = () => {
+      if (dragging.current || pending.current) return;
+      const state = latest.current;
+      const index = state.canPrevious ? 1 : 0;
+      const selected = api.selectedScrollSnap();
+      if (selected === index) {
+        if (touched.current) {
+          touched.current = false;
+          queueMicrotask(() => {
+            if (active && !dragging.current && !pending.current && latest.current.periodKey === state.periodKey) reset();
+          });
         }
-        if (Math.abs(dx) < AXIS_LOCK_PX || Math.abs(dx) <= Math.abs(dy)) return;
-        drag.isLocked = true;
-        try {
-          viewport.setPointerCapture?.(event.pointerId);
-        } catch {
-          // Touch pointers are already captured by the element they started on.
+        return;
+      }
+      pending.current = true;
+      if (selected < index && state.canPrevious) state.onPrevious();
+      else if (selected > index && state.canNext) state.onNext();
+      refusalFrame.current = requestAnimationFrame(() => {
+        if (pending.current && latest.current.periodKey === state.periodKey) {
+          api.scrollTo(index, true);
+          pending.current = false;
         }
+      });
+    };
+    const down = () => {
+      cancelRefusal();
+      dragging.current = true;
+      touched.current = true;
+    };
+    const up = () => {
+      dragging.current = false;
+      if (prefersReducedMotion()) {
+        api.scrollTo(api.selectedScrollSnap(), true);
+        commit();
       }
-
-      drag.samples = [...drag.samples.slice(-5), { x: event.clientX, time: performance.now() }];
-      const { canPrevious: hasPrevious, canNext: hasNext } = latest.current;
-      if ((dx < 0 && !hasNext) || (dx > 0 && !hasPrevious)) {
-        // Rebase here so reversing away from the boundary follows immediately.
-        drag.startX = event.clientX;
-        drag.baseOffset = 0;
-        drag.samples = [{ x: event.clientX, time: performance.now() }];
-        moveTrack(0, "none");
-        return;
-      }
-      moveTrack(boundOffset(drag.baseOffset + dx, drag.width, hasPrevious, hasNext), "none");
     };
-
-    const handlePointerUp = (event: PointerEvent) => {
-      const drag = dragRef.current;
-      if (!drag || event.pointerId !== drag.pointerId) return;
-      if (isDialogOpen()) {
-        cancelDrag();
-        return;
-      }
-      dragRef.current = null;
-      releaseCapture(drag.pointerId);
-      if (!drag.isLocked) {
-        if (drag.baseOffset) moveTrack(0, "snap");
-        return;
-      }
-
-      guardNextClick();
-      const dx = event.clientX - drag.startX;
-      const samples = [...drag.samples, { x: event.clientX, time: performance.now() }];
-      const { canPrevious: hasPrevious, canNext: hasNext } = latest.current;
-      const offset = boundOffset(drag.baseOffset + dx, drag.width, hasPrevious, hasNext);
-      const direction = getReleaseDirection(dx, getVelocity(samples), drag.width, hasPrevious, hasNext);
-      if (!direction) {
-        moveTrack(0, offset === 0 ? "none" : "snap");
-        return;
-      }
-      commit(direction, offset, drag.width);
+    // Embla emits settle before updating its index for zero-duration jumps.
+    const reducedSelect = () => {
+      if (prefersReducedMotion()) commit();
     };
-
-    const handlePointerCancel = (event: PointerEvent) => {
-      if (dragRef.current?.pointerId === event.pointerId) cancelDrag();
+    const hidden = () => {
+      if (document.visibilityState === "hidden") reset();
     };
-
-    const resetInteraction = () => {
-      pendingRef.current = null;
-      cancelDrag("none");
-      clearClickGuard();
-      moveTrack(0, "none");
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") resetInteraction();
-    };
-
-    // Touch starts captured by the element under the finger. Moving capture to
-    // the viewport fires lostpointercapture on that element, and it bubbles here;
-    // only a capture the viewport itself loses ends the drag.
-    const handleLostCapture = (event: PointerEvent) => {
-      if (event.target === viewport && dragRef.current?.pointerId === event.pointerId) cancelDrag();
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown, true);
-    document.addEventListener("pointermove", handlePointerMove, true);
-    document.addEventListener("pointerup", handlePointerUp, true);
-    document.addEventListener("pointercancel", handlePointerCancel, true);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("blur", resetInteraction);
-    window.addEventListener("pagehide", resetInteraction);
-    viewport.addEventListener("lostpointercapture", handleLostCapture);
-
+    api.on("pointerDown", down).on("pointerUp", up).on("settle", commit).on("select", reducedSelect);
+    window.addEventListener("blur", reset);
+    window.addEventListener("pagehide", reset);
+    document.addEventListener("visibilitychange", hidden);
     return () => {
-      document.removeEventListener("pointerdown", handlePointerDown, true);
-      document.removeEventListener("pointermove", handlePointerMove, true);
-      document.removeEventListener("pointerup", handlePointerUp, true);
-      document.removeEventListener("pointercancel", handlePointerCancel, true);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("blur", resetInteraction);
-      window.removeEventListener("pagehide", resetInteraction);
-      viewport.removeEventListener("lostpointercapture", handleLostCapture);
-      if (dragRef.current) releaseCapture(dragRef.current.pointerId);
-      dragRef.current = null;
+      active = false;
+      api.off("pointerDown", down).off("pointerUp", up).off("settle", commit).off("select", reducedSelect);
+      window.removeEventListener("blur", reset);
+      window.removeEventListener("pagehide", reset);
+      document.removeEventListener("visibilitychange", hidden);
+      cancelRefusal();
     };
-  }, [clearClickGuard, commit, guardNextClick, measureWidth, moveTrack, readOffset]);
+  }, [api, reset, cancelRefusal]);
 
-  const controls = useMemo<IPeriodPagerControls>(
-    () => ({
-      onPrevious: () => {
-        if (dragRef.current || !latest.current.canPrevious) return;
-        commit("previous", readOffset(), measureWidth());
-      },
-      onNext: () => {
-        if (dragRef.current || !latest.current.canNext) return;
-        commit("next", readOffset(), measureWidth());
-      },
-    }),
-    [commit, measureWidth, readOffset],
-  );
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    const current = currentRef.current;
+    if (!viewport || !current) return;
+    let width = viewport.getBoundingClientRect().width;
+    const measure = () => {
+      viewport.style.height = `${current.getBoundingClientRect().height}px`;
+      const nextWidth = viewport.getBoundingClientRect().width;
+      if (nextWidth !== width) {
+        width = nextWidth;
+        reset();
+      }
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(current);
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [reset]);
 
-  return (
-    <div ref={viewportRef} className={classes.viewport} data-period-pager="">
-      <div ref={trackRef} className={classes.track}>
-        {canPrevious ? (
-          <div className={classes.previous} aria-hidden="true" inert>
-            <PagerPage offset={-1} controls={NO_CONTROLS} renderPage={renderPage} />
-          </div>
-        ) : null}
-        <div className={classes.current}>
-          <PagerPage offset={0} controls={controls} renderPage={renderPage} />
-        </div>
-        {canNext ? (
-          <div className={classes.next} aria-hidden="true" inert>
-            <PagerPage offset={1} controls={NO_CONTROLS} renderPage={renderPage} />
-          </div>
-        ) : null}
-      </div>
+  const controls = useMemo<IPeriodPagerControls>(() => {
+    const go = (offset: -1 | 1) => {
+      const state = latest.current;
+      if (dragging.current || pending.current || (offset < 0 ? !state.canPrevious : !state.canNext)) return;
+      if (api) api.scrollTo((state.canPrevious ? 1 : 0) + offset, prefersReducedMotion());
+      else if (offset < 0) state.onPrevious();
+      else state.onNext();
+    };
+    return { onPrevious: () => go(-1), onNext: () => go(1) };
+  }, [api]);
+
+  const setViewport = useCallback((node: HTMLDivElement | null) => {
+    viewportRef.current = node;
+    emblaRef(node);
+  }, [emblaRef]);
+  const offsets: TPeriodOffset[] = [...(canPrevious ? [-1 as const] : []), 0, ...(canNext ? [1 as const] : [])];
+
+  return <div ref={setViewport} className={classes.viewport} data-period-pager="" data-carousel-ready={api ? "" : undefined}>
+    <div className={getTrackClassName(!api && currentIndex > 0)}>
+      {offsets.map((offset) => <div key={offset} ref={offset === 0 ? currentRef : undefined} className={classes.page} aria-hidden={offset !== 0 ? true : undefined} inert={offset !== 0 ? true : undefined} data-period-current={offset === 0 ? "" : undefined}>
+        <PagerPage offset={offset} controls={offset === 0 ? controls : NO_CONTROLS} renderPage={renderPage} />
+      </div>)}
     </div>
-  );
+  </div>;
 }

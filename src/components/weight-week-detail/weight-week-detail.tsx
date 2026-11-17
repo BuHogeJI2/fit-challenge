@@ -9,20 +9,22 @@ import { weightWeekClasses as classes } from "./weight-week-detail.styles";
 import type { IWeightWeekDetailProps } from "./weight-week-detail.types";
 
 export function WeightWeekDetail({ weekStart, entries, todayKey, goalWeightKg, selectedDate, onSelect, onEdit, onPrevious, onNext, canPrevious, canNext, backHref, savedEntry }: IWeightWeekDetailProps) {
-  const end = addDays(weekStart, 6);
-  const visible = entries.filter((entry) => entry.date >= weekStart && entry.date <= end);
-  const summary = getWeightSummary(visible, null);
   const formatDate = (date: string) => formatDateInContext(date, todayKey);
   return <section className={classes.screen}>
     <Link className={classes.back} href={backHref} aria-label="Back to weeks" replace><span className={classes.backIcon} aria-hidden="true">‹</span>Weeks</Link>
-    <PeriodPager periodKey={weekStart} canPrevious={canPrevious} canNext={canNext} onPrevious={onPrevious} onNext={onNext} renderPage={(offset, controls) => (
-      <WeightPeriodPanel view="week" period={addDays(weekStart, offset * 7)} entries={entries} todayKey={todayKey} goalWeightKg={goalWeightKg} selectedDate={selectedDate} selectedWeek={null} onSelectDate={onSelect} onSelectWeek={() => {}} onEdit={onEdit} canPrevious={canPrevious} canNext={canNext} onPrevious={controls.onPrevious} onNext={controls.onNext} />
-    )} />
-    {summary.first && summary.latest ? <dl className={classes.summary} aria-label="Week comparison">
-      <div><dt className={classes.label}>First recorded</dt><dd className={classes.value}>{formatKg(summary.first.weightKg)}<span className={classes.date}>{formatDate(summary.first.date)}</span></dd></div>
-      <div><dt className={classes.label}>Last recorded</dt><dd className={classes.value}>{formatKg(summary.latest.weightKg)}<span className={classes.date}>{formatDate(summary.latest.date)}</span></dd></div>
-      <div><dt className={classes.label}>Change</dt><dd className={classes.value}>{summary.changeSinceFirstKg === null ? "—" : `${formatSignedWeightValue(summary.changeSinceFirstKg)} kg`}</dd></div>
-    </dl> : null}
-    <WeightJournal key={weekStart} rows={withChangeFromPrevious(entries).filter(({ entry }) => entry.date >= weekStart && entry.date <= end)} showMonth todayKey={todayKey} onEdit={onEdit} previewCount={7} savedEntry={savedEntry} />
+    <PeriodPager periodKey={weekStart} canPrevious={canPrevious} canNext={canNext} onPrevious={onPrevious} onNext={onNext} renderPage={(offset, controls) => {
+      const start = addDays(weekStart, offset * 7);
+      const end = addDays(start, 6);
+      const summary = getWeightSummary(entries.filter((entry) => entry.date >= start && entry.date <= end), null);
+      return <>
+        <WeightPeriodPanel view="week" period={addDays(weekStart, offset * 7)} entries={entries} todayKey={todayKey} goalWeightKg={goalWeightKg} selectedDate={selectedDate} selectedWeek={null} onSelectDate={onSelect} onSelectWeek={() => {}} onEdit={onEdit} canPrevious={canPrevious} canNext={canNext} onPrevious={controls.onPrevious} onNext={controls.onNext} />
+        {summary.first && summary.latest ? <dl className={classes.summary} aria-label="Week comparison">
+          <div><dt className={classes.label}>First recorded</dt><dd className={classes.value}>{formatKg(summary.first.weightKg)}<span className={classes.date}>{formatDate(summary.first.date)}</span></dd></div>
+          <div><dt className={classes.label}>Last recorded</dt><dd className={classes.value}>{formatKg(summary.latest.weightKg)}<span className={classes.date}>{formatDate(summary.latest.date)}</span></dd></div>
+          <div><dt className={classes.label}>Change</dt><dd className={classes.value}>{summary.changeSinceFirstKg === null ? "—" : `${formatSignedWeightValue(summary.changeSinceFirstKg)} kg`}</dd></div>
+        </dl> : null}
+        <WeightJournal key={start} rows={withChangeFromPrevious(entries).filter(({ entry }) => entry.date >= start && entry.date <= end)} showMonth todayKey={todayKey} onEdit={onEdit} previewCount={7} savedEntry={savedEntry} />
+      </>;
+    }} />
   </section>;
 }

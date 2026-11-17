@@ -39,7 +39,7 @@ describe("Weight mode", () => {
     const overall = screen.getByRole("region", { name: "Overall weight" });
     expect(overall).toHaveTextContent("84.0 kg");
     expect(overall.compareDocumentPosition(screen.getByRole("group", { name: "Chart range" })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    const comparison = screen.getByLabelText("Month comparison");
+    const comparison = within(document.querySelector<HTMLElement>("[data-period-current]")!).getByLabelText("Month comparison");
     expect(comparison).toHaveTextContent("First recorded89.9 kgSep 1");
     expect(comparison).toHaveTextContent("Last recorded87.0 kgSep 30");
     expect(comparison).toHaveTextContent("−2.9 kg");

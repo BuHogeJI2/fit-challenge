@@ -16,9 +16,10 @@ browser.
 - Tailwind CSS v4
 - Dexie (IndexedDB)
 - wouter
+- Embla Carousel
 - vite-plugin-pwa
 - Vitest + React Testing Library
-- Playwright (one real-touch browser test)
+- Playwright (real-touch carousel browser tests)
 
 ## Prerequisites
 

@@ -175,18 +175,55 @@ export function WeightScreen() {
   }
   const rows = withChangeFromPrevious(entries);
   const weekWindow = getWeekWindow(lastWeek);
-  const visibleWeeks = getWeeklyWeights(entries).filter(
-    (week) => week.weekStart >= weekWindow.start && week.weekStart <= weekWindow.end,
-  );
-  const visibleEntries = view === "month" ? getEntriesInMonth(entries, monthKey) : entries;
-  const periodSummary = getWeightSummary(visibleEntries, null);
   const canPrevious = view === "month" ? monthKey > firstMonthKey : view === "weeks" && weekWindow.start > firstWeek;
   const canNext = view === "month" ? monthKey < currentMonthKey : view === "weeks" && lastWeek < currentWeek;
   const previous = () => view === "month" ? setMonthKey(shiftMonth(monthKey, -1)) : setLastWeek(addDays(lastWeek, -WEEKS_PER_WINDOW * 7));
   const next = () => view === "month" ? setMonthKey(shiftMonth(monthKey, 1)) : setLastWeek(addDays(lastWeek, WEEKS_PER_WINDOW * 7));
-  const renderPanel = (offset: TPeriodOffset, controls: IPeriodPagerControls) => (
-    <WeightPeriodPanel view={view} period={view === "month" ? shiftMonth(monthKey, offset) : addDays(lastWeek, offset * WEEKS_PER_WINDOW * 7)} entries={entries} todayKey={todayKey} goalWeightKg={settings.goalWeightKg} selectedDate={selectedDate} selectedWeek={selectedWeek} onSelectDate={setSelectedDate} onSelectWeek={setSelectedWeek} onEdit={(entry) => setSheet({ mode: "edit", entry })} canPrevious={canPrevious} canNext={canNext} onPrevious={controls.onPrevious} onNext={controls.onNext} />
-  );
+  const renderPanel = (offset: TPeriodOffset, controls: IPeriodPagerControls) => {
+    const pageMonth = shiftMonth(monthKey, offset);
+    const pageEnd = addDays(lastWeek, offset * WEEKS_PER_WINDOW * 7);
+    const pageWindow = getWeekWindow(pageEnd);
+    const visibleWeeks = getWeeklyWeights(entries).filter((week) => week.weekStart >= pageWindow.start && week.weekStart <= pageWindow.end);
+    const periodSummary = getWeightSummary(getEntriesInMonth(entries, pageMonth), null);
+    return <>
+      <WeightPeriodPanel view={view} period={view === "month" ? shiftMonth(monthKey, offset) : addDays(lastWeek, offset * WEEKS_PER_WINDOW * 7)} entries={entries} todayKey={todayKey} goalWeightKg={settings.goalWeightKg} selectedDate={selectedDate} selectedWeek={selectedWeek} onSelectDate={setSelectedDate} onSelectWeek={setSelectedWeek} onEdit={(entry) => setSheet({ mode: "edit", entry })} canPrevious={canPrevious} canNext={canNext} onPrevious={controls.onPrevious} onNext={controls.onNext} />
+      {view === "month" && periodSummary.first && periodSummary.latest ? (
+        <dl className={weightScreenClasses.periodStats} aria-label="Month comparison">
+          <div className={weightScreenClasses.stat}>
+            <dt className={weightScreenClasses.statLabel}>First recorded</dt>
+            <dd className={weightScreenClasses.statValue}>{formatKg(periodSummary.first.weightKg)}<span className={weightScreenClasses.statNote}>{formatDate(periodSummary.first.date)}</span></dd>
+          </div>
+          <div className={weightScreenClasses.stat}>
+            <dt className={weightScreenClasses.statLabel}>{view === "month" && pageMonth < currentMonthKey ? "Last recorded" : "Latest recorded"}</dt>
+            <dd className={weightScreenClasses.statValue}>{formatKg(periodSummary.latest.weightKg)}<span className={weightScreenClasses.statNote}>{formatDate(periodSummary.latest.date)}</span></dd>
+          </div>
+          <div className={weightScreenClasses.stat}>
+            <dt className={weightScreenClasses.statLabel}>Change</dt>
+            <dd className={weightScreenClasses.statValue}>{periodSummary.changeSinceFirstKg === null ? "—" : `${formatSignedWeightValue(periodSummary.changeSinceFirstKg)} kg`}</dd>
+          </div>
+        </dl>
+      ) : null}
+
+      {view === "weeks" ? (
+        <WeightWeeks weeks={visibleWeeks} todayKey={todayKey} getWeekHref={(weekStart) => appHref("/weight", { ...Object.fromEntries(params), view: "week", week: weekStart, end: pageEnd })} onOpen={() => rememberView(appHref("/weight", { ...Object.fromEntries(params), view: "weeks", week: null, end: pageEnd }))} />
+      ) : (
+        <WeightJournal
+          key={`${view}-${pageMonth}`}
+          savedEntry={savedEntry}
+          expanded={params.get("journal") === (view === "all" ? "all" : pageMonth)}
+          onExpandedChange={(expanded) => updateParams({ journal: expanded ? (view === "all" ? "all" : pageMonth) : null })}
+          rows={
+            view === "month"
+              ? rows.filter(({ entry }) => getMonthKey(entry.date) === pageMonth)
+              : rows
+          }
+          showMonth={view === "all"}
+          todayKey={todayKey}
+          onEdit={(entry) => setSheet({ mode: "edit", entry })}
+        />
+      )}
+    </>;
+  };
 
   return (
     <section className={weightScreenClasses.screen}>
@@ -228,42 +265,6 @@ export function WeightScreen() {
 
       {view === "all" ? renderPanel(0, { onPrevious: previous, onNext: next }) : (
         <PeriodPager key={view} periodKey={`${view}-${view === "month" ? monthKey : lastWeek}`} canPrevious={canPrevious} canNext={canNext} onPrevious={previous} onNext={next} renderPage={renderPanel} />
-      )}
-
-      {view === "month" && periodSummary.first && periodSummary.latest ? (
-        <dl className={weightScreenClasses.periodStats} aria-label="Month comparison">
-          <div className={weightScreenClasses.stat}>
-            <dt className={weightScreenClasses.statLabel}>First recorded</dt>
-            <dd className={weightScreenClasses.statValue}>{formatKg(periodSummary.first.weightKg)}<span className={weightScreenClasses.statNote}>{formatDate(periodSummary.first.date)}</span></dd>
-          </div>
-          <div className={weightScreenClasses.stat}>
-            <dt className={weightScreenClasses.statLabel}>{view === "month" && monthKey < currentMonthKey ? "Last recorded" : "Latest recorded"}</dt>
-            <dd className={weightScreenClasses.statValue}>{formatKg(periodSummary.latest.weightKg)}<span className={weightScreenClasses.statNote}>{formatDate(periodSummary.latest.date)}</span></dd>
-          </div>
-          <div className={weightScreenClasses.stat}>
-            <dt className={weightScreenClasses.statLabel}>Change</dt>
-            <dd className={weightScreenClasses.statValue}>{periodSummary.changeSinceFirstKg === null ? "—" : `${formatSignedWeightValue(periodSummary.changeSinceFirstKg)} kg`}</dd>
-          </div>
-        </dl>
-      ) : null}
-
-      {view === "weeks" ? (
-        <WeightWeeks weeks={visibleWeeks} todayKey={todayKey} getWeekHref={(weekStart) => appHref("/weight", { ...Object.fromEntries(params), view: "week", week: weekStart, end: lastWeek })} onOpen={() => rememberView(appHref("/weight", { ...Object.fromEntries(params), view: "weeks", week: null, end: lastWeek }))} />
-      ) : (
-        <WeightJournal
-          key={`${view}-${monthKey}`}
-          savedEntry={savedEntry}
-          expanded={params.get("journal") === (view === "all" ? "all" : monthKey)}
-          onExpandedChange={(expanded) => updateParams({ journal: expanded ? (view === "all" ? "all" : monthKey) : null })}
-          rows={
-            view === "month"
-              ? rows.filter(({ entry }) => getMonthKey(entry.date) === monthKey)
-              : rows
-          }
-          showMonth={view === "all"}
-          todayKey={todayKey}
-          onEdit={(entry) => setSheet({ mode: "edit", entry })}
-        />
       )}
 
       <button

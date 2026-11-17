@@ -91,9 +91,6 @@ export function ExercisesScreen() {
   const archived = exercises
     .filter((exercise) => exercise.archivedAt)
     .sort((left, right) => left.name.localeCompare(right.name));
-  const weekEnd = addDays(weekStart, 6);
-  const weekTrainings = trainings.filter((training) => training.date >= weekStart && training.date <= weekEnd)
-    .sort((left, right) => right.date.localeCompare(left.date) || right.createdAt.localeCompare(left.createdAt) || left.id.localeCompare(right.id));
   const currentWeek = getWeekStart(todayKey);
   const firstWeek = trainings.length ? getWeekStart([...trainings].sort((left, right) => left.date.localeCompare(right.date))[0].date) : currentWeek;
   const isEmpty = !exercises.length && !trainings.length;
@@ -106,6 +103,8 @@ export function ExercisesScreen() {
         <PeriodPager periodKey={weekStart} canPrevious={weekStart > firstWeek} canNext={weekStart < currentWeek} onPrevious={() => setWeekStart(addDays(weekStart, -7))} onNext={() => setWeekStart(addDays(weekStart, 7))} renderPage={(offset, controls) => {
           const start = addDays(weekStart, offset * 7);
           const end = addDays(start, 6);
+          const weekTrainings = trainings.filter((training) => training.date >= start && training.date <= end)
+            .sort((left, right) => right.date.localeCompare(left.date) || right.createdAt.localeCompare(left.createdAt) || left.id.localeCompare(right.id));
           const days = getTrainingDayCounts(trainings, sets, start);
           const count = days.reduce((total, day) => total + day.count, 0);
           const activeDays = days.filter((day) => day.count > 0).length;
@@ -129,27 +128,27 @@ export function ExercisesScreen() {
             <div className={classes.chart}>
               <TrainingDaysChart days={days} todayKey={todayKey} />
             </div>
+            {weekTrainings.length ? <ol key={start} className={classes.trainingList} aria-label="Weekly trainings">
+              {weekTrainings.map((training, index) => {
+                const groups = getTrainingExercises(sets.filter((set) => set.trainingId === training.id), exercises);
+                const title = getTrainingTitle(training, sets, exercises);
+                const startsDay = weekTrainings[index - 1]?.date !== training.date;
+                return <li key={training.id} className={startsDay ? classes.trainingItemFirst : classes.trainingItem} data-saved-row={savedEntry?.id === training.id ? savedEntry.phase : undefined}>
+                  {startsDay ? <h2 className={classes.day}>{formatDayHeading(training.date, todayKey)}</h2> : null}
+                  <Link href={appHref(`/trainings/${training.id}`, { from: returnTo })} onClick={() => rememberView(returnTo)} className={groups.length ? classes.trainingLink : classes.trainingLinkEmpty}>
+                    <span className={classes.trainingName}>{title}</span><span className={classes.chevron} aria-hidden="true">›</span>
+                  </Link>
+                  {training.note ? <p className={classes.trainingNote}>{training.note}</p> : null}
+                  {groups.length ? <ul className={classes.groupSummary}>
+                    {groups.map((group) => <li key={group.exerciseId} className={classes.summaryRow}>
+                      <span>{group.exercise?.name ?? "Unknown exercise"}</span><span className={classes.metric}>{group.summary}</span>
+                    </li>)}
+                  </ul> : <p className={classes.noEntries}>No entries yet</p>}
+                </li>;
+              })}
+            </ol> : <p className={classes.empty}>{isEmpty ? "Add your exercises in the Library, then log your sets." : "No training logged in this week."}</p>}
           </>;
         }} />
-        {weekTrainings.length ? <ol key={weekStart} className={classes.trainingList} aria-label="Weekly trainings">
-          {weekTrainings.map((training, index) => {
-            const groups = getTrainingExercises(sets.filter((set) => set.trainingId === training.id), exercises);
-            const title = getTrainingTitle(training, sets, exercises);
-            const startsDay = weekTrainings[index - 1]?.date !== training.date;
-            return <li key={training.id} className={startsDay ? classes.trainingItemFirst : classes.trainingItem} data-saved-row={savedEntry?.id === training.id ? savedEntry.phase : undefined}>
-              {startsDay ? <h2 className={classes.day}>{formatDayHeading(training.date, todayKey)}</h2> : null}
-              <Link href={appHref(`/trainings/${training.id}`, { from: returnTo })} onClick={() => rememberView(returnTo)} className={groups.length ? classes.trainingLink : classes.trainingLinkEmpty}>
-                <span className={classes.trainingName}>{title}</span><span className={classes.chevron} aria-hidden="true">›</span>
-              </Link>
-              {training.note ? <p className={classes.trainingNote}>{training.note}</p> : null}
-              {groups.length ? <ul className={classes.groupSummary}>
-                {groups.map((group) => <li key={group.exerciseId} className={classes.summaryRow}>
-                  <span>{group.exercise?.name ?? "Unknown exercise"}</span><span className={classes.metric}>{group.summary}</span>
-                </li>)}
-              </ul> : <p className={classes.noEntries}>No entries yet</p>}
-            </li>;
-          })}
-        </ol> : <p className={classes.empty}>{isEmpty ? "Add your exercises in the Library, then log your sets." : "No training logged in this week."}</p>}
       </> : <>
         <h1 className={classes.visuallyHidden}>Exercise library</h1>
         <div className={classes.libraryHead}>

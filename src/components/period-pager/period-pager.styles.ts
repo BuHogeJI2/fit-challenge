@@ -1,24 +1,9 @@
 import clsx from "clsx";
 
-const viewport = clsx("relative overflow-x-clip", "touch-pan-y touch-pinch-zoom");
-
-const track = clsx("relative will-change-transform");
-
-const current = clsx("relative");
-
-const previous = clsx("absolute inset-y-0 right-full w-full overflow-hidden");
-
-const next = clsx("absolute inset-y-0 left-full w-full overflow-hidden");
-
 export const periodPagerClasses = {
-  viewport,
-  track,
-  current,
-  previous,
-  next,
+  viewport: clsx("relative -mx-1 overflow-hidden"),
+  track: clsx("flex items-start touch-pan-y touch-pinch-zoom will-change-transform"),
+  page: clsx("min-w-0 basis-full shrink-0 grow-0 p-1"),
 };
 
-export const periodPagerMotion = {
-  settle: "transform var(--pager-settle-duration, 240ms) var(--pager-easing, cubic-bezier(0.2, 0, 0, 1))",
-  snap: "transform var(--pager-snap-duration, 200ms) var(--pager-easing, cubic-bezier(0.2, 0, 0, 1))",
-};
+export const getTrackClassName = (initialPrevious: boolean) => clsx(periodPagerClasses.track, initialPrevious && "[transform:translate3d(-100%,0,0)]");
